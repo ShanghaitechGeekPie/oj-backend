@@ -100,9 +100,11 @@ class Record(models.Model):
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     massage = models.FileField(verbose_name="返回消息")
     grade = models.IntegerField(verbose_name="成绩")
+    delta = models.IntegerField(verbose_name="成绩差")
     git_commit_id = models.CharField(
         max_length=40, unique=True, verbose_name="git提交号码")
     grade_time = models.DateTimeField()
+    submission_time = models.DateTimeField()
 
     class Meta:
         ordering = ['grade_time']
