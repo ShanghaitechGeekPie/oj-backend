@@ -87,7 +87,7 @@ def student_course_list(request, id):
         serializer = StudentCoursesSerializer(courses, many=True)
         return JsonResponse(serializer.data, safe=False)
     else:
-        return return_http_405
+        return return_http_405()
 
 
 @login_required

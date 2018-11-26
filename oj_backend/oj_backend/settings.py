@@ -139,3 +139,5 @@ STATIC_URL = '/static/'
 # override the auth mode.
 
 AUTH_USER_MODEL = 'oj_backend.Student'
+LOGIN_URL = '/student/login'
+LOGIN_REDIRECT_URL = '/'
