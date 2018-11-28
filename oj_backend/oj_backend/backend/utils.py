@@ -29,12 +29,11 @@ from oj_backend.backend.models import Student, Instructor, Course, Assignment, R
 
 
 def student_test(request, student):
-    return (request.user.uid == student)
+    return (request.user.student.uid == student)
 
 
 def student_taking_course_test(request, course):
-    this_student = authUser.objects.filter(
-        student__uid__exact=request.user.uid)
+    this_student = request.user.student
     if this_student:
         this_student_courses = this_student.course_set.get(uid=course)
         return (len(this_student_courses) != 0)
@@ -42,8 +41,7 @@ def student_taking_course_test(request, course):
 
 
 def student_submit_assignment_test(request, assignment):
-    this_student = authUser.objects.filter(
-        student__uid__exact=request.user.uid)
+    this_student = request.user.student
     if this_student:
         this_student_submissions = this_student.record_set.get(
             git_commit_id=assignment)
@@ -51,13 +49,13 @@ def student_submit_assignment_test(request, assignment):
     return False
 
 
-def student_active_test(request, assignment):
-    pass
+def student_active_test(request):
+    return not request.user.student.disabled
 
 
 def return_http_401():
-    return JsonResponse(simplejson.dumps({'message': 'HTTP 401 Unauthorized'}, status=401))
+    return JsonResponse({'message': 'HTTP 401 Unauthorized'}, status=401)
 
 
 def return_http_405():
-    return JsonResponse(simplejson.dumps({'message': 'HTTP 401 Not Allowed'}, status=405))
+    return JsonResponse({'message': 'HTTP 405 Not Allowed'}, status=405)

@@ -34,12 +34,14 @@ def student_login(request):
     """
     /student/login/
     """
+    if request.method == 'GET':
+        return HttpResponseNotAllowed(permitted_methods=['POST'])
     username = request.POST['username']
     password = request.POST['password']
     user = authenticate(request, username=username, password=password)
     if user:
         login(request, user)
-        return JsonResponse(simplejson.dumps({'message': 'Success'}, status=204))
+        return JsonResponse({'message': 'Success'}, status=204)
     else:
         return return_http_401()
 
@@ -49,7 +51,7 @@ def student_logout(request):
     /student/logout/
     """
     logout(request)
-    return JsonResponse(simplejson.dumps({'message': 'Success'}, status=204))
+    return JsonResponse({'message': 'Success'}, status=204)
 
 
 @login_required
