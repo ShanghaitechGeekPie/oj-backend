@@ -17,7 +17,7 @@
 
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import User as authUser
 import uuid
 
 
@@ -25,16 +25,18 @@ def uuid1str():
     return uuid.uuid1().hex
 
 
-class User(AbstractUser):
+class User(models.Model):
+    auth_user = models.OneToOneField(authUser, on_delete=models.SET_NULL)
     uid = models.CharField(unique=True, max_length=32,
                            verbose_name="用户标识符", editable=False, default=uuid1str)
-    #email = models.EmailField(verbose_name="电子邮箱")
-    # email is specified in the AbstractUser class.
+    email = models.EmailField(verbose_name="电子邮箱")
     name = models.CharField(max_length=255, verbose_name="姓名")
     rsa_pub_key = models.FileField(verbose_name="SSH 公钥")
-    #disabled = models.BooleanField(verbose_name="禁用", default=False)
-    # use the is_active attribute from AbstractUser.
+    disabled = models.BooleanField(verbose_name="禁用", default=False)
     USERNAME_FIELD = 'email'
+
+    class Meta:
+        app_label = 'oj_backend'
 
 
 class Student(User):
@@ -43,6 +45,7 @@ class Student(User):
 
     class Meta:
         ordering = ['student_id']
+        app_label = 'oj_backend'
 
     def __str__(self):
         return "{}[{}]‘{}’<{}>".format(self.name, self.student_id, self.nickname, self.email)
@@ -52,6 +55,7 @@ class Instructor(User):
 
     class Meta:
         ordering = ['uid']
+        app_label = 'oj_backend'
 
     def __str__(self):
         return "{}<{}>".format(self.name, self.email)
@@ -66,12 +70,13 @@ class Course(models.Model):
     semaster = models.CharField(max_length=255, verbose_name="学期")
     homepage = models.URLField(max_length=512, verbose_name="课程主页")
     instructor = models.ManyToManyField(
-        Instructor, verbose_name="教师", on_delete=models.SET_NULL)
+        Instructor)
     students = models.ManyToManyField(
-        Student, verbose_name="学生", on_delete=models.SET_NULL)
+        Student)
 
     class Meta:
         ordering = ['code', 'year', 'semaster']
+        app_label = 'oj_backend'
 
     def __str__(self):
         return "{}: {}({})".format(self.code, self.name, self.semaster)
@@ -89,6 +94,7 @@ class Assignment(models.Model):
 
     class Meta:
         ordering = ['release_date', 'deadline']
+        app_label = 'oj_backend'
 
     def __str__(self):
         return "{} - {} <{}>".format(self.course, self.name, self.descr_link)
@@ -96,7 +102,7 @@ class Assignment(models.Model):
 
 class Record(models.Model):
     student = models.ForeignKey(
-        Student, verbose_name="提交用户", on_delete=models.CASCADE)
+        Student, on_delete=models.CASCADE)
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
     massage = models.FileField(verbose_name="返回消息")
     grade = models.IntegerField(verbose_name="成绩")
@@ -108,6 +114,7 @@ class Record(models.Model):
 
     class Meta:
         ordering = ['grade_time']
+        app_label = 'oj_backend'
 
     def __str__(self):
         return "{} - {}".format(self.grade_time, self.git_commit_id)

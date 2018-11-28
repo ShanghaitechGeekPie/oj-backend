@@ -22,13 +22,13 @@ from oj_backend.backend.models import Student, Instructor, Course, Assignment, R
 class StudentBasicInfoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
-        fields = ('uid', 'email', 'name', 'student_id', )
+        fields = ('uid', 'email', 'name', 'student_id')
 
 
 class StudentCoursesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
-        fields = ('uid', 'name', 'year', 'semaster', 'homepage', 'instructor')
+        fields = ('uid', 'name', 'year', 'semaster', 'homepage', 'instructor', 'code')
 
 
 class StudentAssignmentSerializer(serializers.ModelSerializer):

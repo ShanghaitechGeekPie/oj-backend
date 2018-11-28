@@ -48,6 +48,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -93,7 +94,11 @@ WSGI_APPLICATION = 'oj_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.path.join(BASE_DIR, 'db.mysql'),
+        'NAME': os.environ['OJBN_DB_NAME'],
+        'USER': os.environ['OJBN_DB_USER'],
+        'PASSWORD': os.environ['OJBN_DB_PASSWD'],
+        'HOST': os.environ['OJBN_DB_HOST'],   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
     }
 }
 
@@ -122,7 +127,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'zh-cn'
 
-TIME_ZONE = 'CST'
+TIME_ZONE = 'Asia/Shanghai'
 
 USE_I18N = True
 
@@ -138,6 +143,5 @@ STATIC_URL = '/static/'
 
 # override the auth mode.
 
-AUTH_USER_MODEL = 'oj_backend.Student'
 LOGIN_URL = '/student/login'
 LOGIN_REDIRECT_URL = '/'

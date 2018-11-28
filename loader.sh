@@ -20,7 +20,7 @@ cd oj_backend
 python3 manage.py migrate
 
 nohup gunicorn oj_backend.wsgi:application -b 0.0.0.0:8080 --workers 4 --worker-connections 65535&
-#service nginx start
+service nginx start
 
 while true
 do

@@ -189,18 +189,26 @@ def course_assignment_scores(request, course_id, assignment_id):
             assignment__uid__contains=assignment_id)
         students = this_course.objects.student_set.all()
         for student in students:
-            student_id = student.student_id
+            student_uid = student.uid
             try:
                 this_student_record = all_records.filter(
-                    student__uid__contains=student_id).order_by('-submission_time')[0]
+                    student__uid__contains=student_uid).order_by('-submission_time')[0]
                 if records:
                     records = records | this_student_record
                 else:
                     records = this_student_record
             except IndexError:
                 pass
-        records = records.order_by('-submission_time')
+        records = records.order_by('submission_time')
         serializer = ScoreBoardSerializer(records, many=True)
         return JsonResponse(serializer.data, safe=False)
     else:
         return return_http_405()
+
+
+@login_required
+def course_judging_queue(request, course_id):
+    """
+    /course/<str:course_id>/queue/
+    """
+    return JsonResponse(simplejson.dump({'massage': "Coming soon"}), status=500)

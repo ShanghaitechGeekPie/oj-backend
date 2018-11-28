@@ -17,6 +17,7 @@
 
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User as authUser
 from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 try:
@@ -32,7 +33,8 @@ def student_test(request, student):
 
 
 def student_taking_course_test(request, course):
-    this_student = Student.objects.get(uid=request.user.uid)
+    this_student = authUser.objects.filter(
+        student__uid__exact=request.user.uid)
     if this_student:
         this_student_courses = this_student.course_set.get(uid=course)
         return (len(this_student_courses) != 0)
@@ -40,7 +42,8 @@ def student_taking_course_test(request, course):
 
 
 def student_submit_assignment_test(request, assignment):
-    this_student = Student.objects.get(uid=request.user.uid)
+    this_student = authUser.objects.filter(
+        student__uid__exact=request.user.uid)
     if this_student:
         this_student_submissions = this_student.record_set.get(
             git_commit_id=assignment)
@@ -51,8 +54,10 @@ def student_submit_assignment_test(request, assignment):
 def student_active_test(request, assignment):
     pass
 
+
 def return_http_401():
     return JsonResponse(simplejson.dumps({'message': 'HTTP 401 Unauthorized'}, status=401))
+
 
 def return_http_405():
     return JsonResponse(simplejson.dumps({'message': 'HTTP 401 Not Allowed'}, status=405))

@@ -15,8 +15,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-apt update && apt install python3 python3-pip git nginx && python3 -m pip install django &&
+apt update && apt install python3 python3-pip git nginx python3-dev libmysqlclient-dev && python3 -m pip install django mysqlclient simplejson&&
 git clone https://github.com/encode/django-rest-framework.git &&
 cd django-rest-framework &&
-python3 -m pip install -r requirement.txt &&
+python3 -m pip install -r requirements.txt &&
 python3 setup.py install
