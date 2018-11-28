@@ -42,7 +42,7 @@ SECRET_KEY = 'mq-2-_&%i3ne(f=wwhfoc)hw5fvr)=+9elezs&cs!k+1^y^sf='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [os.environ['OJBN_HOSTNAME'],]
 
 
 # Application definition
@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'oj_backend.backend',
+    'oj_backend',
 ]
 
 MIDDLEWARE = [

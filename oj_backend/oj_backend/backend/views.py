@@ -35,7 +35,7 @@ def student_login(request):
     /student/login/
     """
     if request.method == 'GET':
-        return HttpResponseNotAllowed(permitted_methods=['POST'])
+        return return_http_405()
     username = request.POST['username']
     password = request.POST['password']
     user = authenticate(request, username=username, password=password)

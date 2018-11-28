@@ -26,14 +26,13 @@ def uuid1str():
 
 
 class User(models.Model):
-    auth_user = models.OneToOneField(authUser, on_delete=models.SET_NULL)
+    auth_user = models.OneToOneField(authUser, on_delete=models.CASCADE)
     uid = models.CharField(unique=True, max_length=32,
                            verbose_name="用户标识符", editable=False, default=uuid1str)
     email = models.EmailField(verbose_name="电子邮箱")
     name = models.CharField(max_length=255, verbose_name="姓名")
     rsa_pub_key = models.FileField(verbose_name="SSH 公钥")
     disabled = models.BooleanField(verbose_name="禁用", default=False)
-    USERNAME_FIELD = 'email'
 
     class Meta:
         app_label = 'oj_backend'
@@ -86,7 +85,7 @@ class Assignment(models.Model):
     uid = models.CharField(unique=True, max_length=32,
                            verbose_name="唯一标识符", editable=False, default=uuid1str)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    name = models.CharField(max_length="名称")
+    name = models.CharField(max_length=255, verbose_name="名称")
     descr_link = models.URLField(max_length=512, verbose_name="作业描述链接")
     grade = models.FloatField(verbose_name="总成绩")
     deadline = models.DateTimeField(verbose_name="截止日期")
