@@ -5,7 +5,7 @@ MAINTAINER EricDiao @ ShanghaiTech GeekPie
 EXPOSE 8080
 
 RUN apt-get update && \
-  apt-get install python3 python3-pip git nginx python3-dev libmysqlclient-dev && \
+  apt-get install python3 python3-pip git nginx python3-dev default-libmysqlclient-dev && \
   python3 -m pip install django mysqlclient simplejson git+https://github.com/encode/django-rest-framework.git
 
 COPY . /app
