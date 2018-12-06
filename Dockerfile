@@ -1,12 +1,14 @@
-FROM debian:latest
+FROM debian:stretch-slim
 
 MAINTAINER EricDiao @ ShanghaiTech GeekPie
 
 EXPOSE 8080
 
+RUN apt-get update && \
+  apt-get install python3 python3-pip git nginx python3-dev libmysqlclient-dev && \
+  python3 -m pip install django mysqlclient simplejson git+https://github.com/encode/django-rest-framework.git
+
 COPY . /app
 WORKDIR /app
-RUN chmod +x loader.sh && chmod +x setup.sh
-RUN bash /app/setup.sh
 
 CMD bash loader.sh
