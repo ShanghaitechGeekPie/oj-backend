@@ -44,7 +44,7 @@ urlpatterns = [
     path('student/<str:id>/course/<str:course_id>/<str:assignment_id>/', views.student_assignment_detail),
     path('student/<str:id>/course/<str:course_id>/<str:assignment_id>/history/', views.stutdent_assignment_history_list),
     path('course/<str:course_id>/', views.course_info),
-    path('course/<str:course_id>/', views.course_judging_queue),
+    path('course/<str:course_id>/queue', views.course_judging_queue),
     path('course/<str:course_id>/<str:assignment_id>/', views.course_assignment_info),
     path('course/<str:course_id>/<str:assignment_id>/scores/', views.course_assignment_scores),
 ]
