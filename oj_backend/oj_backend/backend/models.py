@@ -28,8 +28,8 @@ def uuid1str():
 class User(models.Model):
     auth_user = models.OneToOneField(authUser, on_delete=models.CASCADE)
     uid = models.CharField(unique=True, max_length=32,
-                           verbose_name="用户标识符", editable=False, default=uuid1str)
-    email = models.EmailField(verbose_name="电子邮箱")
+                           verbose_name="用户标识符", editable=False, default=uuid1str, primary_key=True)
+    email = models.EmailField(verbose_name="电子邮箱", unique=True)
     name = models.CharField(max_length=255, verbose_name="姓名")
     rsa_pub_key = models.FileField(verbose_name="SSH 公钥")
     disabled = models.BooleanField(verbose_name="禁用", default=False)
@@ -62,7 +62,7 @@ class Instructor(User):
 
 class Course(models.Model):
     uid = models.CharField(unique=True, max_length=32,
-                           verbose_name="课程唯一标识符", editable=False, default=uuid1str)
+                           verbose_name="课程唯一标识符", editable=False, default=uuid1str, primary_key=True)
     code = models.CharField(max_length=255, verbose_name="课程代码")
     name = models.CharField(max_length=255, verbose_name="课程名称")
     year = models.IntegerField(verbose_name="学年")
@@ -83,7 +83,7 @@ class Course(models.Model):
 
 class Assignment(models.Model):
     uid = models.CharField(unique=True, max_length=32,
-                           verbose_name="唯一标识符", editable=False, default=uuid1str)
+                           verbose_name="唯一标识符", editable=False, default=uuid1str, primary_key=True)
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, verbose_name="名称")
     descr_link = models.URLField(max_length=512, verbose_name="作业描述链接")
@@ -107,7 +107,7 @@ class Record(models.Model):
     grade = models.IntegerField(verbose_name="成绩")
     delta = models.IntegerField(verbose_name="成绩差")
     git_commit_id = models.CharField(
-        max_length=40, unique=True, verbose_name="git提交号码")
+        max_length=40, unique=True, verbose_name="git提交号码", primary_key=True)
     grade_time = models.DateTimeField()
     submission_time = models.DateTimeField()
 

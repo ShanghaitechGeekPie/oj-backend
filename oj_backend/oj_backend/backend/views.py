@@ -213,4 +213,4 @@ def course_judging_queue(request, course_id):
     """
     /course/<str:course_id>/queue/
     """
-    return JsonResponse(simplejson.dump({'massage': "Coming soon"}), status=500)
+    return JsonResponse({'massage': "Coming soon"}, status=500)
