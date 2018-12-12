@@ -22,4 +22,4 @@ seperate repo `oj-database`. All motification to database model should be done
 in `oj-database`.
 """
 
-from oj_backend.oj_database.models import *
+from oj_backend.database.models import *
