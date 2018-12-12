@@ -20,10 +20,10 @@ It will return the student's basic information, inluding `uid`, `name`, `email` 
 
 ```json
 {
-    'uid': 'b3b17c00f16511e8b3dfdca9047a0f14',
-    'name': "王大锤",
-    'email': 'wangdch@shanghaitech.edu.cn',
-    'student_id': '19260817'
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "王大锤",
+    "email": "wangdch@shanghaitech.edu.cn",
+    "student_id": "19260817"
 }
 ```
 
@@ -38,14 +38,14 @@ It will return the courses in which the student with this `uid` enrolled in in t
 ```json
 [
     {
-        'uid': 'b3b17c00f16511e8b3dfdca9047a0f14',
-        'name': 'Introduction to Computer Science',
-        'code': 'SI 100C',
-        'semaster': 'fall',
-        'year': 2017,
-        'homepage': 'https://shtech.org/course/si100c/17f/',
-        'instructor':null,
-    },
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "Introduction to Computer Science",
+        "code": "SI 100C",
+        "semaster": "Fall",
+        "year": 2017,
+        "homepage": "https://shtech.org/course/si100c/17f/",
+        "instructor":["Hao Chen", "Soren Sch"]
+    }
 ]
 ```
 
@@ -55,6 +55,19 @@ Supported method: `GET`
 
 Registered at `/student/<str:id>/course/<str:course_id>` and `course/<str:course_id>/`.
 
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "Homework1: Postfix Calculator",
+        "deadline":  157000000,
+        "release_date": 157000000,
+        "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+    }
+]
+```
+
 ### Student's submission history
 
 Supported method: `GET`
@@ -63,17 +76,55 @@ Registered at `/student/<str:id>/course/<str:course_id>/<str:assignment_id>/hist
 
 It provides student's submission history under an assignment.
 
+```json
+[
+    {
+        "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "message": "1. Accepted\n",
+        "score": 10,
+        "overall_score": 10,
+        "submission_time": 157000000,
+        "delta": 0
+    }
+]
+```
+
 ### Assignment Detail
 
 Supported method: `GET`
 
 Registered at `/course/<str:course_id>/<str:assignment_id>/`
 
+```json
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "Homework1: Postfix Calculator",
+        "deadline":  157000000,
+        "release_date": 157000000,
+        "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+    }
+```
+
 ### Assignment Scoreboard
 
 Supported method: `GET`
 
 Registerd at `/course/<str:course_id>/<str:assignment_id>/scores/`
+
+```json
+[
+    {
+        "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "nickname": "hammerLi",
+        "score": 10,
+        "overall_score": 10,
+        "submission_time": 157000000,
+        "delta": 0
+    }
+]
+```
 
 ## Lisence
 
