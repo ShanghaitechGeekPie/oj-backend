@@ -12,12 +12,12 @@ Deploying using `Docker` is recommended. Make sure you set the following environ
 
 
 environment variable | description | example
----|---
+---|---|---|
 `OJBN_DB_HOST` | the host where the database is hosted. | `localhost`
 `OJBN_DB_NAME` | the database name. | `ojdb`
 `OJBN_DB_USER` | the user used to acssess the database. | `geekpie`
 `OJBN_DB_PASSWD` | the database password for the given user. | `gouliguojiashengsiyi`
-`'OJBN_HOSTNAME'` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
+`OJBN_HOSTNAME` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
 
 ## API Schema
 
