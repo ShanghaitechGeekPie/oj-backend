@@ -15,105 +15,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+"""
+Please be NOTE:
+In order to share the same ORM with `oj-scheduler`, all models are moved to a
+seperate repo `oj-database`. All motification to database model should be done
+in `oj-database`.
+"""
 
-from django.db import models
-from django.contrib.auth.models import User as authUser
-import uuid
-
-
-def uuid1str():
-    return uuid.uuid1().hex
-
-
-class User(models.Model):
-    auth_user = models.OneToOneField(authUser, on_delete=models.CASCADE)
-    uid = models.CharField(unique=True, max_length=32,
-                           verbose_name="用户标识符", editable=False, default=uuid1str, primary_key=True)
-    email = models.EmailField(verbose_name="电子邮箱", unique=True)
-    name = models.CharField(max_length=255, verbose_name="姓名")
-    rsa_pub_key = models.FileField(verbose_name="SSH 公钥")
-    disabled = models.BooleanField(verbose_name="禁用", default=False)
-
-    class Meta:
-        app_label = 'oj_backend'
-
-
-class Student(User):
-    student_id = models.CharField(max_length=255, verbose_name="学号")
-    nickname = models.CharField(max_length=255, verbose_name="昵称")
-
-    class Meta:
-        ordering = ['student_id']
-        app_label = 'oj_backend'
-
-    def __str__(self):
-        return "{}[{}]‘{}’<{}>".format(self.name, self.student_id, self.nickname, self.email)
-
-
-class Instructor(User):
-
-    class Meta:
-        ordering = ['uid']
-        app_label = 'oj_backend'
-
-    def __str__(self):
-        return "{}<{}>".format(self.name, self.email)
-
-
-class Course(models.Model):
-    uid = models.CharField(unique=True, max_length=32,
-                           verbose_name="课程唯一标识符", editable=False, default=uuid1str, primary_key=True)
-    code = models.CharField(max_length=255, verbose_name="课程代码")
-    name = models.CharField(max_length=255, verbose_name="课程名称")
-    year = models.IntegerField(verbose_name="学年")
-    semaster = models.CharField(max_length=255, verbose_name="学期")
-    homepage = models.URLField(max_length=512, verbose_name="课程主页")
-    instructor = models.ManyToManyField(
-        Instructor)
-    students = models.ManyToManyField(
-        Student)
-
-    class Meta:
-        ordering = ['code', 'year', 'semaster']
-        app_label = 'oj_backend'
-
-    def __str__(self):
-        return "{}: {}({})".format(self.code, self.name, self.semaster)
-
-
-class Assignment(models.Model):
-    uid = models.CharField(unique=True, max_length=32,
-                           verbose_name="唯一标识符", editable=False, default=uuid1str, primary_key=True)
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    name = models.CharField(max_length=255, verbose_name="名称")
-    descr_link = models.URLField(max_length=512, verbose_name="作业描述链接")
-    grade = models.FloatField(verbose_name="总成绩")
-    deadline = models.DateTimeField(verbose_name="截止日期")
-    release_date = models.DateTimeField(verbose_name="发布日期")
-
-    class Meta:
-        ordering = ['release_date', 'deadline']
-        app_label = 'oj_backend'
-
-    def __str__(self):
-        return "{} - {} <{}>".format(self.course, self.name, self.descr_link)
-
-
-class Record(models.Model):
-    student = models.ForeignKey(
-        Student, on_delete=models.CASCADE)
-    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
-    massage = models.FileField(verbose_name="返回消息")
-    grade = models.IntegerField(verbose_name="成绩")
-    delta = models.IntegerField(verbose_name="成绩差")
-    git_commit_id = models.CharField(
-        max_length=40, unique=True, verbose_name="git提交号码", primary_key=True)
-    grade_time = models.DateTimeField()
-    submission_time = models.DateTimeField()
-
-    class Meta:
-        ordering = ['grade_time']
-        app_label = 'oj_backend'
-
-    def __str__(self):
-        return "{} - {}".format(self.grade_time, self.git_commit_id)
+from oj_backend.oj_database.models import *

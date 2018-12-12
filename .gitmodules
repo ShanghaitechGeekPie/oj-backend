@@ -1,0 +1,6 @@
+[submodule "oj_backend/oj_backend/oj-database"]
+	path = oj_backend/oj_backend/oj-database
+	url = git@github.com:ShanghaitechGeekPie/oj-database.git
+[submodule "oj_backend/oj_backend/oj_database"]
+	path = oj_backend/oj_backend/oj_database
+	url = git@github.com:ShanghaitechGeekPie/oj-database.git

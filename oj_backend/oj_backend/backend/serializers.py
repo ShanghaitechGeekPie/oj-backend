@@ -25,10 +25,20 @@ class StudentBasicInfoSerializer(serializers.ModelSerializer):
         fields = ('uid', 'email', 'name', 'student_id')
 
 
+class InstructorSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Instructor
+        fields = ('name')
+
+
 class StudentCoursesSerializer(serializers.ModelSerializer):
+    #instructors = InstructorSerializer(many=True, read_only=True)
+
     class Meta:
         model = Course
-        fields = ('uid', 'name', 'year', 'semaster', 'homepage', 'instructor', 'code')
+        fields = ('uid', 'name', 'year', 'semaster',
+                  'homepage', 'instructor', 'code')
 
 
 class StudentAssignmentSerializer(serializers.ModelSerializer):
@@ -56,4 +66,5 @@ class ScoreBoardSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ('student_nickname', 'overall_score', 'score', 'submission_time', 'delta')
+        fields = ('student_nickname', 'overall_score',
+                  'score', 'submission_time', 'delta')
