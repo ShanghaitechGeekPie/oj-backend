@@ -4,6 +4,21 @@
 
 This part provides a RESTful API of user management, course/assignment details for the GeekPie OJ Project. This project is devleloped using `Python 3.7`, ` Django 2.1.3` and also the latest version of `Django RESTful Framework` directly cloned from GitHub.
 
+## Deploy
+
+This project use `MySQL` as its database. Before installing, make sure you has an accessiable `MySQL` server. Also, this project is designed to work with other micro-service to provide a git-based online programming homework grading system.
+
+Deploying using `Docker` is recommended. Make sure you set the following environment variables correctly before staring the service.
+
+
+environment variable | description | example
+---|---
+`OJBN_DB_HOST` | the host where the database is hosted. | `localhost`
+`OJBN_DB_NAME` | the database name. | `ojdb`
+`OJBN_DB_USER` | the user used to acssess the database. | `geekpie`
+`OJBN_DB_PASSWD` | the database password for the given user. | `gouliguojiashengsiyi`
+`'OJBN_HOSTNAME'` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
+
 ## API Schema
 
 ### User Login/Logout
