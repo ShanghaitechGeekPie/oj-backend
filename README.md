@@ -23,9 +23,11 @@ environment variable | description | example
 
 ### User Login/Logout
 
-Registered at `/student/login` and `/student/logout` respectively. Users are required to login in order to access any API.
+Registered at `/login` and `/logout` respectively. Users are required to login in order to access any API.
 
-### Basic User Information
+### For student
+
+#### Student's Basic Information
 
 Supported method: `POST`, `GET`
 
@@ -38,11 +40,12 @@ It will return the student's basic information, inluding `uid`, `name`, `email` 
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "王大锤",
     "email": "wangdch@shanghaitech.edu.cn",
-    "student_id": "19260817"
+    "student_id": "19260817",
+    "rsa_pub_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwnExnO3zHIE16iR00SlZXSX468auyeGG7Vp2U5NRVdxXeeE1/Nn7HAWDzgB0Q8XNqcgkiobpBiCVvRO/H4tFi...."
 }
 ```
 
-### User Courses List
+#### Student's Courses List
 
 Supported method: `GET`
 
@@ -59,35 +62,18 @@ It will return the courses in which the student with this `uid` enrolled in in t
         "semaster": "Fall",
         "year": 2017,
         "homepage": "https://shtech.org/course/si100c/17f/",
-        "instructor":["Hao Chen", "Soren Sch"]
+        "instructor":["b3b17c00f16511e8b3dfdca9047a0f14", "b3b17c00f16511e8b3dfdca9047a0f14"]
     }
 ]
 ```
 
-### Course Assignment List
+#### Student's submission history
+
+This API is accessiable by instructor.
 
 Supported method: `GET`
 
-Registered at `/student/<str:id>/course/<str:course_id>` and `course/<str:course_id>/`.
-
-```json
-[
-    {
-        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "name": "Homework1: Postfix Calculator",
-        "deadline":  157000000,
-        "release_date": 157000000,
-        "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
-    }
-]
-```
-
-### Student's submission history
-
-Supported method: `GET`
-
-Registered at `/student/<str:id>/course/<str:course_id>/<str:assignment_id>/history/`.
+Registered at `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`.
 
 It provides student's submission history under an assignment.
 
@@ -105,13 +91,16 @@ It provides student's submission history under an assignment.
 ]
 ```
 
-### Assignment Detail
+### For Course
+
+#### Course's Assignment List
 
 Supported method: `GET`
 
-Registered at `/course/<str:course_id>/<str:assignment_id>/`
+Registered at `course/<str:course_id>/assignment/`.
 
 ```json
+[
     {
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
@@ -120,25 +109,260 @@ Registered at `/course/<str:course_id>/<str:assignment_id>/`
         "release_date": 157000000,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
     }
+]
 ```
 
-### Assignment Scoreboard
+#### Assignment Detail
 
 Supported method: `GET`
 
-Registerd at `/course/<str:course_id>/<str:assignment_id>/scores/`
+Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "Homework1: Postfix Calculator",
+    "deadline":  157000000,
+    "release_date": 157000000,
+    "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+}
+```
+
+#### Assignment Scoreboard
+
+This API is accessiable by instructor.
+
+Supported method: `GET`
+
+Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
 
 ```json
 [
     {
-        "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "nickname": "hammerLi",
+        "nickname": "hammerWang",
         "score": 10,
         "overall_score": 10,
         "submission_time": 157000000,
         "delta": 0
     }
 ]
+```
+
+#### Intructor's basic information
+
+Supported method: `GET`
+
+Registered at `/course/<str:course_id>/instructor/<str:instr_id>/`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "Keyi Yuan",
+    "email": "weidaxz@shanghaitech.edu.cn"
+}
+```
+
+
+### For Instructor
+
+NOTE: this part has not been fully implmented yet.
+
+#### Course list
+
+Supported method: `POST`, `GET`
+
+Registered at `/course/`.
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "Introduction to Computer Science",
+        "code": "SI 100C",
+        "semaster": "Fall",
+        "year": 2017,
+        "homepage": "https://shtech.org/course/si100c/17f/",
+        "instructor":["b3b17c00f16511e8b3dfdca9047a0f14", "b3b17c00f16511e8b3dfdca9047a0f14"]
+    }
+]
+```
+
+
+#### Course basic information
+
+Supported method: `POST`, `GET`, `DELETE`
+
+Registered at `/course/<str:id>`.
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "Introduction to Computer Science",
+    "code": "SI 100C",
+    "semaster": "Fall",
+    "year": 2017,
+    "homepage": "https://shtech.org/course/si100c/17f/",
+    "instructor":["b3b17c00f16511e8b3dfdca9047a0f14", "b3b17c00f16511e8b3dfdca9047a0f14"]
+}
+```
+
+#### Course students list
+
+Supported method: `POST`, `GET`
+
+Registered at `/course/<str:id>/students/`.
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "王大锤",
+        "email": "wangdch@shanghaitech.edu.cn",
+        "student_id": "19260817",
+    }
+]
+```
+
+#### Course student
+
+Supported method: `POST`, `GET`, `DELETE`
+
+Registered at `/course/<str:id>/students/<id:uid>`.
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "王大锤",
+    "email": "wangdch@shanghaitech.edu.cn",
+    "student_id": "19260817",
+}
+```
+
+#### Course instrctors list
+
+Supported method: `POST`, `GET`
+
+Registered at `/course/<str:id>/instructor/`
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "Keyi Yuan",
+        "email": "weidaxz@shanghaitech.edu.cn"
+    }
+]
+```
+
+#### Course instructor
+
+Supported method: `GET`, `POST`, `DELETE`
+
+Registered at `/course/<str:id>/instructor/<str:uid>`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "Keyi Yuan",
+    "email": "weidaxz@shanghaitech.edu.cn"
+}
+```
+
+#### Course assignments list
+
+Supported method: `GET`, `POST`
+
+Registered at `/course/<str:id>/assignment/`
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "name": "Homework1: Postfix Calculator",
+        "deadline":  157000000,
+        "release_date": 157000000,
+        "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+    }
+]
+```
+
+TODO: export all assignments.
+
+#### Course assignment
+
+Supported method: `GET`, `POST`, `DELETE`
+
+Registered at `/course/<str:id>/assignment/<str:uid>`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "Homework1: Postfix Calculator",
+    "deadline":  157000000,
+    "release_date": 157000000,
+    "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+}
+```
+
+#### Course judgers list
+
+Supported method: `GET`, `POST`
+
+Registered at `/course/<str:id>/judger/`
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    }
+]
+```
+
+#### Course judger
+
+Supported method: `GET`, `POST`, `DELETE`
+
+Registered at `/course/<str:id>/judger/<str:uid>`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+}
+```
+
+#### Judgers list
+
+Suppoerted method: `GET`, `POST`
+
+Registered at `/judger/`
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "host": "10.19.171.56:443",
+        "cert": "thisisthecert",
+        "max_job": 4
+    }
+]
+```
+
+#### Judger
+
+Supported method: `GET`, `POST`, `DELETE`
+
+Registered at `/judger/<str:uid>`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "host": "10.19.171.56:443",
+    "cert": "thisisthecert",
+    "max_job": 4
+}
 ```
 
 ## Lisence
