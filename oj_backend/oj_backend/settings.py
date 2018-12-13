@@ -99,7 +99,7 @@ DATABASES = {
         'NAME': os.environ['OJBN_DB_NAME'],
         'USER': os.environ['OJBN_DB_USER'],
         'PASSWORD': os.environ['OJBN_DB_PASSWD'],
-        'HOST': os.environ['OJBN_DB_HOST'],   # Or an IP Address that your DB is hosted on
+        'HOST': os.environ['OJBN_DB_HOST'],
         'PORT': '3306',
     }
 }
@@ -145,5 +145,5 @@ STATIC_URL = '/static/'
 
 # override the auth mode.
 
-LOGIN_URL = '/student/login'
+LOGIN_URL = '/login'
 LOGIN_REDIRECT_URL = '/'
