@@ -11,6 +11,4 @@ RUN apt-get update && \
 COPY . /app
 WORKDIR /app
 
-RUN git submodule init && git submodule update
-
 CMD bash loader.sh
