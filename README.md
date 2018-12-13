@@ -149,6 +149,24 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
 ]
 ```
 
+#### Pending assignment list
+
+Supported method: `GET`.
+
+Registerd at `/course/<str:course_id>/queue`.
+
+```json
+[
+    {
+        "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "submission_time": 157000000,
+        "submitter": "hammerWang"
+    }
+]
+
+```
+
 #### Intructor's basic information
 
 Supported method: `GET`
