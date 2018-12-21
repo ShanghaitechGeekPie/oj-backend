@@ -16,24 +16,50 @@
 # under the License.
 
 from rest_framework import serializers
-from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record
+from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judger, pendingAssignment
+
+
+class StudentInfoSerializer(serializers.ModelSerializer):
+    """
+    Returns a student's information including `name`, `email`, `student_id`,
+    `rsa_pub_key` and `nickname`.
+    """
+    class Meta:
+        model = Student
+        fields = ('uid', 'email', 'name', 'student_id',
+                  'nickname', 'rsa_pub_key')
 
 
 class StudentBasicInfoSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Student
-        fields = ('uid', 'email', 'name', 'student_id', 'rsa_pub_key')
-
-
-class InstructorSerializer(serializers.ModelSerializer):
-
+    """
+    Returns a student's basic information including `name`, `email`, `student_id`.
+    """
     class Meta:
         model = Instructor
-        fields = ('name')
+        fields = ('uid', 'name', 'email', 'student_id')
 
 
-class StudentCoursesSerializer(serializers.ModelSerializer):
-    #instructors = InstructorSerializer(many=True, read_only=True)
+class InstructorInfoSerializer(serializers.ModelSerializer):
+    """
+    Returns a instructor's all information.
+    """
+    class Meta:
+        model = Instructor
+        feilds = ('uid', 'name', 'email', 'rsa_pub_key')
+
+
+class InstructorBasicInfoSerializer(serializers.ModelSerializer):
+    """
+    Returns a instructor's `name` and `email`. used in CoursesSerialier and
+    other APIs that requires privacy.
+    """
+    class Meta:
+        model = Instructor
+        fields = ('uid', 'name', 'email')
+
+
+class CoursesSerializer(serializers.ModelSerializer):
+    instructor = InstructorBasicInfoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
@@ -41,23 +67,23 @@ class StudentCoursesSerializer(serializers.ModelSerializer):
                   'homepage', 'instructor', 'code')
 
 
-class StudentAssignmentSerializer(serializers.ModelSerializer):
-    course_uid = serializers.CharField(source='course.uid')
+class AssignmentSerializer(serializers.ModelSerializer):
+    #course_uid = serializers.CharField(source='course.uid')
 
     class Meta:
         model = Assignment
-        fields = ('uid', 'course_uid', 'name', 'descr_link',
-                  'grade', 'deadline', 'release_date')
+        fields = ('uid', 'course', 'name', 'descr_link',
+                  'grade', 'deadline', 'release_date', 'state')
 
 
-class StudentSubmissionRecordSerializer(serializers.ModelSerializer):
-    assignment_id = serializers.CharField(source='assginment.uid')
+class SubmissionRecordSerializer(serializers.ModelSerializer):
+    #assignment_id = serializers.CharField(source='assginment.uid')
     overall_score = serializers.IntegerField(source='assignment.grade')
 
     class Meta:
         model = Record
         fields = ('git_commit_id', 'grade', 'overall_score',
-                  'message', 'assignment_id', 'delta')
+                  'message', 'assignment', 'delta')
 
 
 class ScoreBoardSerializer(serializers.ModelSerializer):
@@ -68,3 +94,23 @@ class ScoreBoardSerializer(serializers.ModelSerializer):
         model = Record
         fields = ('student_nickname', 'overall_score',
                   'score', 'submission_time', 'delta')
+
+
+class JudgerSerializer(serializers.ModelSerializer):
+    """
+    Returns information of a judger.
+    """
+    class Meta:
+        model = Judger
+        fields = ('uid', 'host', 'max_job')
+
+
+class pendingAssignmentSerializer(serializers.ModelSerializer):
+    """
+    Returns information of an assignment in queue.
+    """
+    assignment = AssignmentSerializer(read_only=True)
+
+    class Meta:
+        model = pendingAssignment
+        fields = ('timestamp', 'assigenment')

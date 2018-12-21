@@ -18,6 +18,7 @@ environment variable | description | example
 `OJBN_DB_USER` | the user used to acssess the database. | `geekpie`
 `OJBN_DB_PASSWD` | the database password for the given user. | `gouliguojiashengsiyi`
 `OJBN_HOSTNAME` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
+`OJBN_GITLAB_ADDR` | the address where the gitlab middleware is hosted. | `localhost:8080`
 
 ## API Schema
 
@@ -39,6 +40,7 @@ It will return the student's basic information, inluding `uid`, `name`, `email` 
 {
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "王大锤",
+    "nickname": "hammerWang",
     "email": "wangdch@shanghaitech.edu.cn",
     "student_id": "19260817",
     "rsa_pub_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwnExnO3zHIE16iR00SlZXSX468auyeGG7Vp2U5NRVdxXeeE1/Nn7HAWDzgB0Q8XNqcgkiobpBiCVvRO/H4tFi...."
@@ -91,6 +93,28 @@ It provides student's submission history under an assignment.
 ]
 ```
 
+#### Student's submission history
+
+This API is accessiable by instructor.
+
+Supported method: `GET`
+
+Registered at `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:commit_id>`.
+
+It provides student's one specific submission under an assignment.
+
+```json
+    {
+        "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "message": "1. Accepted\n",
+        "score": 10,
+        "overall_score": 10,
+        "submission_time": 157000000,
+        "delta": 0
+    }
+```
+
 ### For Course
 
 #### Course's Assignment List
@@ -130,8 +154,6 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
 ```
 
 #### Assignment Scoreboard
-
-This API is accessiable by instructor.
 
 Supported method: `GET`
 
@@ -186,11 +208,26 @@ Registered at `/course/<str:course_id>/instructor/<str:instr_id>/`
 
 NOTE: this part has not been fully implmented yet.
 
-#### Course list
+#### Instructor's Basic Information
 
 Supported method: `POST`, `GET`
 
-Registered at `/course/`.
+Registered at `/instructor/<str:id>/` where id is the uid of the student in the database.
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "name": "王大锤",
+    "email": "wangdch@shanghaitech.edu.cn",
+    "rsa_pub_key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDwnExnO3zHIE16iR00SlZXSX468auyeGG7Vp2U5NRVdxXeeE1/Nn7HAWDzgB0Q8XNqcgkiobpBiCVvRO/H4tFi...."
+}
+```
+
+#### Instructor's Course list
+
+Supported method: `POST`, `GET`
+
+Registered at `/instructor/<str:uid>/course/`.
 
 ```json
 [

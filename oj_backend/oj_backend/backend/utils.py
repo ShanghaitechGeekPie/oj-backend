@@ -24,12 +24,15 @@ try:
     from django.utils import simplejson
 except:
     import simplejson
-
 from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record
 
 
 def student_test(request, student):
     return (request.user.student.uid == student)
+
+
+def insturctor_test(request, instr):
+    return (request.user.insturctor.uid == instr)
 
 
 def student_taking_course_test(request, course):
@@ -53,9 +56,41 @@ def student_active_test(request):
     return not request.user.student.disabled
 
 
+def instructor_giving_course_test(request, course):
+    this_instr = request.user.instructor
+    if this_instr:
+        this_instr_courses = this_instr.course_set.get(uid=course)
+        return len(this_instr_courses) != 0
+    return False
+
+
+def create_assignment(course_id):
+    pass
+
+
+def regrade_assignment(assignment_id, course_id):
+    pass
+
+
+def return_http_200():
+    return JsonResponse({'message': 'HTTP 200 OK'}, status=200)
+
+
 def return_http_401():
     return JsonResponse({'message': 'HTTP 401 Unauthorized'}, status=401)
 
 
 def return_http_405():
     return JsonResponse({'message': 'HTTP 405 Not Allowed'}, status=405)
+
+
+def return_http_404():
+    return JsonResponse({'message': 'HTTP 404 Not Found'}, status=404)
+
+
+def return_http_403():
+    return JsonResponse({'message': 'HTTP 403 Forbidden'}, status=403)
+
+
+def return_http_400():
+    return JsonResponse({'message': 'HTTP 400 Bad Request'}, status=400)
