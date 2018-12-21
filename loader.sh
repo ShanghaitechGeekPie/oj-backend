@@ -15,7 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-cd oj_backend
+cd app
 
 python3 manage.py migrate
 
