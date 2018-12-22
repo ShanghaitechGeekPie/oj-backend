@@ -22,4 +22,4 @@ separate repo `oj-database`. All modification to database model should be done
 in `oj-database`.
 """
 
-from oj_database.models import *
+from oj_database.oj_database.models import *
