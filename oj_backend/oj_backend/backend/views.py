@@ -32,7 +32,8 @@ from oj_backend.backend.models import Student, Instructor, Course, Assignment, R
 from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment, return_http_401, return_http_405, return_http_403, return_http_400, return_http_200, return_http_404
 from oj_backend.backend.serializers import *
 
-class studentInfomation(View):
+
+class studentInformation(View):
     """
     Supported method: `POST`, `GET`
 
@@ -61,11 +62,11 @@ class studentInfomation(View):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class insturctorInfomation(View):
+class instructorInformation(View):
     """
     Supported method: `POST`, `GET`
 
-    Registered at `/insturctor/<str:id>/` where id is the uid of the student in
+    Registered at `/instructor/<str:id>/` where id is the uid of the student in
     the database.
     """
 
@@ -146,7 +147,7 @@ class instructorCourseList(View):
     """
     Supported method: `GET`
 
-    Registered at `/insturctor/<str:id>/course/`.
+    Registered at `/instructor/<str:id>/course/`.
 
     It will return the courses in which the student with this uid enrolled in.
     """
@@ -168,7 +169,7 @@ class studentSubmissionList(View):
     `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`
 
     It provides student's submission history under an assignment. This API
-    is accessiable by instructor.
+    is accessible by instructor.
     """
 
     def get(self, request, id, course_id, assignment_id):
@@ -190,7 +191,7 @@ class studentSubmissionDetail(View):
     `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:commit_id>/`
 
     It provides student's submission history under an assignment. This API
-    is accessiable by instructor.
+    is accessible by instructor.
     """
 
     def get(self, request, id, course_id, assignment_id, commit_id):
@@ -248,7 +249,7 @@ class courseAssignmentList(View):
         # will be set to `BUILT`, the backend then will instruct the
         # gitlab-middleware to create repo for students and the scheduler will
         # start to accept submission from gitlab-middleware (the scheduler SHOULD
-        # ONLY asscept submissions when state is `BUILT`).
+        # ONLY accept submissions when state is `BUILT`).
         serializer = AssignmentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -319,7 +320,7 @@ class courseAssignment(View):
 
 class assignmentScoreboard(View):
     """
-    This API is accessiable by instructor.
+    This API is accessible by instructor.
 
     Supported method: `GET`
 
@@ -333,6 +334,8 @@ class assignmentScoreboard(View):
         all_records = Record.objects.filter(
             assignment__uid__contains=assignment_id)
         students = this_course.objects.student_set.all()
+        records = None  # Fixes unbound local variable
+        # FIXME NPE if students is empty
         for student in students:
             student_uid = student.uid
             try:
@@ -499,7 +502,7 @@ class courseJudgerList(View):
             return return_http_403()
         this_course = Course.objects.get(uid=id)
         if this_course:
-            judger_list = this_course.juder.all()
+            judger_list = this_course.default_judge.all()
             serializer = JudgerSerializer(judger_list, many=True)
             return JsonResponse(serializer.data, safe=False)
         return return_http_404()
@@ -509,9 +512,9 @@ class courseJudgerList(View):
             return return_http_403()
         this_course = Course.objects.get(uid=id)
         if this_course:
-            judger = Judger.objects.get(uid=request.data['uid'])
+            judger = Judge.objects.get(uid=request.data['uid'])
             if judger:
-                this_course.judger.add(judger)
+                this_course.default_judge.add(judger)
                 serializer = JudgerSerializer(judger, many=True)
                 return JsonResponse(serializer.data, safe=False)
             return return_http_404()
@@ -529,7 +532,7 @@ class courseJudger(View):
             return return_http_403()
         this_course = Course.objects.get(uid=id)
         if this_course:
-            judger = this_course.juder.get(uid=id)
+            judger = this_course.default_judge.get(uid=id)
             serializer = JudgerSerializer(judger)
             return JsonResponse(serializer.data, safe=False)
         return return_http_404()
@@ -539,7 +542,7 @@ class courseJudger(View):
             return return_http_403()
         this_course = Course.objects.get(uid=id)
         if this_course:
-            judger = this_course.juder.get(uid=uid)
+            judger = this_course.default_judge.get(uid=uid)
             if judger:
                 this_course.judeger.remove(judger)
                 serializer = JudgerSerializer(judger)
@@ -551,7 +554,7 @@ class courseJudger(View):
 
 class judgerList(View):
     """
-    Suppoerted method: `GET`, `POST`
+    Supported method: `GET`, `POST`
 
     Registered at `/judger/`
     """
