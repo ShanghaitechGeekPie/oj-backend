@@ -9,7 +9,7 @@ RUN apt-get update && \
 RUN python3 -m pip install gunicorn django mysqlclient simplejson requests djangorestframework
 
 COPY oj_database /db
-RUN python3 -m pip install db
+RUN python3 -m pip install /db
 
 COPY loader.sh /
 COPY oj_backend /app
