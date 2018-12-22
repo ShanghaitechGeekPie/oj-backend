@@ -16,7 +16,7 @@
 # under the License.
 
 from rest_framework import serializers
-from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judger, pendingAssignment
+from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge, PendingAssignment
 
 
 class StudentInfoSerializer(serializers.ModelSerializer):
@@ -101,7 +101,7 @@ class JudgerSerializer(serializers.ModelSerializer):
     Returns information of a judger.
     """
     class Meta:
-        model = Judger
+        model = Judge
         fields = ('uid', 'host', 'max_job')
 
 
@@ -112,5 +112,5 @@ class pendingAssignmentSerializer(serializers.ModelSerializer):
     assignment = AssignmentSerializer(read_only=True)
 
     class Meta:
-        model = pendingAssignment
+        model = PendingAssignment
         fields = ('timestamp', 'assigenment')

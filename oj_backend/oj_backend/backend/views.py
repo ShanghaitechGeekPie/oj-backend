@@ -365,7 +365,7 @@ class pendingAssignmentList(View):
         assignment_name = this_assignment.name
         course_assignment_url = mw_connector.get_gitlab_student_repo(
             '', course_name, assignment_name)
-        all_pending_assignment = pendingAssignment.objects.filter(
+        all_pending_assignment = PendingAssignment.objects.filter(
             upstream__startswith=course_assignment_url)
         serializer = pendingAssignmentSerializer(
             all_pending_assignment, many=True)
