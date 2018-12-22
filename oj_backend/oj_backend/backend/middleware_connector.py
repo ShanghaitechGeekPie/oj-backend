@@ -15,15 +15,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# TODO: implement this part accordding to interfaces provided by
-# `oj-gitlab-middleware`.
+# TODO: implement this part accordding to interfaces provided by `oj-gitlab-middleware`.
+
 import requests
 import os
 
+OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
+OJBN_HOSTNAME = os.environ['OJBN_HOSTNAME']
+
 def get_gitlab_student_repo(student, course, assignment):
         return "{}/{}/{}-{}".format("https://oj.geekpie.club", course, assignment, student)
-
-OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
 
 def update_user(email=None, ssh_pub_key=None, uid=None):
     """
@@ -58,9 +59,9 @@ def create_course(course=None, instr=None):
         instr = [instr]
 
 
-def get_repo(user=None, course=None, assignemnt=None):
+def get_repo(user=None, course=None, assignment=None):
     """
-    `get_repo(user=None, course=None, assignemnt=None)`
+    `get_repo(user=None, course=None, assignment=None)`
 
     TBD
     """

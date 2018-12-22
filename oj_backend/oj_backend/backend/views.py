@@ -39,7 +39,7 @@ class studentInfomation(View):
     Registered at `/student/<str:id>/` where id is the uid of the student in
     the database.
 
-    It will return the student's basic information, inluding `uid`, `name`,
+    It will return the student's basic information, including `uid`, `name`,
     `email` and `student_id`.
     """
 
@@ -323,7 +323,7 @@ class assignmentScoreboard(View):
 
     Supported method: `GET`
 
-    Registerd at `/course/<str: course_id>/assignment/<str: assignment_id>/scores/`
+    Registered at `/course/<str: course_id>/assignment/<str: assignment_id>/scores/`
     """
 
     def get(self, request, course_id, assignment_id):
@@ -353,7 +353,7 @@ class pendingAssignmentList(View):
     """
     Supported method: `GET`.
 
-    Registerd at `/course/<str:course_id>/queue`.
+    Registered at `/course/<str:course_id>/queue`.
     """
 
     def get(self, request, course_id, assignment_id):
@@ -365,10 +365,10 @@ class pendingAssignmentList(View):
         assignment_name = this_assignment.name
         course_assignment_url = mw_connector.get_gitlab_student_repo(
             '', course_name, assignment_name)
-        all_pending_assignemnt = pendingAssignment.objects.filter(
+        all_pending_assignment = pendingAssignment.objects.filter(
             upstream__startswith=course_assignment_url)
         serializer = pendingAssignmentSerializer(
-            all_pending_assignemnt, many=True)
+            all_pending_assignment, many=True)
         return JsonResponse(serializer.data, safe=False)
 
 
@@ -382,7 +382,7 @@ class courseInstructorList(View):
     def get(self, request, course_id):
         if not (student_taking_course_test(request, course_id) or instructor_giving_course_test(request, course_id)):
             return return_http_403()
-        all_instr = Course.ojects.get(uid=course_id).instructor.all()
+        all_instr = Course.objects.get(uid=course_id).instructor.all()
         serializer = InstructorBasicInfoSerializer(all_instr, many=True)
         return JsonResponse(serializer.data, safe=False)
 
@@ -407,7 +407,7 @@ class courseInstructorsBasicInfo(View):
     def get(self, request, course_id, instr_id):
         if not (student_taking_course_test(request, course_id) or instructor_giving_course_test(request, course_id)):
             return return_http_403()
-        course = Course.ojects.get(uid=course_id)
+        course = Course.objects.get(uid=course_id)
         if not course:
             return return_http_404()
         instr = course.instructor.get(uid=instr_id)
@@ -442,8 +442,8 @@ class courseStudentList(View):
         course = Course.objects.get(uid=id)
         if not course:
             return return_http_404()
-        stduent_list = course.student.all()
-        serializer = StudentBasicInfoSerializer(stduent_list, many=False)
+        student_list = course.student.all()
+        serializer = StudentBasicInfoSerializer(student_list, many=False)
         return JsonResponse(serializer.data, safe=False)
 
     def post(self, request, id):
@@ -470,9 +470,9 @@ class courseStudentInfo(View):
         course = Course.objects.get(uid=id)
         if not course:
             return return_http_404()
-        stduent = course.student.get(uid=uid)
-        if stduent:
-            serializer = StudentBasicInfoSerializer(stduent)
+        student = course.student.get(uid=uid)
+        if student:
+            serializer = StudentBasicInfoSerializer(student)
             return JsonResponse(serializer.data, safe=False)
         return return_http_400()
 
@@ -481,8 +481,8 @@ class courseStudentInfo(View):
             return return_http_403()
         this_course = Course.objects.get(uid=id)
         this_student = Student.objects.get(uid=uid)
-        if this_course and this_course.stduent.get(uid=uid):
-            this_course.stduent.remove(this_student)
+        if this_course and this_course.student.get(uid=uid):
+            this_course.student.remove(this_student)
             return JsonResponse(StudentBasicInfoSerializer(this_student).data, safe=False)
         return return_http_404()
 

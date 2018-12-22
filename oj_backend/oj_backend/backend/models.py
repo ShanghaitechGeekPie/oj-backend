@@ -18,7 +18,7 @@
 """
 Please be NOTE:
 In order to share the same ORM with `oj-scheduler`, all models are moved to a
-seperate repo `oj-database`. All motification to database model should be done
+separate repo `oj-database`. All modification to database model should be done
 in `oj-database`.
 """
 
