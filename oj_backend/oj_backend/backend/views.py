@@ -28,7 +28,7 @@ except:
     import simplejson
 
 import oj_backend.backend.middleware_connector as mw_connector
-from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judger, pendingAssignment
+from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge, PendingAssignment
 from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment, return_http_401, return_http_405, return_http_403, return_http_400, return_http_200, return_http_404
 from oj_backend.backend.serializers import *
 
