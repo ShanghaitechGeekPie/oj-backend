@@ -104,8 +104,7 @@ class courseBasicInfo(View):
         return JsonResponse(serializer.data, safe=False)
 
     def post(self, request, id):
-        if not (student_taking_course_test(request, id)
-                and instructor_giving_course_test(request, id)):
+        if not instructor_giving_course_test(request, id):
             return return_http_403()
         serializer = CoursesSerializer(data=request.data)
         if serializer.is_valid():
@@ -114,8 +113,7 @@ class courseBasicInfo(View):
         return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
-        if not (student_taking_course_test(request, id)
-                and instructor_giving_course_test(request, id)):
+        if not instructor_giving_course_test(request, id):
             return return_http_403()
         course = Course.objects.get(uid=id)
         if course:
