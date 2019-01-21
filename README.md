@@ -123,6 +123,8 @@ Supported method: `GET`
 
 Registered at `course/<str:course_id>/assignment/`.
 
+`overall_score` is the score the student get in his/she last commit.
+
 ```json
 [
     {
@@ -131,7 +133,9 @@ Registered at `course/<str:course_id>/assignment/`.
         "name": "Homework1: Postfix Calculator",
         "deadline":  157000000,
         "release_date": 157000000,
-        "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+        "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
+        "score": 3.14,
+        "overall_score": 10.0
     }
 ]
 ```
@@ -149,7 +153,9 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
     "name": "Homework1: Postfix Calculator",
     "deadline":  157000000,
     "release_date": 157000000,
-    "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+    "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
+    "score": 3.14,
+    "overall_score": 10.0
 }
 ```
 
@@ -362,11 +368,11 @@ Registered at `/course/<str:id>/assignment/<str:uid>`
 }
 ```
 
-#### Course judgers list
+#### Course judges list
 
 Supported method: `GET`, `POST`
 
-Registered at `/course/<str:id>/judger/`
+Registered at `/course/<str:id>/judge/`
 
 ```json
 [
@@ -376,11 +382,11 @@ Registered at `/course/<str:id>/judger/`
 ]
 ```
 
-#### Course judger
+#### Course judge
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/course/<str:id>/judger/<str:uid>`
+Registered at `/course/<str:id>/judge/<str:uid>`
 
 ```json
 {
@@ -388,11 +394,11 @@ Registered at `/course/<str:id>/judger/<str:uid>`
 }
 ```
 
-#### Judgers list
+#### Judges list
 
 Suppoerted method: `GET`, `POST`
 
-Registered at `/judger/`
+Registered at `/judge/`
 
 ```json
 [
@@ -405,11 +411,11 @@ Registered at `/judger/`
 ]
 ```
 
-#### Judger
+#### Judge
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/judger/<str:uid>`
+Registered at `/judge/<str:uid>`
 
 ```json
 {
@@ -419,6 +425,26 @@ Registered at `/judger/<str:uid>`
     "max_job": 4
 }
 ```
+
+## Interface for internal communication
+
+### Interface with `oj-middleware*`
+
+Supported method: `POST`
+
+Registered at `/internal/subbmission`.
+
+Authorization: TBD
+
+```json
+{
+    "assignment_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "upstream": "git@git.oj.geekpie.club/si100c-17f/hw1-diaozh.git"
+}
+```
+
+
 
 ## Lisence
 
