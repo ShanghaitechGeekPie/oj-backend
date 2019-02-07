@@ -27,11 +27,23 @@ except:
 from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record
 
 
+def get_course_uid_from_path(path):
+    path = path.split("/")
+    for i in range(len(path)):
+        if path[i] == "course" and i+1 < len(path):
+            return path[i+1]
+    return None
+
+
 def student_test(request, student):
+    if not request.user.is_authenticated:
+        return False
     return (request.user.student.uid == student)
 
 
 def insturctor_test(request, instr):
+    if not request.user.is_authenticated:
+        return False
     return (request.user.insturctor.uid == instr)
 
 

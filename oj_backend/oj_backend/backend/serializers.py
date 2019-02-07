@@ -59,7 +59,7 @@ class InstructorBasicInfoSerializer(serializers.ModelSerializer):
 
 
 class CoursesSerializer(serializers.ModelSerializer):
-    instructor = InstructorBasicInfoSerializer(many=True, read_only=True)
+    #instructor = InstructorBasicInfoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course

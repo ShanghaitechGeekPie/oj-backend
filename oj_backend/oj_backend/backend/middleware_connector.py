@@ -19,12 +19,15 @@
 
 import requests
 import os
+import simplejson
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
 OJBN_HOSTNAME = os.environ['OJBN_HOSTNAME']
 
+
 def get_gitlab_student_repo(student, course, assignment):
-        return "{}/{}/{}-{}".format("https://oj.geekpie.club", course, assignment, student)
+    return "{}/{}/{}-{}".format("https://oj.geekpie.club", course, assignment, student)
+
 
 def update_user(email=None, ssh_pub_key=None, uid=None):
     """
@@ -35,6 +38,7 @@ def update_user(email=None, ssh_pub_key=None, uid=None):
     """
     global OJBN_GITLAB_ADDR
     pass
+
 
 def create_repo(user=None, course=None, assignment=None):
     """
@@ -47,6 +51,7 @@ def create_repo(user=None, course=None, assignment=None):
     if isinstance(user, str):
         user = [user]
     return user
+
 
 def create_course(course=None, instr=None):
     """

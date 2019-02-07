@@ -38,7 +38,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('login', views.login),
     path('logout', views.logout),
-    path('student/<str:id>/', views.studentInformation.as_view()),
+    path('student/<str:uid>/', views.studentInformation.as_view()),
     path('student/<str:id>/course/', views.studentCourseList.as_view()),
     path('student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/',
          views.studentSubmissionList.as_view()),

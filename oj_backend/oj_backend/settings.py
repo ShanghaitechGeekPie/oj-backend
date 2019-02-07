@@ -28,6 +28,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import redis
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -104,6 +105,20 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": os.environ['OJBN_REDIS_ADDR'],
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+
+redisConnectionPool = redis.ConnectionPool(
+    connection_class=redis.Connection, max_connections=100, host=os.environ['OJBN_REDIS_HOST'], port=int(os.environ['OJBN_REDIS_PORT']), db=int(os.environ['OJBN_REDIS_DB']))
 
 
 # Password validation

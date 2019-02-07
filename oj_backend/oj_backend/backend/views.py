@@ -15,553 +15,298 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from django.shortcuts import render
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from django.views import View
-from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse
+from rest_framework import status, generics, mixins
 from rest_framework.parsers import JSONParser
-from rest_framework import status
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 try:
     from django.utils import simplejson
 except:
     import simplejson
 
+import redis
+import time
+
 import oj_backend.backend.middleware_connector as mw_connector
-from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge, PendingAssignment
-from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment, return_http_401, return_http_405, return_http_403, return_http_400, return_http_200, return_http_404
+from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment
+from oj_backend.backend.models import *
 from oj_backend.backend.serializers import *
+from oj_backend.backend.permissions import *
+from settings import redisConnectionPool
 
 
-class studentInformation(View):
-    """
-    Supported method: `POST`, `GET`
-
-    Registered at `/student/<str:id>/` where id is the uid of the student in
-    the database.
-
-    It will return the student's basic information, including `uid`, `name`,
-    `email` and `student_id`.
-    """
+class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+    '''
+    `/student/<str:uid>`
+    '''
+    serializer_class = StudentInfoSerializer
+    permission_classes = (userInfoReadWritePermission,)
 
-    def get(self, request, id):
-        if not student_test(request, id):
-            return return_http_403()
+    def get_queryset(self):
+        student_uid = self.kwargs['uid']
+        return Student.objects.get(uid=student_uid)
 
-        student = Student.objects.get(uid=id)
-        serializer = StudentInfoSerializer(student)
-        return JsonResponse(serializer.data, safe=False)
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
-    def post(self, request, id):
-        if not student_test(request, id):
-            return return_http_403()
-        serializer = StudentInfoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
 
-class instructorInformation(View):
-    """
-    Supported method: `POST`, `GET`
+class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
+    '''
+    `/instructor/<str:uid>/`
+    '''
+    serializer_class = InstructorInfoSerializer
+    permission_classes = (userInfoReadWritePermission,)
 
-    Registered at `/instructor/<str:id>/` where id is the uid of the student in
-    the database.
-    """
+    def get_queryset(self):
+        instr_uid = self.kwargs['uid']
+        return Instructor.objects.get(uid=instr_uid)
 
-    def get(self, request, id):
-        if not insturctor_test(request, id):
-            return return_http_403()
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
 
-        instr = Instructor.objects.get(uid=id)
-        serializer = InstructorInfoSerializer(instr)
-        return JsonResponse(serializer.data, safe=False)
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
 
-    def post(self, request, id):
-        if not insturctor_test(request, id):
-            return return_http_403()
 
-        serializer = InstructorInfoSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
+    '''
+    `/student/<str:uid>/course/`
+    '''
+    serializer_class = CoursesSerializer
+    permission_classes = (courseReadWritePermission,)
 
+    def get_queryset(self):
+        student_uid = self.request.user.uid
+        return Course.objects.filter(student__uid=student_uid)
 
-class courseBasicInfo(View):
-    """
-    Supported method: `POST`, `GET`, `DELETE`
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
-    Registered at `/course/<str:id>`.
-    """
 
-    def get(self, request, id):
-        if not student_taking_course_test(request, id):
-            return return_http_403()
-        course = Course.objects.get(uid=id)
-        serializer = CoursesSerializer(course)
-        return JsonResponse(serializer.data, safe=False)
+class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
+    '''
+    `/insturctor/<str:uid>/course/`
+    '''
+    serializer_class = CoursesSerializer
+    permission_classes = (courseReadWritePermission,)
 
-    def post(self, request, id):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        serializer = CoursesSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        instr_uid = self.request.user.uid
+        return Course.objects.filter(instructor__uid=instr_uid)
 
-    def delete(self, request, id):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        course = Course.objects.get(uid=id)
-        if course:
-            resp = JsonResponse(CoursesSerializer(course).data, safe=False)
-            course.delete()
-            return JsonResponse(resp, safe=False)
-        return return_http_400()
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
 
-class studentCourseList(View):
-    """
-    Supported method: `GET`
 
-    Registered at `/student/<str:id>/course/`.
-
-    It will return the courses in which the student with this uid enrolled in.
-    """
-
-    def get(self, request, id):
-        if not student_test(request, id):
-            return return_http_403()
-
-        courses = Course.objects.filter(student__uid__contains=id)
-        serializer = CoursesSerializer(courses, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-class instructorCourseList(View):
-    """
-    Supported method: `GET`
-
-    Registered at `/instructor/<str:id>/course/`.
-
-    It will return the courses in which the student with this uid enrolled in.
-    """
-
-    def get(self, request, id):
-        if not student_test(request, id):
-            return return_http_403()
-
-        courses = Course.objects.filter(instructor__uid__contains=id)
-        serializer = CoursesSerializer(courses, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-class studentSubmissionList(View):
-    """
-    Supported method: `GET`
-
-    Registered at
-    `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`
-
-    It provides student's submission history under an assignment. This API
-    is accessible by instructor.
-    """
-
-    def get(self, request, id, course_id, assignment_id):
-        if not (student_test(request, id)
-                and student_taking_course_test(request, course_id)) \
-                or instructor_giving_course_test(request, course_id):
-            return return_http_403()
-
-        records = Record.objects.filter(
-            assignment__uid__contain=assignment_id, student__uid__contain=id)
-        serializer = SubmissionRecordSerializer(records, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-class studentSubmissionDetail(View):
-    """
-    Supported method: `GET`
-
-    Registered at
-    `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:commit_id>/`
-
-    It provides student's submission history under an assignment. This API
-    is accessible by instructor.
-    """
-
-    def get(self, request, id, course_id, assignment_id, commit_id):
-        if not (student_test(request, id)
-                and student_taking_course_test(request, course_id)) \
-                or instructor_giving_course_test(request, course_id):
-            return return_http_403()
-
-        records = Record.objects.get(git_commit_id=commit_id)
-        if records:
-            serializer = SubmissionRecordSerializer(records)
-            return JsonResponse(serializer.data, safe=False)
-        return return_http_404()
-
-
-class courseAssignmentList(View):
-    """
-    Supported method: `GET`, `POST`
-
-    Registered at `/course/<str:course_id>/assignment/`.
-    """
-
-    def get(self, request, course_id):
-        if not (student_taking_course_test(request, course_id)
-                and instructor_giving_course_test(request, course_id)):
-            return return_http_403()
-
-        assignments = Assignment.objects.filter(
-            course__uid__contains=course_id)
-        serializer = AssignmentSerializer(assignments, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    def post(self, request, course_id):
-        # when posting to this URL. we create a new assignment.
-        if not instructor_giving_course_test(request, course_id):
-            return return_http_403()
-        # Validate input.
-        request.data['state'] = 1
-        # when creating a new assignment, the state is always 1 (see below for detail).
-        # NOTE: Key `state` is an integer, it stores which state of the assignment
-        # creating progress the assignment is in.
-        #
-        # |   state  | integer |
-        # ----------------------
-        # |  CREATED |    1    |
-        # | FINISHED |    2    |
-        # |   BUILT  |    3    |
-        # | DISABLED |    0    |
-        #
-        # When the user creates a new assignment, the backend will set the key of
-        # the new assignment to `CREATED` and instructs the user to finish the
-        # grading script in a certain repo. When user finished, he/she would inform
-        # the backend. The backend then will set it to `FINISHED` and instruct the
-        # image builder to build the grading image. When building finished, the key
-        # will be set to `BUILT`, the backend then will instruct the
-        # gitlab-middleware to create repo for students and the scheduler will
-        # start to accept submission from gitlab-middleware (the scheduler SHOULD
-        # ONLY accept submissions when state is `BUILT`).
-        serializer = AssignmentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            # start creating new assignment.
-            course = Course.objects.get(uid=course_id)
-            course_name = "{}-{}{}".format(course.code.replace(" ", ""),
-                                           course.year, course.semaster)
-            # example course name: SI100C-2017Fall
-            response = mw_connector.create_repo(user=request.user.email, course=course_name, assignment=request['name'])
-            return JsonResponse(response, status=status.HTTP_201_CREATED)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class courseAssignment(View):
-    """
-    Supported method: `GET`, `POST`, `DELETE`
-
-    Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
-    """
-
-    def get(self, request, course_id, assignment_id):
-        if not (student_taking_course_test(request, course_id)
-                and instructor_giving_course_test(request, course_id)):
-            return return_http_403()
-
-        assignments = Assignment.objects.filter(
-            course__uid__contains=course_id, uid__contains=assignment_id)
-        serializer = AssignmentSerializer(assignments)
-        return JsonResponse(serializer.data, safe=False)
-
-    def post(self, request, course_id, assignment_id):
-        """
-        update course info, start a regrade.
-        """
-        if not instructor_giving_course_test(request, course_id):
-            return return_http_403()
-
-        # Validate input.
-        this_assignment = Assignment.objects.filter(
-            course__uid__contains=course_id, uid__contains=assignment_id)
-        if this_assignment:
-            if this_assignment.state == 1:
-                if request.data['state'] != 1 or request.data['state'] != 2:
-                    return return_http_400()
-            elif request.data['state'] != this_assignment.state:
-                return return_http_400()
-        else:
-            return return_http_400()
-
-        serializer = AssignmentSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            # TODO: start to build image or start a regrade.
-            return JsonResponse(serializer.data, status=201)
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, course_id, assignment_id):
-        if not instructor_giving_course_test(request, course_id):
-            return return_http_403()
-
-        assignment = Assignment.objects.filter(
-            course__uid__contains=course_id, uid__contains=assignment_id)
-        if assignment:
-            assignment.delete()
-            return return_http_200()
-        return return_http_400()
-
-
-class assignmentScoreboard(View):
-    """
-    This API is accessible by instructor.
-
-    Supported method: `GET`
-
-    Registered at `/course/<str: course_id>/assignment/<str: assignment_id>/scores/`
-    """
-
-    def get(self, request, course_id, assignment_id):
-        if not (student_taking_course_test(request, course_id) or instructor_giving_course_test(request, course_id)):
-            return return_http_403()
-        this_course = Course.objects.get(uid=course_id)
-        all_records = Record.objects.filter(
-            assignment__uid__contains=assignment_id)
-        students = this_course.objects.student_set.all()
-        records = None  # Fixes unbound local variable
-        # FIXME NPE if students is empty
-        for student in students:
-            student_uid = student.uid
-            try:
-                this_student_record = all_records.filter(
-                    student__uid__contains=student_uid).order_by('-submission_time')[0]
-                if records:
-                    records = records | this_student_record
-                else:
-                    records = this_student_record
-            except IndexError:
-                pass
-        records = records.order_by('submission_time')
-        serializer = ScoreBoardSerializer(records, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-class pendingAssignmentList(View):
-    """
-    Supported method: `GET`.
-
-    Registered at `/course/<str:course_id>/queue`.
-    """
-
-    def get(self, request, course_id, assignment_id):
-        if not (student_taking_course_test(request, course_id) or instructor_giving_course_test(request, course_id)):
-            return return_http_403()
-        this_course = Course.objects.get(uid=course_id)
-        course_name = this_course.name
-        this_assignment = Assignment.objects.get(uid=assignment_id)
-        assignment_name = this_assignment.name
-        course_assignment_url = mw_connector.get_gitlab_student_repo(
-            '', course_name, assignment_name)
-        all_pending_assignment = PendingAssignment.objects.filter(
-            upstream__startswith=course_assignment_url)
-        serializer = pendingAssignmentSerializer(
-            all_pending_assignment, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-
-class courseInstructorList(View):
-    """
-    Supported method: `GET`, `POST`
-
-    Registered at `/course/<str:course_id>/instructor/`
-    """
-
-    def get(self, request, course_id):
-        if not (student_taking_course_test(request, course_id) or instructor_giving_course_test(request, course_id)):
-            return return_http_403()
-        all_instr = Course.objects.get(uid=course_id).instructor.all()
-        serializer = InstructorBasicInfoSerializer(all_instr, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    def post(self, request, course_id):
-        if not instructor_giving_course_test(request, course_id):
-            return return_http_403()
-        instr = Instructor.objects.get(uid=request.data['uid'])
-        course = Course.objects.get(uid=course_id)
-        if instr and course:
-            course.instructor.add(instr)
-            return JsonResponse(InstructorBasicInfoSerializer(instr).data, safe=False)
-        return return_http_400()
-
-
-class courseInstructorsBasicInfo(View):
-    """
-    Supported method: `GET`, `DELETE`
-
-    Registered at `/course/<str:course_id>/instructor/<str:instr_id>/`
-    """
-
-    def get(self, request, course_id, instr_id):
-        if not (student_taking_course_test(request, course_id) or instructor_giving_course_test(request, course_id)):
-            return return_http_403()
-        course = Course.objects.get(uid=course_id)
-        if not course:
-            return return_http_404()
-        instr = course.instructor.get(uid=instr_id)
-        if instr:
-            serializer = InstructorBasicInfoSerializer(instr, many=False)
-            return JsonResponse(serializer.data, safe=False)
-        return return_http_404()
-
-    def delete(self, request, course_id, instr_id):
-        if not instructor_giving_course_test(request, course_id):
-            return return_http_403()
-        this_course = Course.objects.get(uid=course_id)
-        if instr_id != this_course.creator:
-            this_instr = Instructor.objects.get(uid=instr_id)
-            if this_instr:
-                this_course.instructor.remove(this_instr)
-                return JsonResponse(InstructorBasicInfoSerializer(this_instr).data, safe=False)
-            return return_http_404()
-        else:
-            return return_http_403()
-        return return_http_400()
-
-
-class courseStudentList(View):
-    """
-    Supported method: `POST`, `GET`
-
-    Registered at `/course/<str:id>/students/`.
-    """
-
-    def get(self, request, id):
-        course = Course.objects.get(uid=id)
-        if not course:
-            return return_http_404()
-        student_list = course.student.all()
-        serializer = StudentBasicInfoSerializer(student_list, many=False)
-        return JsonResponse(serializer.data, safe=False)
-
-    def post(self, request, id):
-        course = Course.objects.get(uid=id)
-        if not course:
-            return return_http_404()
-        student = Student.objects.get(email=request.data['email'])
-        if student:
-            course.student.add(student)
-            return JsonResponse(StudentBasicInfoSerializer(student).data)
-        return return_http_400()
-
-
-class courseStudentInfo(View):
-    """
-    Supported method: `POST`, `GET`, `DELETE`
-
-    Registered at `/course/<str:id>/students/<id:uid>`.
-    """
-
-    def get(self, request, id, uid):
-        if not (student_taking_course_test(request, id) or instructor_giving_course_test(request, id)):
-            return return_http_403()
-        course = Course.objects.get(uid=id)
-        if not course:
-            return return_http_404()
-        student = course.student.get(uid=uid)
-        if student:
-            serializer = StudentBasicInfoSerializer(student)
-            return JsonResponse(serializer.data, safe=False)
-        return return_http_400()
-
-    def delete(self, request, id, uid):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        this_course = Course.objects.get(uid=id)
-        this_student = Student.objects.get(uid=uid)
-        if this_course and this_course.student.get(uid=uid):
-            this_course.student.remove(this_student)
-            return JsonResponse(StudentBasicInfoSerializer(this_student).data, safe=False)
-        return return_http_404()
-
-
-class courseJudgerList(View):
-    """
-    Supported method: `GET`, `POST`
-
-    Registered at `/course/<str:id>/judger/`
-    """
-
-    def get(self, request, id):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        this_course = Course.objects.get(uid=id)
-        if this_course:
-            judger_list = this_course.default_judge.all()
-            serializer = JudgerSerializer(judger_list, many=True)
-            return JsonResponse(serializer.data, safe=False)
-        return return_http_404()
-
-    def post(self, request, id):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        this_course = Course.objects.get(uid=id)
-        if this_course:
-            judger = Judge.objects.get(uid=request.data['uid'])
-            if judger:
-                this_course.default_judge.add(judger)
-                serializer = JudgerSerializer(judger, many=True)
-                return JsonResponse(serializer.data, safe=False)
-            return return_http_404()
-
-
-class courseJudger(View):
-    """
-    Supported method: `GET`, `DELETE`
-
-    Registered at `/course/<str:id>/judger/<str:uid>`
-    """
-
-    def get(self, request, id, uid):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        this_course = Course.objects.get(uid=id)
-        if this_course:
-            judger = this_course.default_judge.get(uid=id)
-            serializer = JudgerSerializer(judger)
-            return JsonResponse(serializer.data, safe=False)
-        return return_http_404()
-
-    def delete(self, request, id, uid):
-        if not instructor_giving_course_test(request, id):
-            return return_http_403()
-        this_course = Course.objects.get(uid=id)
-        if this_course:
-            judger = this_course.default_judge.get(uid=uid)
-            if judger:
-                this_course.judeger.remove(judger)
-                serializer = JudgerSerializer(judger)
-                return JsonResponse(serializer.data, safe=False)
-            return return_http_404()
-        else:
-            return return_http_404()
-
-
-class judgerList(View):
-    """
-    Supported method: `GET`, `POST`
-
-    Registered at `/judger/`
-    """
-
-    def get(self, request):
-        pass
-
-    def post(self, request):
-        pass
-
-    def delete(self, request):
-        pass
+class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
+    '''
+    `/student/<str:student_id>/course/<str:course_id>/assignment/`
+    '''
+    serializer_class = AssignmentSerializer  # TODO: change it!
+    permission_classes = (assignmentInfoReadWritePermisson,)
+
+    def get_queryset(self):
+        this_student = self.kwargs['student_id']
+        this_course = self.kwargs['course_id']
+        return Assignment.objects.filter(course__uid=this_course, student__uid=this_student)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+    '''
+    `/course/<str:course_id>`
+    '''
+    serializer_class = CoursesSerializer
+    permission_classes = (courseReadWritePermission,)
+
+    def get_queryset(self):
+        course_uid = self.kwargs['uid']
+        return Course.objects.get(uid=course_uid)
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
+    '''
+    `/course/<str:uid>/assignment/`
+    '''
+    serializer_class = AssignmentSerializer
+    permission_classes = (assignmentInfoReadWritePermisson,)
+
+    def get_queryset(self):
+        this_assignment = self.kwargs['uid']
+        this_instr = self.request.user.uid
+        return Assignment.objects.filter(uid=this_assignment, course__instructor__uid=this_instr)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        #TODO: notify using redis.
+        return self.create(request, *args, **kwargs)
+        # deal with it!
+
+class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+    '''
+    `/course/<str:course_id>/assignment/<str:assignment_id>`
+    '''
+    serializer_class = AssignmentSerializer
+    permission_classes = (assignmentInfoReadWritePermisson, )
+
+    def get_queryset(self):
+        return Assignment.objects.filter(uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        #TODO: notify using redis.
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        #TODO: notify using redis.
+        return self.delete(request, *args, **kwargs)
+
+class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
+    '''
+     `/course/<str:uid>/instructor/`
+    '''
+    serializer_class = InstructorBasicInfoSerializer
+    permission_classes = (courseInstrInfoReadWritePermission,)
+
+    def get_queryset(self):
+        this_course = Course.objects.get(uid=self.kwargs['uid'])
+        return this_course.instructor.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+        # TODO: do linking manually.
+
+class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.DestroyModelMixin):
+    '''
+    `/course/<str:course_id>/instructor/<str:instr_id>`
+    '''
+    serializer_class = InstructorBasicInfoSerializer # TODO: change it!
+    # This class will delete THE USER!!!
+    permission_classes = (courseInstrInfoReadWritePermission,)
+
+    def get_queryset(self):
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        return this_course.instructor.get(uid=self.kwargs['instr_id'])
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+        # TODO: do linking manually.
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+        # TODO: do linking manually.
+
+class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
+    '''
+    `/course/<str:course_id>/judge/`
+    '''
+    serializer_class = JudgerSerializer # TODO: change it!
+    # This class will delete THE JUDGE!!!
+    permission_classes = (courseJudgeReadWritePermisson,)
+
+    def get_queryset(self):
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        return this_course.judge.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+        # TODO: do linking manually.
+
+class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
+    '''
+    `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`
+    '''
+    serializer_class = SubmissionRecordSerializer
+    permission_classes = (submissionRecordReadPermission,)
+
+    def get_queryset(self):
+        this_student = self.kwargs['student_id']
+        this_assignment = self.kwargs['assignment_id']
+        return Record.objects.filter(student__uid=this_student, assignment__uid=this_assignment)
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class submissionHistoryDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    '''
+    `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:git_commit_id>`
+    '''
+    serializer_class = SubmissionRecordSerializer
+    permission_classes = (submissionRecordReadPermission)
+
+    def get_queryset(self):
+        this_student = self.kwargs['student_id']
+        this_assignment = self.kwargs['assignment_id']
+        this_record = self.kwargs['git_commit_id']
+        return Record.objects.filter(student__uid=this_student, assignment__uid=this_assignment, git_commit_id=this_record)
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin):
+    '''
+    `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
+    '''
+    serializer_class = ScoreBoardSerializer
+    permission_classes = (recordReadOnly,)
+
+    def get_queryset(self):
+        this_assignment = self.kwargs['course_id']
+        this_course = self.kwargs['assignment_id']
+        this_course_student_list = Course.objects.get(uid=this_course).student.all()
+        query_set = None
+        for this_student in this_course_student_list:
+            this_student_record = Record.objects.filter(
+                student=this_student, assignment__uid=this_assignment).order_by('-submission_time')[0]
+            if query_set:
+                query_set = query_set | this_student_record
+            else:
+                query_set = this_course_student_list
+        return query_set
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class internalSubmissionInterface(generics.GenericAPIView):
+    '''
+    `/internal/subbmission/`
+    '''
+    # TODO: add auth!
+
+    def post(self, request, *args, **kwargs):
+        this_submission = simplejson.dumps(request.DATA)
+        this_redis = redis.Redis(connection_pool=redisConnectionPool)
+        this_redis.zadd(name='pendingAssignment', mapping={this_submission: time.time()})
+        return Response(status=201)

@@ -1,6 +1,6 @@
 # GeekPie OJ Project: Backend Part
 
-*⚠️ 建设中*
+**⚠️ 建设中**
 
 This part provides a RESTful API of user management, course/assignment details for the GeekPie OJ Project. This project is devleloped using `Python 3.7`, ` Django 2.1.3` and also the latest version of `Django RESTful Framework` directly cloned from GitHub.
 
@@ -19,12 +19,47 @@ environment variable | description | example
 `OJBN_DB_PASSWD` | the database password for the given user. | `gouliguojiashengsiyi`
 `OJBN_HOSTNAME` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
 `OJBN_GITLAB_ADDR` | the address where the gitlab middleware is hosted. | `localhost:8080`
+`OJBN_OAUTH_URL` | the URL of the OAuth service this service is using | `https://gauth.geekpie.club/oauth/login`
+`OJBN_REDIS_ADDR` | the address of redis server. Follows the schema of `redis-py` | `redis://[:password]@localhost:6379/0`
 
 ## API Schema
 
-### User Login/Logout
+### For all users
 
-Registered at `/login` and `/logout` respectively. Users are required to login in order to access any API.
+#### User Login/Logout
+
+Registered at `/user/login/oauth` <del> and `/user/logout` respectively </del>. Users are required to login in order to access any API.
+
+We are planning to use GAuth (ShanghaitechGeekPie/GAuth), but details are TBD.
+
+#### Login parameters
+
+Supported method: `POST`
+
+Registered at `/user/login/oauth/param`
+
+```json
+{
+    "login_url": "https://gauth.geekpie.club/oauth/login",
+    "redir_param_name": "next"
+}
+```
+
+In this example, frontend shall redirect user to `https://gauth.geekpie.club/oauth/login?next=https://oj.geekpie.club/course/b3b17c00f16511e8b3dfdca9047a0f14` (suppose we are `oj.geekpie.club` and currently the user is at `/course/b3b17c00f16511e8b3dfdca9047a0f14` )
+
+#### User's role
+
+Supported method: `GET`
+
+Registered at `/user/role`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    "is_student": true,
+    "is_insturctor": false
+}
+```
 
 ### For student
 
@@ -32,7 +67,7 @@ Registered at `/login` and `/logout` respectively. Users are required to login i
 
 Supported method: `POST`, `GET`
 
-Registered at `/student/<str:id>/` where id is the uid of the student in the database.
+Registered at `/student/<str:uid>/` where id is the uid of the student in the database.
 
 It will return the student's basic information, inluding `uid`, `name`, `email` and `student_id` in the following format.
 
@@ -51,7 +86,7 @@ It will return the student's basic information, inluding `uid`, `name`, `email` 
 
 Supported method: `GET`
 
-Registered at `/student/<str:id>/course/`.
+Registered at `/student/<str:uid>/course/`.
 
 It will return the courses in which the student with this `uid` enrolled in in the following format.
 
@@ -75,7 +110,7 @@ This API is accessiable by instructor.
 
 Supported method: `GET`
 
-Registered at `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`.
+Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`.
 
 It provides student's submission history under an assignment.
 
@@ -87,7 +122,7 @@ It provides student's submission history under an assignment.
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 157000000,
+        "submission_time": 1548241628,
         "delta": 0
     }
 ]
@@ -99,7 +134,7 @@ This API is accessiable by instructor.
 
 Supported method: `GET`
 
-Registered at `/student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:commit_id>`.
+Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:commit_id>`.
 
 It provides student's one specific submission under an assignment.
 
@@ -110,7 +145,7 @@ It provides student's one specific submission under an assignment.
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 157000000,
+        "submission_time": 1548241628,
         "delta": 0
     }
 ```
@@ -121,7 +156,7 @@ It provides student's one specific submission under an assignment.
 
 Supported method: `GET`
 
-Registered at `course/<str:course_id>/assignment/`.
+Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/`.
 
 `overall_score` is the score the student get in his/she last commit.
 
@@ -131,8 +166,8 @@ Registered at `course/<str:course_id>/assignment/`.
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
-        "deadline":  157000000,
-        "release_date": 157000000,
+        "deadline":  1548241628,
+        "release_date": 1548241628,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
         "score": 3.14,
         "overall_score": 10.0
@@ -151,8 +186,8 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
-    "deadline":  157000000,
-    "release_date": 157000000,
+    "deadline":  1548241628,
+    "release_date": 1548241628,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
     "score": 3.14,
     "overall_score": 10.0
@@ -171,7 +206,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
         "nickname": "hammerWang",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 157000000,
+        "submission_time": 1548241628,
         "delta": 0
     }
 ]
@@ -188,7 +223,7 @@ Registerd at `/course/<str:course_id>/queue`.
     {
         "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "submission_time": 157000000,
+        "submission_time": 1548241628,
         "submitter": "hammerWang"
     }
 ]
@@ -218,7 +253,7 @@ NOTE: this part has not been fully implmented yet.
 
 Supported method: `POST`, `GET`
 
-Registered at `/instructor/<str:id>/` where id is the uid of the student in the database.
+Registered at `/instructor/<str:uid>/` where id is the uid of the student in the database.
 
 ```json
 {
@@ -254,7 +289,7 @@ Registered at `/instructor/<str:uid>/course/`.
 
 Supported method: `POST`, `GET`, `DELETE`
 
-Registered at `/course/<str:id>`.
+Registered at `/course/<str:uid>`.
 
 ```json
 {
@@ -272,7 +307,7 @@ Registered at `/course/<str:id>`.
 
 Supported method: `POST`, `GET`
 
-Registered at `/course/<str:id>/students/`.
+Registered at `/course/<str:uid>/students/`.
 
 ```json
 [
@@ -289,7 +324,7 @@ Registered at `/course/<str:id>/students/`.
 
 Supported method: `POST`, `GET`, `DELETE`
 
-Registered at `/course/<str:id>/students/<id:uid>`.
+Registered at `/course/<str:uid>/students/<id:uid>`.
 
 ```json
 {
@@ -304,7 +339,7 @@ Registered at `/course/<str:id>/students/<id:uid>`.
 
 Supported method: `POST`, `GET`
 
-Registered at `/course/<str:id>/instructor/`
+Registered at `/course/<str:uid>/instructor/`
 
 ```json
 [
@@ -320,7 +355,7 @@ Registered at `/course/<str:id>/instructor/`
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/course/<str:id>/instructor/<str:uid>`
+Registered at `/course/<str:uid>/instructor/<str:uid>`
 
 ```json
 {
@@ -334,7 +369,7 @@ Registered at `/course/<str:id>/instructor/<str:uid>`
 
 Supported method: `GET`, `POST`
 
-Registered at `/course/<str:id>/assignment/`
+Registered at `/course/<str:uid>/assignment/`
 
 ```json
 [
@@ -342,8 +377,8 @@ Registered at `/course/<str:id>/assignment/`
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
-        "deadline":  157000000,
-        "release_date": 157000000,
+        "deadline":  1548241628,
+        "release_date": 1548241628,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
     }
 ]
@@ -355,15 +390,15 @@ TODO: export all assignments.
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/course/<str:id>/assignment/<str:uid>`
+Registered at `/course/<str:uid>/assignment/<str:uid>`
 
 ```json
 {
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
-    "deadline":  157000000,
-    "release_date": 157000000,
+    "deadline":  1548241628,
+    "release_date": 1548241628,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
 }
 ```
@@ -372,7 +407,7 @@ Registered at `/course/<str:id>/assignment/<str:uid>`
 
 Supported method: `GET`, `POST`
 
-Registered at `/course/<str:id>/judge/`
+Registered at `/course/<str:uid>/judge/`
 
 ```json
 [
@@ -386,7 +421,7 @@ Registered at `/course/<str:id>/judge/`
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/course/<str:id>/judge/<str:uid>`
+Registered at `/course/<str:course_id>/judge/<str:judge_id>`
 
 ```json
 {
