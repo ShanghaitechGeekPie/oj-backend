@@ -17,57 +17,113 @@
 
 # TODO: implement this part accordding to interfaces provided by `oj-gitlab-middleware`.
 
-import requests
 import os
 import simplejson
+from secrets import choice
+from string import ascii_letters, digits
+from requests import post
+from urllib.parse import quote
+from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
-OJBN_HOSTNAME = os.environ['OJBN_HOSTNAME']
 
 
-def get_gitlab_student_repo(student, course, assignment):
-    return "{}/{}/{}-{}".format("https://oj.geekpie.club", course, assignment, student)
+class MiddlewareError(BaseException):
+
+    '''
+    Base exception class for middleware error.
+    '''
+
+    def __init__(self, cause="Unkown Error."):
+        self.__cause__ = cause
 
 
-def update_user(email=None, ssh_pub_key=None, uid=None):
-    """
-    `update_user(email=None, ssh_pub_key=None, uid=None)`
+class MWUpdateError(MiddlewareError):
 
-    This function provides interfaces for creating/updating
-    student/insturctor's account in GitLab.
-    """
-    global OJBN_GITLAB_ADDR
-    pass
+    '''
+    Exception for the middleware failed to update a user's information, because of bad parameters.
+    '''
 
-
-def create_repo(user=None, course=None, assignment=None):
-    """
-    `create_repo(user=None, course=None, assignment=None)`
-
-    This function provides interfaces for creating new repos for user(s),
-    returning URL to the created repo(s)
-    """
-    global OJBN_GITLAB_ADDR
-    if isinstance(user, str):
-        user = [user]
-    return user
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
-def create_course(course=None, instr=None):
-    """
-    `create_course(course=None, instr=None)`
+class baseMiddlewareAdopter:
+    '''
+    This is the base adopter for web interface provided by oj-middleware.
+    '''
 
-    This function provides interfaces for creating new project for a course.
-    """
-    global OJBN_GITLAB_ADDR
-    if isinstance(instr, str):
-        instr = [instr]
+    def __init__(self, api_server=None, interface=None, payload=None):
+        self.api_server = api_server
+        self.interface = interface
+        self._send_request(payload)
+
+    def _send_request(self, payload):
+        api_url = "{}/{}".format(self.api_server, self.interface)
+        try:
+            request = post(api_url, json=payload)
+            request.raise_for_status()
+        except (ConnectionError, Timeout):
+            raise MiddlewareError(
+                cause='The connection to middleware server is either broken or timeout.')
+        except HTTPError:
+            cause = request.json().get('cuase') if request.json().get(
+                'cuase') else "Middleware server returns with an unexplianed status code {}.".format(request.status_code)
+            raise MWUpdateError(cause=cause)
+
+    @staticmethod
+    def gen_passwd():
+        dict = ascii_letters + digits
+        return ''.join(choice(dict) for _ in range(16))
 
 
-def get_repo(user=None, course=None, assignment=None):
-    """
-    `get_repo(user=None, course=None, assignment=None)`
+class MWUpdateUser(baseMiddlewareAdopter):
 
-    TBD
-    """
-    pass
+    def __init__(self, user_email, api_server=OJBN_GITLAB_ADDR):
+        payload = {'email': user_email,
+                   'password': baseMiddlewareAdopter.gen_passwd()}
+        super().__init__(api_server=api_server, interface='/users', payload=payload)
+
+
+class MWUpdateUserKey(baseMiddlewareAdopter):
+
+    def __init__(self, user_email, user_key, api_server=OJBN_GITLAB_ADDR):
+        payload = {'key': user_key}
+        interface = '/users/{}/key'.format(quote(user_email))
+        super().__init__(api_server=api_server, interface=interface, payload=payload)
+
+
+class MWUpdateCourse(baseMiddlewareAdopter):
+
+    def __init__(self, course_name, course_uid, api_server=OJBN_GITLAB_ADDR):
+        payload = {"name": course_name, "uuid": course_uid}
+        super().__init__(api_server=api_server, interface='/courses', payload=payload)
+
+
+class MWCourseAddInstr(baseMiddlewareAdopter):
+
+    def __init__(self, course_uid, instr_email, api_server=OJBN_GITLAB_ADDR):
+        payload = {"instructor_name": instr_email}
+        interface = '/courses/{}/instructors'
+        super().__init__(api_server=api_server, interface=interface, payload=payload)
+
+
+class MWCourseAddAssignment(baseMiddlewareAdopter):
+
+    def __init__(self, course_uid, assignment_name, assignment_uid, api_server=OJBN_GITLAB_ADDR):
+        payload = {'name': assignment_name, 'uuid': assignment_uid}
+        interface = '/courses/{}/assignments'.format(course_uid)
+        super().__init__(api_server=api_server, interface=interface, payload=payload)
+
+
+class MWCourseAddStudent(baseMiddlewareAdopter):
+    def __init__(self, course_uid, assignment_uid, student_email, api_server=OJBN_GITLAB_ADDR):
+        interface = "/courses/{}/assignments/{}/repos".format(
+            course_uid, assignment_uid)
+        repo_name = student_email.split('@')[0]
+        payload = {'owner_email': student_email, 'repo_name': repo_name}
+        super().__init__(api_server=api_server, interface=interface, payload=payload)
+
+# TODO:
+# Write adopters for downloading a user's repo and get its commit history.
+# This function requries the backend to act like a reserve proxy between user and middleware.
