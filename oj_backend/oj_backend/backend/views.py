@@ -156,7 +156,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
     '''
     `/student/<str:student_id>/course/<str:course_id>/assignment/`
     '''
-    serializer_class = AssignmentSerializer  # TODO: change it!
+    serializer_class = AssignmentSerializer
     permission_classes = (assignmentInfoReadWritePermisson,)
 
     def get_queryset(self):
@@ -319,8 +319,18 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-        # TODO: do linking manually.
+        this_judge = Judge.objects.get(uid=request.data['uid'])
+        if not this_judge.exists():
+            return JsonResponse(data={}, status=404)
+        if not this_judge.maintainer == request.user:
+            return JsonResponse(data={}, status=403)
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        if not this_course.exists():
+            return JsonResponse(data={}, status=404)
+        if not this_course.instructor.get(uid=request.user.uid):
+            return JsonResponse(data={}, status=403)
+        this_course.judge.add(this_judge)
+        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
 
 
 class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
