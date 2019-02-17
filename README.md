@@ -21,6 +21,11 @@ environment variable | description | example
 `OJBN_GITLAB_ADDR` | the address where the gitlab middleware is hosted. | `localhost:8080`
 `OJBN_OAUTH_URL` | the URL of the OAuth service this service is using | `https://gauth.geekpie.club/oauth/login`
 `OJBN_REDIS_ADDR` | the address of redis server. Follows the schema of `redis-py` | `redis://[:password]@localhost:6379/0`
+`OIDC_RP_CLIENT_ID` | OpenID client ID | |
+`OIDC_RP_CLIENT_SECRET` | OpenID client secret | |
+`OIDC_OP_AUTHORIZATION_ENDPOINT` |  | |
+`OIDC_OP_TOKEN_ENDPOINT` |  | |
+`OIDC_OP_USER_ENDPOINT`  |  | |
 
 ## API Schema
 

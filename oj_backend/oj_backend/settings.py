@@ -43,13 +43,14 @@ SECRET_KEY = 'mq-2-_&%i3ne(f=wwhfoc)hw5fvr)=+9elezs&cs!k+1^y^sf='
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [os.environ['OJBN_HOSTNAME'],]
+ALLOWED_HOSTS = [os.environ['OJBN_HOSTNAME'], ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'rest_framework',
+    'mozilla_django_oidc',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -138,6 +139,16 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+)
+
+OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
+OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
+OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
+OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
+OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
 
 
 # Internationalization
