@@ -32,29 +32,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from oj_backend.backend import views
+from oj_backend.backend.views import urls
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('login', views.login),
-    path('logout', views.logout),
-    path('student/<str:uid>/', views.studentInformation.as_view()),
-    path('student/<str:id>/course/', views.studentCourseList.as_view()),
-    path('student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/',
-         views.studentSubmissionList.as_view()),
-    path('student/<str:id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:commit_id>/',
-         views.studentSubmissionDetail.as_view()),
-    path('instructor/<str:id>/', views.instructorInformation.as_view()),
-    path('instructor/<str:id>/course/', views.instructorCourseList.as_view()),
-    path('course/<str:course_id>/assignment/',
-         views.courseAssignmentList.as_view()),
-    path('course/<str:course_id>/assignment/<str:assignment_id>/',
-         views.courseAssignment.as_view()),
-    path('course/<str: course_id>/assignment/<str:assignment_id>/scores/',
-         views.assignmentScoreboard.as_view()),
-    path('course/<str:course_id>/', views.courseBasicInfo.as_view()),
-    path('course/<str:course_id>/queue', views.pendingAssignmentList.as_view()),
-    path('course/<str:id>/judger/', views.courseJudgerList.as_view()),
-    path('course/<str:id>/judger/<str:uid>/', views.courseJudger.as_view()),
-    path('judger/', views.judgerList.as_view())
+    url(r'^oidc/', include('mozilla_django_oidc.urls')),
+
 ]
