@@ -33,6 +33,7 @@ except:
 import redis
 import time
 
+import oj_backend.settings
 import oj_backend.backend.middleware_connector as mw_connector
 from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment
 from oj_backend.backend.models import *
@@ -584,7 +585,7 @@ class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
             return Response(data={}, status=403)
         redis_server = redis.Redis(
             connection_pool=redisConnectionPool)
-        all_pending = redis_server.zrange('pendingAssignment', 0, -1)
+        all_pending = redis_server.zrange(self.kwargs['assignment_id'], 0, -1)
         pending_list = []
         for submission in all_pending:
             submission = simplejson.loads(submission)
@@ -601,6 +602,15 @@ class internalSubmissionInterface(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         this_submission = simplejson.dumps(request.DATA)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
-        this_redis.zadd(name='pendingAssignment', mapping={
-                        this_submission: time.time()})
+        this_redis.zadd(request.DATA["assignment_uid"], {
+                        request.DATA["upstream"]: time.time()})
         return Response(data=this_submission, status=201)
+
+
+class oauthLoginParam(generics.GenericAPIView):
+    '''
+    `/user/login/oauth/param`
+    '''
+
+    def get(self, request, *args, **kwargs):
+        return JsonResponse(status=200, data={'login_url': settings.OIDC_OP_AUTHORIZATION_ENDPOINT})
