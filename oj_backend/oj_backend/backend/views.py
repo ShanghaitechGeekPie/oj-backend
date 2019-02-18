@@ -205,7 +205,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
     def get_queryset(self):
         this_course = self.kwargs['uid']
         this_instr = self.request.user.uid
-        return Assignment.objects.filter(course__uid=this_course, course__instructor__uid=this_instr)
+        return Assignment.objects.filter(course__uid=this_course, course__instructor__user__uid=this_instr)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -261,40 +261,43 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
 
     def post(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['uid'])
-        if not this_course.instructor.get(uid=request.user.uid).exists():
+        if not this_course.instructor.get(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
             validate_email(request.data['email'])
         except ValidationError:
             return JsonResponse(status=400, data={})
-        this_instr = Instructor.objects.get(email=request.data['email'])
+        this_instr = Instructor.objects.get(user__email=request.data['email'])
         if not this_instr.exists():
-            # TODO: motify the database so that one user could be both instructor and student.
-            pass
+            this_instr = Instructor(
+                enroll_email=request.data['email'], user=None)
+            this_instr.save()
         this_course.instructor.add(this_instr)
-        # return self.create(request, *args, **kwargs)
-        # TODO: do linking manually.
+        MWCourseAddInstr(
+            course_uid=self.kwargs['uid'], instr_email=request.data['email'])
+        return JsonResponse(data={}, status=201)
 
 
 class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.DestroyModelMixin):
     '''
-    `/course/<str:course_id>/instructor/<str:instr_id>`
+    `/course/<str:course_id>/instructor/<str:instr_email>`
     '''
     serializer_class = InstructorBasicInfoSerializer
     permission_classes = (courseInstrInfoReadWritePermission,)
 
     def get_queryset(self):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        return this_course.instructor.get(uid=self.kwargs['instr_id'])
+        return this_course.instructor.get(enroll_email=self.kwargs['instr_email'])
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        if not this_course.instructor.get(uid=request.user.uid).exists():
+        if not this_course.instructor.get(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
-        this_instr = this_course.instructor.get(email=request.data['email'])
+        this_instr = this_course.instructor.get(
+            email=self.kwargs['instr_email'])
         if this_instr.uid == this_course.creator:
             return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
         if not this_instr.exists():
@@ -303,6 +306,66 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
         this_instr.delete()
         return response
 
+
+class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
+    '''
+    `/course/<str:course_id>/student/`
+    '''
+    serializer_class = StudentBasicInfoSerializer
+    permission_classes = (courseStudentInfoReadWritePermission)
+
+    def get_queryset(self):
+        return Course.objects.get(uid=self.kwargs['course_id']).student.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        this_course = Course.objects.get(uid=self.kwargs['uid'])
+        if not this_course.instructor.get(user__uid=request.user.uid).exists():
+            return JsonResponse(data={}, status=403)
+        try:
+            validate_email(request.data['email'])
+        except ValidationError:
+            return JsonResponse(status=400, data={})
+        this_student = Student.objects.get(user__email=request.data['email'])
+        if not this_student.exists():
+            this_student = Student(
+                enroll_email=request.data['email'], user=None)
+            this_student.save()
+            MWUpdateUser(request.data['email'])
+        this_course.student.add(this_student)
+        for assignment in this_course.assignment_set.all():
+            MWCourseAddStudent(
+                self.kwargs['course_id'], assignment.uid, request.data['email'])
+        return JsonResponse(data={}, status=201)
+
+
+class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    '''
+    `/course/<str:course_id>/student/<str:student_email>`
+    '''
+
+    serializer_class = StudentBasicInfoSerializer
+    permission_classes = (courseStudentInfoReadWritePermission)
+
+    def get_queryset(self):
+        return Course.objects.get(uid=self.kwargs['course_id']).student.get(user__enroll_email=self.kwargs['student_email'])
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        if not this_course.instructor.get(user__uid=request.user.uid).exists():
+            return JsonResponse(data={}, status=403)
+        this_student = this_course.student.get(
+            enroll_email=self.kwargs['student_email'])
+        if not this_student.exists():
+            return JsonResponse(data={}, status=404)
+        response = JsonResponse(data=this_student, safe=False, status=201)
+        this_student.delete()
+        return response
 
 class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
     '''
@@ -330,6 +393,88 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         if not this_course.instructor.get(uid=request.user.uid):
             return JsonResponse(data={}, status=403)
         this_course.judge.add(this_judge)
+        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+
+
+class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    '''
+    `/course/<str:course_id>/judge/<str:judge_id>`
+    '''
+    serializer_class = JudgerSerializer
+    permission_classes = (courseJudgeReadWritePermisson)
+
+    def get_queryset(self):
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        return this_course.judge.get(uid=self.kwargs['judge_id'])
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        if not this_course.exists():
+            return JsonResponse(data={}, status=404)
+        if not this_course.instructor.get(user__uid=request.user.uid):
+            return JsonResponse(data={}, status=403)
+        this_judge = Judge.objects.get(uid=request.data['uid'])
+        this_course.judge.delete(this_judge)
+        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+
+
+class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
+    '''
+    `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
+    '''
+    serializer_class = JudgerSerializer
+    permission_classes = (courseJudgeReadWritePermisson,)
+
+    def get_queryset(self):
+        this_assignment = Assignment.objects.filter(
+            uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
+        return this_assignment.judge.all()
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        this_judge = Judge.objects.get(uid=request.data['uid'])
+        if not this_judge.exists():
+            return JsonResponse(data={}, status=404)
+        if not this_judge.maintainer == request.user.instructor:
+            return JsonResponse(data={}, status=403)
+        this_assignment = Assignment.objects.get(
+            uid=self.kwargs['assignment_id'])
+        if not this_assignment.exists():
+            return JsonResponse(data={}, status=404)
+        if not this_assignment.course.instructor.get(uid=request.user.uid):
+            return JsonResponse(data={}, status=403)
+        this_assignment.judge.add(this_judge)
+        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+
+
+class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    '''
+    `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>`
+    '''
+    serializer_class = JudgerSerializer
+    permission_classes = (courseJudgeReadWritePermisson)
+
+    def get_queryset(self):
+        this_assignment = Assignment.objects.get(
+            uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
+        return this_assignment.judge.get(uid=self.kwargs['judge_id'])
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        if not this_course.exists():
+            return JsonResponse(data={}, status=404)
+        if not this_course.instructor.get(user__uid=request.user.uid):
+            return JsonResponse(data={}, status=403)
+        this_judge = Judge.objects.get(uid=request.data['uid'])
+        this_course.judge.delete(this_judge)
         return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
 
 
@@ -400,6 +545,7 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
 
+
 class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin):
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
@@ -428,21 +574,20 @@ class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin)
 
 class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
     '''
-    `/course/<str:course_id>/`
+    `/course/<str:course_id>/assignment/<str:assignment_id>/queue/`
     '''
 
     def get(self, request, course_id):
         if request.user is AnonymousUser:
-            return Response(status=401)
+            return Response(data={}, status=401)
         if not (Course.objects.get(uid=course_id).insturctor.get(uid=request.user.uid).exists() or Course.objects.get(uid=course_id).student.get(uid=request.user.uid).exists()):
-            return Response(status=403)
+            return Response(data={}, status=403)
         redis_server = redis.Redis(
             connection_pool=redisConnectionPool)
         all_pending = redis_server.zrange('pendingAssignment', 0, -1)
         pending_list = []
         for submission in all_pending:
             submission = simplejson.loads(submission)
-            # TODO: add attribute list.
             if submission['course_id'] == course_id:
                 pending_list.append(submission)
         return JsonResponse(pending_list, status=200, safe=False)
@@ -452,7 +597,6 @@ class internalSubmissionInterface(generics.GenericAPIView):
     '''
     `/internal/subbmission/`
     '''
-    # TODO: add auth!
 
     def post(self, request, *args, **kwargs):
         this_submission = simplejson.dumps(request.DATA)

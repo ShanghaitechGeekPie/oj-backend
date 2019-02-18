@@ -65,7 +65,7 @@ class InstructorInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Instructor
-        feilds = ('uid', 'name', 'email', 'rsa_pub_key')
+        fields = ('uid', 'name', 'email', 'rsa_pub_key')
         related_fields = ('user',)
 
     def update(self, instance, validated_data):
@@ -85,7 +85,7 @@ class InstructorBasicInfoSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Instructor
-        fields = ('uid', 'name', 'email')
+        fields = ('enroll_email')
 
 
 class CoursesSerializer(serializers.ModelSerializer):

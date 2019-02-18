@@ -221,7 +221,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
 
 Supported method: `GET`.
 
-Registerd at `/course/<str:course_id>/queue`.
+Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/queue`.
 
 ```json
 [
@@ -254,7 +254,7 @@ Registered at `/course/<str:course_id>/instructor/<str:instr_id>/`
 
 NOTE: this part has not been fully implmented yet.
 
-#### Instructor's Basic Information
+#### Instructor's Information
 
 Supported method: `POST`, `GET`
 

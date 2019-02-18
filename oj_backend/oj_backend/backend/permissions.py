@@ -94,6 +94,18 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
             return this_instr.exists()
         return False
 
+class courseStudentInfoReadWritePermission(permissions.BasePermission):
+    '''
+    This class provides permission for viewing/modifying course's instructors.
+
+    Only instructors are granted this permission.
+    '''
+
+    def has_object_permission(self, request, view, obj):
+        this_course = Course.objects.get(uid=get_course_uid(request.path))
+        return this_course.instructor.get(user__uid=request.user.uid).exists()
+
+
 class judgeReadWritePermission(permissions.BasePermission):
     '''
     This class provides read/write permision to the user that owns a judge.
