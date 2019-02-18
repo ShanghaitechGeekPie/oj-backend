@@ -601,6 +601,5 @@ class internalSubmissionInterface(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         this_submission = simplejson.dumps(request.DATA)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
-        this_redis.zadd(name='pendingAssignment', mapping={
-                        this_submission: time.time()})
+        this_redis.zadd(request.DATA["assignment_uid"], {request.DATA["upstream"]: time.time()})
         return Response(data=this_submission, status=201)
