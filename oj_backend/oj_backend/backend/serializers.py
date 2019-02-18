@@ -24,10 +24,25 @@ class StudentInfoSerializer(serializers.ModelSerializer):
     Returns a student's information including `name`, `email`, `student_id`,
     `rsa_pub_key` and `nickname`.
     """
+    uid = serializers.UUIDField(source='user.uid')
+    email = serializers.EmailField(source='user.email')
+    name = serializers.CharField(source='user.name')
+    rsa_pub_key = serializers.CharField(source='user.rsa_pub_key')
+
     class Meta:
         model = Student
         fields = ('uid', 'email', 'name', 'student_id',
-                  'nickname', 'rsa_pub_key')
+                  'nickname', 'rsa_pub_key',)
+        related_fields = ('user',)
+
+    def update(self, instance, validated_data):
+        for related_obj_name in self.Meta.related_fields:
+            data = validated_data.pop(related_obj_name)
+            related_instance = getattr(instance, related_obj_name)
+            for attr_name, value in data.items():
+                setattr(related_instance, attr_name, value)
+            related_instance.save()
+        return super(StudentInfoSerializer, self).update(instance, validated_data)
 
 
 class StudentBasicInfoSerializer(serializers.ModelSerializer):
@@ -35,17 +50,32 @@ class StudentBasicInfoSerializer(serializers.ModelSerializer):
     Returns a student's basic information including `name`, `email`, `student_id`.
     """
     class Meta:
-        model = Instructor
-        fields = ('uid', 'name', 'email', 'student_id')
+        model = Student
+        fields = ('name', 'enroll_email', 'student_id')
 
 
 class InstructorInfoSerializer(serializers.ModelSerializer):
     """
     Returns a instructor's all information.
     """
+    uid = serializers.UUIDField(source='user.uid')
+    email = serializers.EmailField(source='user.email')
+    name = serializers.CharField(source='user.name')
+    rsa_pub_key = serializers.CharField(source='user.rsa_pub_key')
+
     class Meta:
         model = Instructor
         feilds = ('uid', 'name', 'email', 'rsa_pub_key')
+        related_fields = ('user',)
+
+    def update(self, instance, validated_data):
+        for related_obj_name in self.Meta.related_fields:
+            data = validated_data.pop(related_obj_name)
+            related_instance = getattr(instance, related_obj_name)
+            for attr_name, value in data.items():
+                setattr(related_instance, attr_name, value)
+            related_instance.save()
+        return super(InstructorInfoSerializer, self).update(instance, validated_data)
 
 
 class InstructorBasicInfoSerializer(serializers.ModelSerializer):
@@ -59,7 +89,6 @@ class InstructorBasicInfoSerializer(serializers.ModelSerializer):
 
 
 class CoursesSerializer(serializers.ModelSerializer):
-    #instructor = InstructorBasicInfoSerializer(many=True, read_only=True)
 
     class Meta:
         model = Course
@@ -103,14 +132,3 @@ class JudgerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Judge
         fields = ('uid', 'host', 'max_job')
-
-
-class pendingAssignmentSerializer(serializers.ModelSerializer):
-    """
-    Returns information of an assignment in queue.
-    """
-    assignment = AssignmentSerializer(read_only=True)
-
-    class Meta:
-        model = PendingAssignment
-        fields = ('timestamp', 'assigenment')
