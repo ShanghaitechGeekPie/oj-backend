@@ -28,6 +28,10 @@ from requests.exceptions import RequestException, ConnectionError, HTTPError, Ti
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
 
 
+def get_course_project_name(code, year, semaster):
+    return "{}-{}{}".format(code, year, semaster)
+
+
 class MiddlewareError(BaseException):
 
     '''
@@ -120,7 +124,12 @@ class MWCourseAddStudent(baseMiddlewareAdopter):
     def __init__(self, course_uid, assignment_uid, student_email, api_server=OJBN_GITLAB_ADDR):
         interface = "/courses/{}/assignments/{}/repos".format(
             course_uid, assignment_uid)
-        repo_name = student_email.split('@')[0]
+        if not isinstance(student_email, list):
+            repo_name = student_email.split('@')[0]
+            student_email = [student_email]
+        else:
+            repo_name = 'group_' + \
+                "_".join(user.split('@')[0] for user in student_email)
         payload = {'owner_email': student_email, 'repo_name': repo_name}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
