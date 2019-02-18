@@ -33,7 +33,7 @@ environment variable | description | example
 
 #### User Login/Logout
 
-Registered at `/user/login/oauth` <del> and `/user/logout` respectively </del>. Users are required to login in order to access any API.
+Registered at `/oidc/callback/`. Users are required to login in order to access any API.
 
 We are planning to use GAuth (ShanghaitechGeekPie/GAuth), but details are TBD.
 
