@@ -35,7 +35,6 @@ environment variable | description | example
 
 Registered at `/oidc/callback/`. Users are required to login in order to access any API.
 
-We are planning to use GAuth (ShanghaitechGeekPie/GAuth), but details are TBD.
 
 #### Login parameters
 
@@ -46,12 +45,10 @@ Registered at `/user/login/oauth/param`
 ```json
 {
     "login_url": "https://gauth.geekpie.club/oauth/login",
-    "redir_param_name": "next"
 }
 ```
 
-In this example, frontend shall redirect user to `https://gauth.geekpie.club/oauth/login?next=https://oj.geekpie.club/course/b3b17c00f16511e8b3dfdca9047a0f14` (suppose we are `oj.geekpie.club` and currently the user is at `/course/b3b17c00f16511e8b3dfdca9047a0f14` )
-
+In this example, frontend shall redirect user to `https://gauth.geekpie.club/oauth/login`.
 #### User's role
 
 Supported method: `GET`
