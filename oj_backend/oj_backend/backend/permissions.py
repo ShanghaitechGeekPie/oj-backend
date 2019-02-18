@@ -16,8 +16,8 @@
 # under the License.
 
 from rest_framework import permissions
-from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge, PendingAssignment
-from utils import get_course_uid_from_path as get_course_uid
+from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge
+from oj_beckend.backend.utils import get_course_uid_from_path as get_course_uid
 
 
 class userInfoReadWritePermission(permissions.BasePermission):
@@ -28,7 +28,7 @@ class userInfoReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
-        return request.user.uid == obj.uid
+        return request.user.uid == obj.user.uid
 
 
 class submissionRecordReadPermission(permissions.BasePermission):
@@ -43,8 +43,8 @@ class submissionRecordReadPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         this_user = request.user
         this_student = obj.student
-        this_instr = obj.assignment.course.instructor.get(uid=this_user.uid)
-        if this_user.uid == this_student.uid:
+        this_instr = obj.assignment.course.instructor.get(user__uid=this_user.uid)
+        if this_user.uid == this_student.user.uid:
             return True
         return this_instr.exists()
 
@@ -61,8 +61,8 @@ class assignmentInfoReadWritePermisson(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         this_course = obj.course
         this_user = request.user
-        this_student = this_course.student.get(uid=this_user.uid)
-        this_instr = this_course.instructor.get(uid=this_user.uid)
+        this_student = this_course.student.get(user__uid=this_user.uid)
+        this_instr = this_course.instructor.get(user__uid=this_user.uid)
         if request.method in permissions.SAFE_METHODS:
             return this_instr.exists() or this_student.exists()
         else:
@@ -82,8 +82,8 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         this_course = Course.objects.get(uid=get_course_uid(request.path))
         if this_course:
-            this_student = this_course.student.get(uid=request.user.uid)
-            this_instr = this_course.instructor.get(uid=request.user.uid)
+            this_student = this_course.student.get(user__uid=request.user.uid)
+            this_instr = this_course.instructor.get(user__uid=request.user.uid)
         else:
             return False
         if request.method in permissions.SAFE_METHODS:
@@ -101,7 +101,7 @@ class judgeReadWritePermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         this_user = request.user
-        return obj.maintainer.get(uid=this_user.uid).exists()
+        return obj.maintainer.get(user__uid=this_user.uid).exists()
 
 
 class courseJudgeReadWritePermisson(permissions.BasePermission):
@@ -116,7 +116,7 @@ class courseJudgeReadWritePermisson(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         this_course = Course.objects.get(uid=get_course_uid(request.path))
         if this_course:
-            return this_course.instr.get(uid=request.user.uid)
+            return this_course.instr.get(user__uid=request.user.uid)
         return False
 
 
@@ -128,8 +128,8 @@ class courseReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
-        instr = obj.instructor.get(uid=request.user.uid)
-        student = obj.student.get(uid=request.user.uid)
+        instr = obj.instructor.get(user__uid=request.user.uid)
+        student = obj.student.get(user__uid=request.user.uid)
         if request.method in permissions.SAFE_METHODS:
             # for any users in this class.
             return instr.exists() or student.exists()
@@ -140,7 +140,7 @@ class courseReadWritePermission(permissions.BasePermission):
 class courseRelatedObjReadWritebyInstr(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
-        return obj.instructor.get(uid=request.user.uid).exists()
+        return obj.instructor.get(user__uid=request.user.uid).exists()
 
 
 class recordReadOnly(permissions.BasePermission):
@@ -153,6 +153,6 @@ class recordReadOnly(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             if obj.student.uid == request.user.uid:
                 return True
-            if obj.assignment.course.instructor.get(uid=request.user.uid).exists():
+            if obj.assignment.course.instructor.get(user__uid=request.user.uid).exists():
                 return True
         return False
