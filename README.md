@@ -353,6 +353,7 @@ Registered at `/course/<str:uid>/instructor/`
     }
 ]
 ```
+Caution: `name` and `uid` fileds may be omitted because we do not know those information before the user registered.
 
 #### Course instructor
 
@@ -367,6 +368,7 @@ Registered at `/course/<str:uid>/instructor/<str:uid>`
     "email": "weidaxz@shanghaitech.edu.cn"
 }
 ```
+Caution: `name` and `uid` fileds may be omitted because we do not know those information before the user registered.
 
 #### Course assignments list
 
@@ -445,7 +447,9 @@ Registered at `/judge/`
     {
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "host": "10.19.171.56:443",
-        "cert": "thisisthecert",
+        "client_cert": "thisisthecert",
+        "cert_ca": "thisisthecert",
+        "client_key": "thisisthekey",
         "max_job": 4
     }
 ]
@@ -461,7 +465,9 @@ Registered at `/judge/<str:uid>`
 {
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "host": "10.19.171.56:443",
-    "cert": "thisisthecert",
+    "client_cert": "thisisthecert",
+    "cert_ca": "thisisthecert",
+    "client_key": "thisisthekey",
     "max_job": 4
 }
 ```

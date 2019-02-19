@@ -382,7 +382,7 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     '''
     `/course/<str:course_id>/judge/`
     '''
-    serializer_class = JudgerSerializer
+    serializer_class = courseJudgeSerializer
     permission_classes = (courseJudgeReadWritePermisson,)
 
     def get_queryset(self):
@@ -404,14 +404,14 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         if not this_course.instructor.get(uid=request.user.uid):
             return JsonResponse(data={}, status=403)
         this_course.judge.add(this_judge)
-        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+        return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 
 class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     '''
     `/course/<str:course_id>/judge/<str:judge_id>`
     '''
-    serializer_class = JudgerSerializer
+    serializer_class = courseJudgeSerializer
     permission_classes = (courseJudgeReadWritePermisson)
 
     def get_queryset(self):
@@ -429,14 +429,14 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
         this_course.judge.delete(this_judge)
-        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+        return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 
 class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
     '''
-    serializer_class = JudgerSerializer
+    serializer_class = courseJudgeSerializer
     permission_classes = (courseJudgeReadWritePermisson,)
 
     def get_queryset(self):
@@ -460,14 +460,14 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
         if not this_assignment.course.instructor.get(uid=request.user.uid):
             return JsonResponse(data={}, status=403)
         this_assignment.judge.add(this_judge)
-        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+        return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 
 class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>`
     '''
-    serializer_class = JudgerSerializer
+    serializer_class = courseJudgeSerializer
     permission_classes = (courseJudgeReadWritePermisson)
 
     def get_queryset(self):
@@ -486,7 +486,7 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
         this_course.judge.delete(this_judge)
-        return JsonResponse(JudgerSerializer(this_judge), safe=False, status=201)
+        return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 
 class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
@@ -526,7 +526,7 @@ class instrJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
     '''
     `/judge/`
     '''
-    serializer_class = JudgerSerializer
+    serializer_class = JudgeSerializer
     permission_classes = (judgeReadWritePermission,)
 
     def get_queryset(self):
@@ -544,7 +544,7 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
     '''
     `/judge/<str:uid>`
     '''
-    serializer_class = JudgerSerializer
+    serializer_class = JudgeSerializer
     permission_classes = (judgeReadWritePermission)
 
     def get(self, request, *args, **kwargs):
@@ -599,8 +599,7 @@ class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
         pending_list = []
         for submission in all_pending:
             submission = simplejson.loads(submission)
-            if submission['course_id'] == course_id:
-                pending_list.append(submission)
+            pending_list.append(submission)
         return JsonResponse(pending_list, status=200, safe=False)
 
 

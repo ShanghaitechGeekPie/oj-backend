@@ -125,7 +125,7 @@ class ScoreBoardSerializer(serializers.ModelSerializer):
                   'score', 'submission_time', 'delta')
 
 
-class JudgerSerializer(serializers.ModelSerializer):
+class JudgeSerializer(serializers.ModelSerializer):
     """
     Returns information of a judger.
     """
@@ -133,3 +133,8 @@ class JudgerSerializer(serializers.ModelSerializer):
         model = Judge
         fields = ('uid', 'host', 'max_job',
                   'client_key', 'client_cert', 'cert_ca')
+
+class courseJudgeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Judge
+        fields = ('uid',)
