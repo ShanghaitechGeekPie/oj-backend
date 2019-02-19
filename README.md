@@ -168,6 +168,7 @@ Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/`.
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
+        "short_name": "hw1",
         "deadline":  1548241628,
         "release_date": 1548241628,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
@@ -385,6 +386,8 @@ Registered at `/course/<str:uid>/assignment/`
     }
 ]
 ```
+
+When creating a new assignment, an additional field `ssh_url_to_repo` is added to the response indicating the repo to the grading script.
 
 TODO: export all assignments.
 

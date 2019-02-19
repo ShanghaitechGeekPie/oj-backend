@@ -138,6 +138,9 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         instr_uid = self.request.user.uid
         return Course.objects.filter(instructor__uid=instr_uid)
 
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -220,8 +223,13 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         try:
             MWCourseAddAssignment(
                 self.kwargs['uid'], this_assignment.name, this_assignment.uid)
+            repo = MWCourseAddRepo(self.kwargs['uid'], this_assignment.uid, [], repo_name='_grading_script')
+            git_repo = repo.response.json().get('ssh_url_to_repo')
         except (MiddlewareError, MWUpdateError):
             return JsonResponse(data={}, status=500)
+        if isinstance(response, Response):
+            response.data['ssh_url_to_repo'] = git_repo
+            response.content = simplejson.dumps(response.data)
         return response
 
 
@@ -338,7 +346,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
             MWUpdateUser(request.data['email'])
         this_course.student.add(this_student)
         for assignment in this_course.assignment_set.all():
-            MWCourseAddStudent(
+            MWCourseAddRepo(
                 self.kwargs['course_id'], assignment.uid, request.data['email'])
         return JsonResponse(data={}, status=201)
 

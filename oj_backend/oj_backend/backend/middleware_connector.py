@@ -60,6 +60,7 @@ class baseMiddlewareAdopter:
     def __init__(self, api_server=None, interface=None, payload=None):
         self.api_server = api_server
         self.interface = interface
+        self.response = None
         self._send_request(payload)
 
     def _send_request(self, payload):
@@ -74,6 +75,7 @@ class baseMiddlewareAdopter:
             cause = request.json().get('cuase') if request.json().get(
                 'cuase') else "Middleware server returns with an unexplianed status code {}.".format(request.status_code)
             raise MWUpdateError(cause=cause)
+        self.response = request
 
     @staticmethod
     def gen_passwd():
@@ -120,16 +122,17 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
 
-class MWCourseAddStudent(baseMiddlewareAdopter):
-    def __init__(self, course_uid, assignment_uid, student_email, api_server=OJBN_GITLAB_ADDR):
+class MWCourseAddRepo(baseMiddlewareAdopter):
+    def __init__(self, course_uid, assignment_uid, student_email, repo_name=None,api_server=OJBN_GITLAB_ADDR):
         interface = "/courses/{}/assignments/{}/repos".format(
             course_uid, assignment_uid)
-        if not isinstance(student_email, list):
-            repo_name = student_email.split('@')[0]
-            student_email = [student_email]
-        else:
-            repo_name = 'group_' + \
-                "_".join(user.split('@')[0] for user in student_email)
+        if repo_name == None:
+            if not isinstance(student_email, list):
+                repo_name = student_email.split('@')[0]
+                student_email = [student_email]
+            else:
+                repo_name = 'group_' + \
+                    "_".join(user.split('@')[0] for user in student_email)
         payload = {'owner_email': student_email, 'repo_name': repo_name}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
