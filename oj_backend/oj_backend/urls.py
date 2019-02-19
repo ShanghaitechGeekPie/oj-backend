@@ -60,5 +60,14 @@ urlpatterns = [
     path('course/<str:course_id>/assignment/<str:assignment_id>/judge/',
          assignmentJudgeList.as_view()),
     path('course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>',
-         assignmentJudgeDetail.as_view())
+         assignmentJudgeDetail.as_view()),
+    path('course/<str:course_id>/assignment/<str:assignment_id>/scores/',
+         assignmentScoreboardDetail.as_view()),
+    path('student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/',
+         submissionHistoryList.as_view()),
+    path('student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:git_commit_id>',
+         submissionHistoryDetail.as_view()),
+    path('judge/', instrJudgeList.as_view()),
+    path('judge/<str:uid>', instrJudgeDetail.as_view()),
+    path('internal/submission/', internalSubmissionInterface.as_view())
 ]

@@ -486,7 +486,8 @@ Authorization: TBD
 {
     "assignment_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-    "upstream": "git@git.oj.geekpie.club/si100c-17f/hw1-diaozh.git"
+    "upstream": "git@git.oj.geekpie.club/si100c-17f/hw1-diaozh.git",
+    "additional_data": "this is additional data, put what you what."
 }
 ```
 

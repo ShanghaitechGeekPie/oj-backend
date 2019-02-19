@@ -223,7 +223,8 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         try:
             MWCourseAddAssignment(
                 self.kwargs['uid'], this_assignment.name, this_assignment.uid)
-            repo = MWCourseAddRepo(self.kwargs['uid'], this_assignment.uid, [], repo_name='_grading_script')
+            repo = MWCourseAddRepo(self.kwargs['uid'], this_assignment.uid, [
+            ], repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
         except (MiddlewareError, MWUpdateError):
             return JsonResponse(data={}, status=500)
@@ -347,7 +348,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         this_course.student.add(this_student)
         for assignment in this_course.assignment_set.all():
             MWCourseAddRepo(
-                self.kwargs['course_id'], assignment.uid, request.data['email'])
+                self.kwargs['course_id'], assignment.uid, request.data['email'], owner_uid=this_student.uid)
         return JsonResponse(data={}, status=201)
 
 
@@ -611,8 +612,11 @@ class internalSubmissionInterface(generics.GenericAPIView):
     def post(self, request, *args, **kwargs):
         this_submission = simplejson.dumps(request.DATA)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
-        this_redis.zadd(request.DATA["assignment_uid"], {
-                        request.DATA["upstream"]: time.time()})
+        payload = {'upstream': request.data['upstream'], "owner_uids": simplejson.loads(
+            request.data['additional_data'])}
+        payload = simplejson.dumps(payload)
+        this_redis.zadd(request.data["assignment_uid"], {
+                        payload: time.time()})
         return Response(data=this_submission, status=201)
 
 
