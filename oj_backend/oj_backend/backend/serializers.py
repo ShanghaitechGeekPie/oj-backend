@@ -131,4 +131,5 @@ class JudgerSerializer(serializers.ModelSerializer):
     """
     class Meta:
         model = Judge
-        fields = ('uid', 'host', 'max_job')
+        fields = ('uid', 'host', 'max_job',
+                  'client_key', 'client_cert', 'cert_ca')

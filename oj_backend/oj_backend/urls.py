@@ -31,10 +31,34 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
-from oj_backend.backend.views import urls
+from django.urls import path, include
+from oj_backend.backend.views import *
 
 urlpatterns = [
-    url(r'^oidc/', include('mozilla_django_oidc.urls')),
-
+    path(r'^oidc/', include('mozilla_django_oidc.urls')),
+    path('student/<str:uid>', studentInformation.as_view()),
+    path('instructor/<str:uid>', insturctorInformation.as_view()),
+    path('user/role', userRole.as_view()),
+    path('user/login/oauth/param', oauthLoginParam.as_view()),
+    path('student/<str:uid>/course/', courseList4Students.as_view()),
+    path('instructor/<str:uid>/course/', courseList4Instr.as_view()),
+    path('student/<str:student_id>/course/<str:course_id>/assignment/',
+         assignmentList4Student.as_view()),
+    path('course/<str:course_id>', courseInformation.as_view()),
+    path('course/<str:uid>/assignment/', assignmentList4Instr.as_view()),
+    path('course/<str:course_id>/assignment/<str:assignment_id>',
+         assignmentDetail.as_view()),
+    path('course/<str:uid>/instructor/', courseInstrList.as_view()),
+    path('course/<str:course_id>/instructor/<str:instr_email>',
+         courseInstrDetail.as_view()),
+    path('course/<str:course_id>/student/', courseStudentList.as_view()),
+    path('course/<str:course_id>/student/<str:student_email>',
+         courseStudentDetail.as_view()),
+    path('course/<str:course_id>/judge/', courseJudgeList.as_view()),
+    path('course/<str:course_id>/judge/<str:judge_id>',
+         courseJudgeDetail.as_view()),
+    path('course/<str:course_id>/assignment/<str:assignment_id>/judge/',
+         assignmentJudgeList.as_view()),
+    path('course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>',
+         assignmentJudgeDetail.as_view())
 ]

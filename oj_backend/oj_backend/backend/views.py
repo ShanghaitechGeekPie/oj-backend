@@ -20,6 +20,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, validate_ipv46_address
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse
 from django.contrib.auth.models import AnonymousUser
+from django.urls import path, include
 from rest_framework import status, generics, mixins
 from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
@@ -367,6 +368,7 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         response = JsonResponse(data=this_student, safe=False, status=201)
         this_student.delete()
         return response
+
 
 class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
     '''
