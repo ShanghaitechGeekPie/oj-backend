@@ -19,7 +19,15 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 #from django.contrib.auth.models import User
 from .users import User
+from .models import *
 
+admin.site.register(User)
 admin.site.register(User, UserAdmin)
+admin.site.register(Student)
+admin.site.register(Instructor)
+admin.site.register(Course)
+admin.site.register(Assignment)
+admin.site.register(Record)
+admin.site.register(Judge)
 
 # Register your models here.
