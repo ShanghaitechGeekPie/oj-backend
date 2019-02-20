@@ -58,8 +58,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'oj_database',
-    'oj_backend.backend',
     'oj_backend',
+    'oj_backend.backend.users'
+    'oj_backend.backend',
 ]
 
 MIDDLEWARE = [
@@ -144,7 +145,7 @@ AUTHENTICATION_BACKENDS = (
     'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
 )
 
-AUTH_USER_MODEL = 'oj_backend.User'
+AUTH_USER_MODEL = 'users.User'
 
 OIDC_RP_SIGN_ALGO = 'HS256'
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
