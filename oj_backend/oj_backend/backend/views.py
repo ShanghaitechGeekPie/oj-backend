@@ -461,6 +461,8 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
         if not this_assignment.course.instructor.get(uid=request.user.uid):
             return JsonResponse(data={}, status=403)
         this_assignment.judge.add(this_judge)
+        this_redis = redis.Redis(connection_pool=redisConnectionPool)
+        this_redis.publish('assignment_judge', request.data['uid'])
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 
@@ -487,6 +489,8 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
         this_course.judge.delete(this_judge)
+        this_redis = redis.Redis(connection_pool=redisConnectionPool)
+        this_redis.publish('assignment_judge', request.data['uid'])
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 

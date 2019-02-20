@@ -102,7 +102,7 @@ class MWUpdateUserKey(baseMiddlewareAdopter):
 class MWUpdateCourse(baseMiddlewareAdopter):
 
     def __init__(self, course_name, course_uid, api_server=OJBN_GITLAB_ADDR):
-        payload = {"name": course_name, "uuid": course_uid}
+        payload = {"name": course_name.lower(), "uuid": course_uid}
         super().__init__(api_server=api_server, interface='/courses', payload=payload)
 
 
@@ -128,12 +128,12 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
             course_uid, assignment_uid)
         if repo_name == None:
             if not isinstance(owner_email, list):
-                repo_name = owner_email.split('@')[0]
+                repo_name = owner_email.split('@')[0].lower()
                 owner_email = [owner_email]
                 owner_uid = [owner_uid]
             else:
                 repo_name = 'group_' + \
-                    "_".join(user.split('@')[0] for user in owner_email)
+                    "_".join(user.split('@')[0] for user in owner_email).lower()
         payload = {'owner_email': owner_email, 'repo_name': repo_name, 'additional_data': simplejson.dumps(owner_uid)}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
