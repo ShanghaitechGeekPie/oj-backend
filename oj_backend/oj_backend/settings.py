@@ -144,7 +144,7 @@ AUTHENTICATION_BACKENDS = (
     'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
 )
 
-AUTH_USER_MODEL = 'oj_backend.backend.models.User'
+AUTH_USER_MODEL = 'oj_backend.User'
 
 OIDC_RP_SIGN_ALGO = 'HS256'
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']

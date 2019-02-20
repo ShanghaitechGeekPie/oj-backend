@@ -16,7 +16,7 @@
 # under the License.
 
 from rest_framework import serializers
-from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge, PendingAssignment
+from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge
 
 
 class StudentInfoSerializer(serializers.ModelSerializer):
