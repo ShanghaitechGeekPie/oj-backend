@@ -58,9 +58,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'oj_database',
-    'oj_backend',
-    'oj_backend.backend',
+    'oj_backend.backend.admin',
+    'oj_backend.backend.middleware_connector',
+    'oj_backend.backend.models',
+    'oj_backend.backend.permissions',
+    'oj_backend.backend.serializers',
     'oj_backend.backend.users',
+    'oj_backend.backend.views'
 ]
 
 MIDDLEWARE = [
