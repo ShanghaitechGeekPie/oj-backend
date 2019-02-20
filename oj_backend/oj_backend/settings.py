@@ -152,8 +152,8 @@ OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
 OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
 OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
 OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
-LOGIN_REDIRECT_URL = os.environ['OIDC_LOGIN_REDIRECT_URL']
-LOGOUT_REDIRECT_URL = os.environ['OIDC_LOGOUT_REDIRECT_URL']
+LOGIN_REDIRECT_URL = "https://oj.geekpie.club/"
+LOGOUT_REDIRECT_URL = "https://oj.geekpie.club/"
 
 
 # Internationalization
@@ -176,6 +176,3 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # override the auth mode.
-
-LOGIN_URL = '/login'
-LOGIN_REDIRECT_URL = '/'
