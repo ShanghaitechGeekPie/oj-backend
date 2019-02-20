@@ -59,8 +59,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'oj_database',
     'oj_backend',
-    'oj_backend.backend.users'
     'oj_backend.backend',
+    'oj_backend.backend.users',
 ]
 
 MIDDLEWARE = [
