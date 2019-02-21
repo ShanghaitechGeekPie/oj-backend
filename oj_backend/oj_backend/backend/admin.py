@@ -21,7 +21,6 @@ from django.contrib.auth.admin import UserAdmin
 from .users import User
 from .models import *
 
-admin.site.register(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(Student)
 admin.site.register(Instructor)
