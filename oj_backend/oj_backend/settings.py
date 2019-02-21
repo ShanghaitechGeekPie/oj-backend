@@ -49,14 +49,14 @@ ALLOWED_HOSTS = [os.environ['OJBN_HOSTNAME'], ]
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework',
-    'mozilla_django_oidc',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'mozilla_django_oidc'
+    'rest_framework',
     'oj_database',
     'oj_backend.backend.admin',
     'oj_backend.backend.middleware_connector',
