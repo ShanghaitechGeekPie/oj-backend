@@ -34,13 +34,12 @@ except:
 import redis
 import time
 
-import oj_backend.settings
 import oj_backend.backend.middleware_connector as mw_connector
 from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment
 from oj_backend.backend.models import *
 from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
-from oj_backend.settings import redisConnectionPool
+from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT
 from oj_backend.backend.middleware_connector import *
 
 
@@ -630,4 +629,4 @@ class oauthLoginParam(generics.GenericAPIView):
     '''
 
     def get(self, request, *args, **kwargs):
-        return JsonResponse(status=200, data={'login_url': settings.OIDC_OP_AUTHORIZATION_ENDPOINT})
+        return JsonResponse(status=200, data={'login_url': OIDC_OP_AUTHORIZATION_ENDPOINT})
