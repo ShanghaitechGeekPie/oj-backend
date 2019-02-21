@@ -38,7 +38,7 @@ Registered at `/oidc/callback/`. Users are required to login in order to access 
 
 #### Login parameters
 
-Supported method: `POST`
+Supported method: `GET`
 
 Registered at `/user/login/oauth/param`
 
@@ -49,6 +49,7 @@ Registered at `/user/login/oauth/param`
 ```
 
 In this example, frontend shall redirect user to `https://gauth.geekpie.club/oauth/login`.
+
 #### User's role
 
 Supported method: `GET`
@@ -404,13 +405,14 @@ Registered at `/course/<str:uid>/assignment/<str:uid>`
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
+    "short_name": "HW1",
     "deadline":  1548241628,
     "release_date": 1548241628,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
 }
 ```
 
-#### Course judges list
+#### Course's default judges list
 
 Supported method: `GET`, `POST`
 
@@ -424,7 +426,7 @@ Registered at `/course/<str:uid>/judge/`
 ]
 ```
 
-#### Course judge
+#### Course's default judge
 
 Supported method: `GET`, `POST`, `DELETE`
 
@@ -436,7 +438,33 @@ Registered at `/course/<str:course_id>/judge/<str:judge_id>`
 }
 ```
 
-#### Judges list
+#### Assignment judges list
+
+Supported method: `GET`, `POST`
+
+Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
+
+```json
+[
+    {
+        "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+    }
+]
+```
+
+#### Assignment's judge
+
+Supported method: `GET`, `POST`, `DELETE`
+
+Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>`
+
+```json
+{
+    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+}
+```
+
+#### Judge List
 
 Suppoerted method: `GET`, `POST`
 
