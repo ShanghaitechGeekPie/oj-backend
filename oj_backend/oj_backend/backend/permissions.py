@@ -17,7 +17,7 @@
 
 from rest_framework import permissions
 from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge
-from oj_beckend.backend.utils import get_course_uid_from_path as get_course_uid
+from oj_backend.backend.utils import get_course_uid_from_path as get_course_uid
 
 
 class userInfoReadWritePermission(permissions.BasePermission):
