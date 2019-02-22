@@ -28,6 +28,8 @@ class userInfoReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         return request.user.uid == obj.user.uid
 
 
@@ -41,6 +43,8 @@ class submissionRecordReadPermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         this_user = request.user
         this_student = obj.student
         this_instr = obj.assignment.course.instructor.filter(user__uid=this_user.uid)
@@ -59,6 +63,8 @@ class assignmentInfoReadWritePermisson(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         this_course = obj.course
         this_user = request.user
         this_student = this_course.student.filter(user__uid=this_user.uid)
@@ -80,6 +86,8 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         this_course = Course.objects.get(uid=get_course_uid(request.path))
         if this_course:
             this_student = this_course.student.filter(user__uid=request.user.uid)
@@ -102,6 +110,8 @@ class courseStudentInfoReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         try:
             this_course = Course.objects.get(uid=get_course_uid(request.path))
         except:
@@ -115,6 +125,8 @@ class judgeReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         this_user = request.user
         return obj.maintainer.filter(user__uid=this_user.uid).exists()
 
@@ -129,6 +141,8 @@ class courseJudgeReadWritePermisson(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         try:
             this_course = Course.objects.filter(uid=get_course_uid(request.path))
         except:
@@ -146,6 +160,8 @@ class courseReadWritePermission(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         instr = obj.instructor.filter(user__uid=request.user.uid)
         student = obj.student.filter(user__uid=request.user.uid)
         if request.method in permissions.SAFE_METHODS:
@@ -158,6 +174,8 @@ class courseReadWritePermission(permissions.BasePermission):
 class courseRelatedObjReadWritebyInstr(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         return obj.instructor.filter(user__uid=request.user.uid).exists()
 
 
@@ -168,6 +186,8 @@ class recordReadOnly(permissions.BasePermission):
     '''
 
     def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
         if request.method in permissions.SAFE_METHODS:
             if obj.student.user.uid == request.user.uid:
                 return True
