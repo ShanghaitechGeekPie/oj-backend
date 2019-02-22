@@ -140,7 +140,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'mozilla_django_oidc.auth.OIDCAuthenticationBackend',
+    'oj_backend.backend.users.OJOIDCAuthenticationBackend',
 )
 
 AUTH_USER_MODEL = 'oj_database.User'

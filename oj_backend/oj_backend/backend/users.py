@@ -22,27 +22,27 @@ from oj_database.models import Student
 from oj_database.models import Instructor
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
-class MyOIDCAB(OIDCAuthenticationBackend):
-    
-    def createFromOIDC(self,claims):
 
-        addEmail=claims.get('email')
-        addName=claims.get('first name')+claims.get('last name')
-        user=User.objects(email=addEmail,name=addName,rsa_pub_key="")
+class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
+
+    def createFromOIDC(self, claims):
+
+        addEmail = claims.get('email')
+        addName = claims.get('first name')+claims.get('last name')
+        user = User.objects(email=addEmail, name=addName, rsa_pub_key="")
         user.save()
 
         return user
 
-    def updateUser(self,olduser,claims):
+    def updateUser(self, olduser, claims):
 
         Student.object.filter(enroll_email=olduser.email).update(user=None)
         Instructor.object.filter(enroll_email=olduser.email).update(user=None)
-        olduser.email=claims.get('email')
-        olduser.name=claims.get('first name')+claims.get('last name')
+        olduser.email = claims.get('email')
+        olduser.name = claims.get('first name')+claims.get('last name')
         olduser.save()
         Student.object.filter(enroll_email=olduser.email).update(user=olduser)
-        Instructor.object.filter(enroll_email=olduser.email).update(user=olduser)
-        
+        Instructor.object.filter(
+            enroll_email=olduser.email).update(user=olduser)
+
         return olduser
-
-
