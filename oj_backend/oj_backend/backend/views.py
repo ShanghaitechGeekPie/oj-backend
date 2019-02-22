@@ -20,7 +20,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email, validate_ipv46_address
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse
 from django.contrib.auth.models import AnonymousUser
-from django.urls import path, include
+from django.urls import path, include, reverse
 from rest_framework import status, generics, mixins
 from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
@@ -632,4 +632,4 @@ class oauthLoginParam(generics.GenericAPIView):
     '''
 
     def get(self, request, *args, **kwargs):
-        return JsonResponse(status=200, data={'login_url': OIDC_OP_AUTHORIZATION_ENDPOINT})
+        return JsonResponse(status=200, data={'login_url': reverse('oidc_authentication_init')})
