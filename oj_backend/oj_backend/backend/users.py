@@ -31,7 +31,6 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         addName = claims.get('first name')+claims.get('last name')
         user = User.objects(email=addEmail, name=addName, rsa_pub_key="")
         user.save()
-
         return user
 
     def updateUser(self, olduser, claims):

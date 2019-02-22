@@ -105,8 +105,8 @@ class userRole(generics.GenericAPIView):
             return Response(status=401)
         data = {
             'uid': request.user.uid,
-            'is_student': Student.objects.get(user__uid=request.user.uid).exists(),
-            'is_instructor': Instructor.objects.get(user__uid=request.user.uid).exists()
+            'is_student': Student.objects.filter(user__uid=request.user.uid).exists(),
+            'is_instructor': Instructor.objects.filter(user__uid=request.user.uid).exists()
         }
         return JsonResponse(data=data, status=200)
 
@@ -217,7 +217,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
     def post(self, request, *args, **kwargs):
         # TODO: notify using redis.
         response = self.create(request, *args, **kwargs)
-        this_assignment = Assignment.objects.filter(
+        this_assignment = Assignment.objects.get(
             course__uid=self.kwargs['uid'], name=request.data['name'], descr_link=request.data['descr_link'])
         try:
             MWCourseAddAssignment(
@@ -271,16 +271,22 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
 
     def post(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['uid'])
-        if not this_course.instructor.get(user__uid=request.user.uid).exists():
+        if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
             validate_email(request.data['email'])
         except ValidationError:
             return JsonResponse(status=400, data={})
-        this_instr = Instructor.objects.get(user__email=request.data['email'])
-        if not this_instr.exists():
+        try:
+            this_instr = Instructor.objects.get(user__email=request.data['email'])
+        except:
             this_instr = Instructor(
                 enroll_email=request.data['email'], user=None)
+            try:
+                this_user = User.objects.get(email=request.data['email'])
+                this_instr.user = this_user
+            except:
+                pass
             this_instr.save()
         this_course.instructor.add(this_instr)
         MWCourseAddInstr(
@@ -304,11 +310,11 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
 
     def delete(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        if not this_course.instructor.get(user__uid=request.user.uid).exists():
+        if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         this_instr = this_course.instructor.get(
-            email=self.kwargs['instr_email'])
-        if this_instr.uid == this_course.creator:
+            enroll_email=self.kwargs['instr_email'])
+        if this_instr.user.uid == this_course.creator:
             return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
         if not this_instr.exists():
             return JsonResponse(data={}, status=404)
@@ -332,16 +338,21 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
 
     def post(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['uid'])
-        if not this_course.instructor.get(user__uid=request.user.uid).exists():
+        if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
             validate_email(request.data['email'])
         except ValidationError:
             return JsonResponse(status=400, data={})
-        this_student = Student.objects.get(user__email=request.data['email'])
-        if not this_student.exists():
-            this_student = Student(
-                enroll_email=request.data['email'], user=None)
+        try:
+            this_student = Student.objects.get(user__email=request.data['email'])
+        except:
+            this_student = Student(enroll_email=request.data['email'], user=None)
+            try:
+                this_user = User.objects.get(email=request.data['email'])
+                this_student.user = this_user
+            except:
+                pass
             this_student.save()
             MWUpdateUser(request.data['email'])
         this_course.student.add(this_student)
@@ -367,11 +378,11 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
 
     def delete(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        if not this_course.instructor.get(user__uid=request.user.uid).exists():
+        if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
-        this_student = this_course.student.get(
-            enroll_email=self.kwargs['student_email'])
-        if not this_student.exists():
+        try:
+            this_student = this_course.student.get(enroll_email=self.kwargs['student_email'])
+        except:
             return JsonResponse(data={}, status=404)
         response = JsonResponse(data=this_student, safe=False, status=201)
         this_student.delete()
@@ -393,15 +404,19 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        this_judge = Judge.objects.get(uid=request.data['uid'])
-        if not this_judge.exists():
+        try:
+            this_judge = Judge.objects.get(uid=request.data['uid'])
+        except:
             return JsonResponse(data={}, status=404)
         if not this_judge.maintainer == request.user:
             return JsonResponse(data={}, status=403)
-        this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        if not this_course.exists():
+        try:
+            this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        except:
             return JsonResponse(data={}, status=404)
-        if not this_course.instructor.get(uer__uid=request.user.uid):
+        try:
+            this_course.instructor.get(uer__uid=request.user.uid)
+        except:
             return JsonResponse(data={}, status=403)
         this_course.judge.add(this_judge)
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
@@ -422,10 +437,13 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         return self.retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        if not this_course.exists():
+        try:
+            this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        except:
             return JsonResponse(data={}, status=404)
-        if not this_course.instructor.get(user__uid=request.user.uid):
+        try:
+            this_course.instructor.get(user__uid=request.user.uid)
+        except:
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
         this_course.judge.delete(this_judge)
@@ -448,16 +466,19 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        this_judge = Judge.objects.get(uid=request.data['uid'])
-        if not this_judge.exists():
+        try:
+            this_judge = Judge.objects.get(uid=request.data['uid'])
+        except:
             return JsonResponse(data={}, status=404)
         if not this_judge.maintainer == request.user.instructor:
             return JsonResponse(data={}, status=403)
-        this_assignment = Assignment.objects.get(
-            uid=self.kwargs['assignment_id'])
-        if not this_assignment.exists():
+        try:
+            this_assignment = Assignment.objects.get(uid=self.kwargs['assignment_id'])
+        except:
             return JsonResponse(data={}, status=404)
-        if not this_assignment.course.instructor.get(user__uid=request.user.uid):
+        try:
+            this_assignment.course.instructor.get(user__uid=request.user.uid)
+        except:
             return JsonResponse(data={}, status=403)
         this_assignment.judge.add(this_judge)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
@@ -481,10 +502,13 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         return self.retrieve(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        if not this_course.exists():
+        try:
+            this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        except:
             return JsonResponse(data={}, status=404)
-        if not this_course.instructor.get(user__uid=request.user.uid):
+        try:
+            this_course.instructor.get(user__uid=request.user.uid)
+        except:
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
         this_course.judge.delete(this_judge)
@@ -599,7 +623,7 @@ class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
     def get(self, request, course_id):
         if request.user is AnonymousUser:
             return Response(data={}, status=401)
-        if not (Course.objects.get(uid=course_id).insturctor.get(user__uid=request.user.uid).exists() or Course.objects.get(uid=course_id).student.get(user__uid=request.user.uid).exists()):
+        if not (Course.objects.get(uid=course_id).insturctor.filter(user__uid=request.user.uid).exists() or Course.objects.filter(uid=course_id).student.get(user__uid=request.user.uid).exists()):
             return Response(data={}, status=403)
         redis_server = redis.Redis(
             connection_pool=redisConnectionPool)
