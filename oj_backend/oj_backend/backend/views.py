@@ -632,6 +632,6 @@ class oauthLoginParam(generics.GenericAPIView):
     '''
 
     def get(self, request, *args, **kwargs):
-        host = request.META.get('SERVER_NAME')
+        host = request.META.get('HTTP_HOST')
         schema = "https://" #if OJ_ENFORCE_HTTPS else request.MATA.get['HTTP_X_FORWARDED_PROTO']
         return JsonResponse(status=200, data={'login_url': schema+host+reverse('oidc_authentication_init')})
