@@ -55,7 +55,7 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
 
     def get_object(self):
         queryset = self.get_queryset()
-        obj = get_object_or_404(queryset, uid=self.kwargs['uid'])
+        obj = get_object_or_404(queryset, user__uid=self.kwargs['uid'])
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -85,7 +85,7 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
 
     def get_object(self):
         queryset = self.get_queryset()
-        obj = get_object_or_404(queryset, uid=self.kwargs['uid'])
+        obj = get_object_or_404(queryset, user__uid=self.kwargs['uid'])
         self.check_object_permissions(self.request, obj)
         return obj
 
