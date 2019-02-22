@@ -331,7 +331,7 @@ Caution: `name`, `student_id` and `uid` fileds may be omitted because we do not 
 
 Supported method: `POST`, `GET`, `DELETE`
 
-Registered at `/course/<str:uid>/students/<id:uid>`.
+Registered at `/course/<str:uid>/students/<id:student_email>`.
 
 ```json
 {
@@ -347,7 +347,7 @@ Caution: `name`, `student_id` and `uid` fileds may be omitted because we do not 
 
 Supported method: `POST`, `GET`
 
-Registered at `/course/<str:uid>/instructor/`
+Registered at `/course/<str:course_id>/instructor/`
 
 ```json
 [
@@ -364,7 +364,7 @@ Caution: `name` and `uid` fileds may be omitted because we do not know those inf
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/course/<str:uid>/instructor/<str:uid>`
+Registered at `/course/<str:course_id>/instructor/<str:instr_email>`
 
 ```json
 {
@@ -403,7 +403,7 @@ TODO: export all assignments.
 
 Supported method: `GET`, `POST`, `DELETE`
 
-Registered at `/course/<str:uid>/assignment/<str:uid>`
+Registered at `/course/<str:course_id>/assignment/<str:assignment_id>`
 
 ```json
 {
