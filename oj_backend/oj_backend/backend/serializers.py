@@ -92,7 +92,7 @@ class CoursesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ('uid', 'name', 'year', 'semaster',
+        fields = ('uid', 'name', 'year', 'semester',
                   'homepage', 'instructor', 'code')
 
 
@@ -117,12 +117,17 @@ class SubmissionRecordSerializer(serializers.ModelSerializer):
 
 class ScoreBoardSerializer(serializers.ModelSerializer):
     student_nickname = serializers.CharField(source='student.nickname')
-    overall_score = serializers.IntegerField(source='assignment.grade')
+    overall_score = serializers.FloatField(source='assignment.grade')
+    score = serializers.FloatField(source='grade')
 
     class Meta:
         model = Record
         fields = ('student_nickname', 'overall_score',
                   'score', 'submission_time', 'delta')
+
+    @property
+    def delta(self):
+        return -1
 
 
 class JudgeSerializer(serializers.ModelSerializer):

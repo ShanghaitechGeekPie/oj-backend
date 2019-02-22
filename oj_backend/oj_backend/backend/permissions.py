@@ -67,7 +67,7 @@ class assignmentInfoReadWritePermisson(permissions.BasePermission):
             return False
         this_course = obj.course
         this_user = request.user
-        this_student = this_course.student.filter(user__uid=this_user.uid)
+        this_student = this_course.students.filter(user__uid=this_user.uid)
         this_instr = this_course.instructor.filter(user__uid=this_user.uid)
         if request.method in permissions.SAFE_METHODS:
             return this_instr.exists() or this_student.exists()
@@ -90,7 +90,7 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
             return False
         this_course = Course.objects.get(uid=get_course_uid(request.path))
         if this_course:
-            this_student = this_course.student.filter(user__uid=request.user.uid)
+            this_student = this_course.students.filter(user__uid=request.user.uid)
             this_instr = this_course.instructor.filter(user__uid=request.user.uid)
         else:
             return False
@@ -163,7 +163,7 @@ class courseReadWritePermission(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         instr = obj.instructor.filter(user__uid=request.user.uid)
-        student = obj.student.filter(user__uid=request.user.uid)
+        student = obj.students.filter(user__uid=request.user.uid)
         if request.method in permissions.SAFE_METHODS:
             # for any users in this class.
             return instr.exists() or student.exists()

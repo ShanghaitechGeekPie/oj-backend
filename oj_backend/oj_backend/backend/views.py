@@ -693,10 +693,10 @@ class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin)
     permission_classes = (recordReadOnly,)
 
     def get_queryset(self):
-        this_assignment = self.kwargs['course_id']
-        this_course = self.kwargs['assignment_id']
+        this_course = self.kwargs['course_id']
+        this_assignment = self.kwargs['assignment_id']
         this_course_student_list = Course.objects.get(
-            uid=this_course).student.all()
+            uid=this_course).students.all()
         query_set = None
         for this_student in this_course_student_list:
             this_student_record = Record.objects.filter(

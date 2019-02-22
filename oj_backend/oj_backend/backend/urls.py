@@ -27,7 +27,7 @@ urlpatterns = [
     path('instructor/<str:uid>/course/', courseList4Instr.as_view()),
     path('student/<str:student_id>/course/<str:course_id>/assignment/',
          assignmentList4Student.as_view()),
-    path('course/<str:course_id>', courseInformation.as_view()),
+    path('course/<str:uid>', courseInformation.as_view()),
     path('course/<str:uid>/assignment/', assignmentList4Instr.as_view()),
     path('course/<str:course_id>/assignment/<str:assignment_id>',
          assignmentDetail.as_view()),
