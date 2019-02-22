@@ -320,11 +320,12 @@ Registered at `/course/<str:uid>/students/`.
     {
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "王大锤",
-        "email": "wangdch@shanghaitech.edu.cn",
+        "enroll_email": "wangdch@shanghaitech.edu.cn",
         "student_id": "19260817",
     }
 ]
 ```
+Caution: `name`, `student_id` and `uid` fileds may be omitted because we do not know those information before the user registered.
 
 #### Course student
 
@@ -336,10 +337,11 @@ Registered at `/course/<str:uid>/students/<id:uid>`.
 {
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "王大锤",
-    "email": "wangdch@shanghaitech.edu.cn",
+    "enroll_email": "wangdch@shanghaitech.edu.cn",
     "student_id": "19260817",
 }
 ```
+Caution: `name`, `student_id` and `uid` fileds may be omitted because we do not know those information before the user registered.
 
 #### Course instrctors list
 
@@ -352,7 +354,7 @@ Registered at `/course/<str:uid>/instructor/`
     {
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Keyi Yuan",
-        "email": "weidaxz@shanghaitech.edu.cn"
+        "enroll_email": "weidaxz@shanghaitech.edu.cn"
     }
 ]
 ```
@@ -368,7 +370,7 @@ Registered at `/course/<str:uid>/instructor/<str:uid>`
 {
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Keyi Yuan",
-    "email": "weidaxz@shanghaitech.edu.cn"
+    "enroll_email": "weidaxz@shanghaitech.edu.cn"
 }
 ```
 Caution: `name` and `uid` fileds may be omitted because we do not know those information before the user registered.
@@ -385,6 +387,7 @@ Registered at `/course/<str:uid>/assignment/`
         "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
+        "short_name": "HW1",
         "deadline":  1548241628,
         "release_date": 1548241628,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
