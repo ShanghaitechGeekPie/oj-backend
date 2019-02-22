@@ -18,7 +18,7 @@
 from django.urls import path, include
 from .views import *
 
-urlspatterns = [
+urlpatterns = [
     path('student/<str:uid>', studentInformation.as_view()),
     path('instructor/<str:uid>', insturctorInformation.as_view()),
     path('user/role', userRole.as_view()),
