@@ -128,7 +128,7 @@ class judgeReadWritePermission(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         this_user = request.user
-        return obj.maintainer.filter(user__uid=this_user.uid).exists()
+        return obj.maintainer.user == this_user
 
 
 class courseJudgeReadWritePermisson(permissions.BasePermission):

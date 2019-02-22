@@ -89,6 +89,7 @@ class InstructorBasicInfoSerializer(serializers.ModelSerializer):
 
 
 class CoursesSerializer(serializers.ModelSerializer):
+    instructor = serializers.SlugRelatedField(many=True, read_only=True, slug_field='enroll_email')
 
     class Meta:
         model = Course

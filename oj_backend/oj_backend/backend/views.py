@@ -50,7 +50,7 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
     '''
     queryset = Student.objects.all()
     serializer_class = StudentInfoSerializer
-    permission_classes = (userInfoReadWritePermission,)
+    permission_classes = (userInfoReadWritePermission,IsAuthenticated)
     lookup_field = 'uid'
 
     def get_object(self):
@@ -80,7 +80,7 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
     '''
     queryset = Instructor.objects.all()
     serializer_class = InstructorInfoSerializer
-    permission_classes = (userInfoReadWritePermission,)
+    permission_classes = (userInfoReadWritePermission,IsAuthenticated)
     lookup_field = 'uid'
 
     def get_object(self):
@@ -125,7 +125,7 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
     `/student/<str:uid>/course/`
     '''
     serializer_class = CoursesSerializer
-    permission_classes = (courseReadWritePermission,)
+    permission_classes = (courseReadWritePermission,IsAuthenticated)
     queryset = Course.objects.all()
 
     def get_object(self):
@@ -144,7 +144,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
     `/insturctor/<str:uid>/course/`
     '''
     serializer_class = CoursesSerializer
-    permission_classes = (courseReadWritePermission,)
+    permission_classes = (courseReadWritePermission, IsAuthenticated)
     queryset = Course.objects.all()
 
     def get_object(self):
@@ -155,7 +155,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         return obj
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        serializer.save(creator=self.request.user.uid)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -177,7 +177,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
     `/student/<str:student_id>/course/<str:course_id>/assignment/`
     '''
     serializer_class = AssignmentSerializer
-    permission_classes = (assignmentInfoReadWritePermisson,)
+    permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
     queryset = Assignment.objects.all()
 
     def get_object(self):
@@ -198,7 +198,7 @@ class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
     `/course/<str:course_id>`
     '''
     serializer_class = CoursesSerializer
-    permission_classes = (courseReadWritePermission,)
+    permission_classes = (courseReadWritePermission, IsAuthenticated)
     queryset = Course.objects.all()
 
     def get_object(self):
@@ -230,7 +230,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
     `/course/<str:uid>/assignment/`
     '''
     serializer_class = AssignmentSerializer
-    permission_classes = (assignmentInfoReadWritePermisson,)
+    permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
     queryset = Assignment.objects.all()
 
     def get_object(self):
@@ -268,7 +268,7 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
     `/course/<str:course_id>/assignment/<str:assignment_id>`
     '''
     serializer_class = AssignmentSerializer
-    permission_classes = (assignmentInfoReadWritePermisson, )
+    permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
     queryset = Assignment.objects.all()
 
     def get_object(self):
@@ -295,7 +295,7 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
      `/course/<str:uid>/instructor/`
     '''
     serializer_class = InstructorBasicInfoSerializer
-    permission_classes = (courseInstrInfoReadWritePermission,)
+    permission_classes = (courseInstrInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
         this_course = Course.objects.get(uid=self.kwargs['uid'])
@@ -339,7 +339,7 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
     `/course/<str:course_id>/instructor/<str:instr_email>`
     '''
     serializer_class = InstructorBasicInfoSerializer
-    permission_classes = (courseInstrInfoReadWritePermission,)
+    permission_classes = (courseInstrInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
@@ -373,7 +373,8 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
     `/course/<str:course_id>/student/`
     '''
     serializer_class = StudentBasicInfoSerializer
-    permission_classes = (courseStudentInfoReadWritePermission)
+    permission_classes = (
+        courseStudentInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
         return Course.objects.get(uid=self.kwargs['course_id']).student.all()
@@ -418,7 +419,8 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     '''
 
     serializer_class = StudentBasicInfoSerializer
-    permission_classes = (courseStudentInfoReadWritePermission)
+    permission_classes = (
+        courseStudentInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
         return Course.objects.get(uid=self.kwargs['course_id']).all()
@@ -451,7 +453,7 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     `/course/<str:course_id>/judge/`
     '''
     serializer_class = courseJudgeSerializer
-    permission_classes = (courseJudgeReadWritePermisson,)
+    permission_classes = (courseJudgeReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
@@ -489,7 +491,7 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     `/course/<str:course_id>/judge/<str:judge_id>`
     '''
     serializer_class = courseJudgeSerializer
-    permission_classes = (courseJudgeReadWritePermisson)
+    permission_classes = (courseJudgeReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
@@ -522,7 +524,7 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
     `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
     '''
     serializer_class = courseJudgeSerializer
-    permission_classes = (courseJudgeReadWritePermisson,)
+    permission_classes = (courseJudgeReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
         this_assignment = Assignment.objects.filter(
@@ -563,7 +565,7 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>`
     '''
     serializer_class = courseJudgeSerializer
-    permission_classes = (courseJudgeReadWritePermisson)
+    permission_classes = (courseJudgeReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
         this_assignment = Assignment.objects.get(
@@ -599,7 +601,7 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
     `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/`
     '''
     serializer_class = SubmissionRecordSerializer
-    permission_classes = (submissionRecordReadPermission,)
+    permission_classes = (submissionRecordReadPermission, IsAuthenticated)
     queryset = Record.objects.all()
 
     def get_object(self):
@@ -620,7 +622,7 @@ class submissionHistoryDetail(generics.GenericAPIView, mixins.RetrieveModelMixin
     `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:git_commit_id>`
     '''
     serializer_class = SubmissionRecordSerializer
-    permission_classes = (submissionRecordReadPermission)
+    permission_classes = (submissionRecordReadPermission, IsAuthenticated)
     queryset = Record.objects.all()
 
     def get_queryset(self):
@@ -641,7 +643,7 @@ class instrJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
     `/judge/`
     '''
     serializer_class = JudgeSerializer
-    permission_classes = (judgeReadWritePermission,)
+    permission_classes = (judgeReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
         this_user = self.request.user
@@ -651,6 +653,9 @@ class instrJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
         obj = self.get_queryset()
         self.check_object_permissions(self.request, obj)
         return obj
+
+    def perform_create(self, serializer):
+        serializer.save(maintainer=self.request.user.instructor)
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -664,14 +669,16 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
     `/judge/<str:uid>`
     '''
     serializer_class = JudgeSerializer
-    permission_classes = (judgeReadWritePermission)
+    permission_classes = (judgeReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
         this_user = self.request.user
         return Judge.objects.filter(maintainer=this_user.instructor, uid=self.kwargs['uid'])
 
     def get_object(self):
-        obj = self.get_queryset()
+        this_user = self.request.user
+        obj = self.get_queryset().get(
+            maintainer=this_user.instructor, uid=self.kwargs['uid'])
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -690,7 +697,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin)
     `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
     '''
     serializer_class = ScoreBoardSerializer
-    permission_classes = (recordReadOnly,)
+    permission_classes = (recordReadOnly, IsAuthenticated)
 
     def get_queryset(self):
         this_course = self.kwargs['course_id']

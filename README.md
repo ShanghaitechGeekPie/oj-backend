@@ -240,7 +240,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/queue`.
 
 Supported method: `GET`
 
-Registered at `/course/<str:course_id>/instructor/<str:instr_id>/`
+Registered at `/course/<str:course_id>/instructor/<str:instr_email>/`
 
 ```json
 {
@@ -305,7 +305,7 @@ Registered at `/course/<str:uid>`.
     "semaster": "Fall",
     "year": 2017,
     "homepage": "https://shtech.org/course/si100c/17f/",
-    "instructor":["b3b17c00f16511e8b3dfdca9047a0f14", "b3b17c00f16511e8b3dfdca9047a0f14"]
+    "instructor":["weidaxz@shanghaitech.edu.cn", "huashuita@shanghaitech.edu.cn"]
 }
 ```
 
