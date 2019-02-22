@@ -31,10 +31,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, re_path, include
 from oj_backend.settings import OJ_URL_PREFIX as api_path
 
 urlpatterns = [
-    path(r'^oidc/', include('mozilla_django_oidc.urls')),
-    path(api_path, include('oj_backend.backend.urls'))
+    re_path(r'^oidc/', include('mozilla_django_oidc.urls')),
+    re_path(api_path, include('oj_backend.backend.urls'))
 ]
