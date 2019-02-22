@@ -21,6 +21,7 @@ from django.core.validators import validate_email, validate_ipv46_address
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse
 from django.contrib.auth.models import AnonymousUser
 from django.urls import path, include, reverse
+from django.shortcuts import get_object_or_404
 from rest_framework import status, generics, mixins
 from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
@@ -47,14 +48,16 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
     '''
     `/student/<str:uid>`
     '''
+    queryset = Student.objects.all()
     serializer_class = StudentInfoSerializer
     permission_classes = (userInfoReadWritePermission,)
     lookup_field = 'uid'
 
-    def get_queryset(self):
-        #student_uid = self.kwargs['uid']
-        #return Student.objects.get(user__uid=student_uid)
-        return Stduent.objects.all()
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset, uid=self.kwargs['uid'])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -75,13 +78,16 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
     '''
     `/instructor/<str:uid>/`
     '''
+    queryset = Instructor.objects.all()
     serializer_class = InstructorInfoSerializer
     permission_classes = (userInfoReadWritePermission,)
     lookup_field = 'uid'
 
-    def get_queryset(self):
-        instr_uid = self.kwargs['uid']
-        return Instructor.objects.all()
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset, uid=self.kwargs['uid'])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
