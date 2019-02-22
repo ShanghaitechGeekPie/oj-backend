@@ -39,7 +39,7 @@ from oj_backend.backend.utils import student_active_test, student_test, insturct
 from oj_backend.backend.models import *
 from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
-from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT, OJ_SUBMISSION_TOKEN
+from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT, OJ_SUBMISSION_TOKEN, OJ_ENFORCE_HTTPS
 from oj_backend.backend.middleware_connector import *
 
 
@@ -632,4 +632,6 @@ class oauthLoginParam(generics.GenericAPIView):
     '''
 
     def get(self, request, *args, **kwargs):
-        return JsonResponse(status=200, data={'login_url': reverse('oidc_authentication_init')})
+        host = request.META.get('SERVER_NAME')
+        schema = "https://" #if OJ_ENFORCE_HTTPS else request.MATA.get['HTTP_X_FORWARDED_PROTO']
+        return JsonResponse(status=200, data={'login_url': schema+host+reverse('oidc_authentication_init')})

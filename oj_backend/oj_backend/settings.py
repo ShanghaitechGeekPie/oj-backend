@@ -157,6 +157,7 @@ LOGOUT_REDIRECT_URL = "https://oj.geekpie.club/"
 OJ_SUBMISSION_TOKEN = os.environ['OJ_SUBMISSION_TOKEN']
 
 OJ_URL_PREFIX = r"^api/"
+OJ_ENFORCE_HTTPS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
