@@ -49,10 +49,12 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
     '''
     serializer_class = StudentInfoSerializer
     permission_classes = (userInfoReadWritePermission,)
+    lookup_field = 'uid'
 
     def get_queryset(self):
-        student_uid = self.kwargs['uid']
-        return Student.objects.get(user__uid=student_uid)
+        #student_uid = self.kwargs['uid']
+        #return Student.objects.get(user__uid=student_uid)
+        return Stduent.objects.all()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -75,10 +77,11 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
     '''
     serializer_class = InstructorInfoSerializer
     permission_classes = (userInfoReadWritePermission,)
+    lookup_field = 'uid'
 
     def get_queryset(self):
         instr_uid = self.kwargs['uid']
-        return Instructor.objects.get(user__uid=instr_uid)
+        return Instructor.objects.all()
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
