@@ -154,6 +154,8 @@ OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
 LOGIN_REDIRECT_URL = "https://oj.geekpie.club/"
 LOGOUT_REDIRECT_URL = "https://oj.geekpie.club/"
 
+OJ_SUBMISSION_TOKEN = os.environ['OJ_SUBMISSION_TOKEN']
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/

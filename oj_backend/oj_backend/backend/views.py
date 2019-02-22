@@ -39,7 +39,7 @@ from oj_backend.backend.utils import student_active_test, student_test, insturct
 from oj_backend.backend.models import *
 from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
-from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT
+from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT, OJ_SUBMISSION_TOKEN
 from oj_backend.backend.middleware_connector import *
 
 
@@ -613,6 +613,9 @@ class internalSubmissionInterface(generics.GenericAPIView):
     '''
 
     def post(self, request, *args, **kwargs):
+        auth_token = request.META.get("HTTP_AUTHORIZATION")
+        if auth_token != OJ_SUBMISSION_TOKEN:
+            return JsonResponse(status=401, data={})
         this_submission = simplejson.dumps(request.DATA)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         payload = {'upstream': request.data['upstream'], "owner_uids": simplejson.loads(
