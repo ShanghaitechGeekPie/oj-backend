@@ -36,5 +36,5 @@ from oj_backend.settings import OJ_URL_PREFIX as api_path
 
 urlpatterns = [
     path(r'^oidc/', include('mozilla_django_oidc.urls')),
-    path(api_path, include('backend.urls'))
+    path(api_path, include('oj_backend.backend.urls'))
 ]
