@@ -127,7 +127,7 @@ It provides student's submission history under an assignment.
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 1548241628,
+        "submission_time": 2019-01-23 19:07:08,
         "delta": 0
     }
 ]
@@ -150,7 +150,7 @@ It provides student's one specific submission under an assignment.
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 1548241628,
+        "submission_time": 2019-01-23 19:07:08,
         "delta": 0
     }
 ```
@@ -172,8 +172,8 @@ Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/`.
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
         "short_name": "hw1",
-        "deadline":  1548241628,
-        "release_date": 1548241628,
+        "deadline":  2019-01-23 19:07:08,
+        "release_date": 2019-01-23 19:07:08,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
         "score": 3.14,
         "overall_score": 10.0
@@ -192,8 +192,8 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
-    "deadline":  1548241628,
-    "release_date": 1548241628,
+    "deadline":  2019-01-23 19:07:08,
+    "release_date": 2019-01-23 19:07:08,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
     "score": 3.14,
     "overall_score": 10.0
@@ -212,7 +212,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
         "nickname": "hammerWang",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 1548241628,
+        "submission_time": 2019-01-23 19:07:08,
         "delta": 0
     }
 ]
@@ -229,7 +229,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/queue`.
     {
         "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "submission_time": 1548241628,
+        "submission_time": 2019-01-23 19:07:08,
         "submitter": "hammerWang"
     }
 ]
@@ -388,8 +388,8 @@ Registered at `/course/<str:uid>/assignment/`
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
         "short_name": "HW1",
-        "deadline":  1548241628,
-        "release_date": 1548241628,
+        "deadline":  2019-01-23 19:07:08,
+        "release_date": 2019-01-23 19:07:08,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
     }
 ]
@@ -411,8 +411,8 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>`
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
     "short_name": "HW1",
-    "deadline":  1548241628,
-    "release_date": 1548241628,
+    "deadline":  2019-01-23 19:07:08,
+    "release_date": 2019-01-23 19:07:08,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
 }
 ```
