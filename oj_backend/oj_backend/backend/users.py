@@ -30,33 +30,37 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
         addEmail = claims.get('email')
         addName = claims.get('famaily_name','')+claims.get('given_name','')
-        user = User(email=addEmail, name=addName, rsa_pub_key="")
+        user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
+            'famaily_name'), given_name=claims.get('given_name'))
         user.save()
         try:
             thisStudent = Student.objects.get(enroll_email=addEmail)
             thisStudent.user = user
-            thisStudent.nickname = claims.get('nickname','')
+            thisStudent.nickname = claims.get('nickname', '')
+            thisStudent.save()
             for course in thisStudent.course_set.all():
                 for assignment in course.assignment.all():
-                    MWCourseAddRepo(course.uid, assignment.uid, user.email, owner_uid=user.uid)
-        except:
+                    MWCourseAddRepo(course.uid, assignment.uid,
+                                    user.email, owner_uid=user.uid)
+        except Student.DoesNotExist:
             pass
+            # TODO: if this user has a student identity, we need to create a new student and point it to this user.
         try:
             thisInstr = Instructor.objects.get(enroll_email=addEmail)
             thisInstr.user = user
-        except:
+            thisInstr.save()
+        except Instructor.DoesNotExist:
             pass
         return user
 
     def update_user(self, olduser, claims):
 
-        Student.object.filter(enroll_email=olduser.email).update(user=None)
-        Instructor.object.filter(enroll_email=olduser.email).update(user=None)
+        Student.object.get(enroll_email=olduser.email).update(user=None)
+        Instructor.object.get(enroll_email=olduser.email).update(user=None)
         olduser.email = claims.get('email')
         olduser.name = claims.get('famaily_name','')+claims.get('given_name','')
         olduser.save()
-        Student.object.filter(enroll_email=olduser.email).update(user=olduser)
-        Instructor.object.filter(
-            enroll_email=olduser.email).update(user=olduser)
+        Student.objects.get(enroll_email=olduser.email).update(user=olduser)
+        Instructor.objects.get(enroll_email=olduser.email).update(user=olduser)
 
         return olduser
