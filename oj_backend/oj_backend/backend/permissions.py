@@ -144,11 +144,11 @@ class courseJudgeReadWritePermisson(permissions.BasePermission):
         if not request.user.is_authenticated:
             return False
         try:
-            this_course = Course.objects.filter(uid=get_course_uid(request.path))
+            this_course = Course.objects.get(uid=get_course_uid(request.path))
         except:
             return False
         if this_course:
-            return this_course.instr.filter(user__uid=request.user.uid).exists()
+            return this_course.instructor.filter(user__uid=request.user.uid).exists()
         return False
 
 

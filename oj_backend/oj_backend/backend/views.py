@@ -344,9 +344,9 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
                 this_user = User.objects.get(
                     email=request.data['enroll_email'])
                 this_instr.user = this_user
-                this_instr.save()
             except:
                 pass
+        this_instr.save()
         this_course.instructor.add(this_instr)
         MWCourseAddInstr(
             course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
@@ -433,7 +433,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         for assignment in this_course.assignment_set.all():
             MWCourseAddRepo(
                 self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], owner_uid=this_student.uid)
-        return JsonResponse(data={}, status=201)
+        return JsonResponse(data=this_student, status=201, safe=False)
 
 
 class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
