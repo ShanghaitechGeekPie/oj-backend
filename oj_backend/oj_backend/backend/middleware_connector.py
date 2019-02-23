@@ -37,9 +37,7 @@ class MiddlewareError(BaseException):
     '''
     Base exception class for middleware error.
     '''
-
-    def __init__(self, cause="Unkown Error."):
-        self.__cause__ = cause
+    pass
 
 
 class MWUpdateError(MiddlewareError):
@@ -47,9 +45,7 @@ class MWUpdateError(MiddlewareError):
     '''
     Exception for the middleware failed to update a user's information, because of bad parameters.
     '''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass
 
 
 class baseMiddlewareAdopter:
@@ -64,17 +60,20 @@ class baseMiddlewareAdopter:
         self._send_request(payload)
 
     def _send_request(self, payload):
-        api_url = "{}/{}".format(self.api_server, self.interface)
+        api_url = "{}{}".format(self.api_server, self.interface)
         try:
             request = post(api_url, json=payload)
             request.raise_for_status()
         except (ConnectionError, Timeout):
-            raise MiddlewareError(
-                cause='The connection to middleware server is either broken or timeout.')
+            cause = 'The connection to middleware server is either broken or timeout.'
+            raise MiddlewareError(cause)
         except HTTPError:
-            cause = request.json().get('cuase') if request.json().get(
-                'cuase') else "Middleware server returns with an unexplianed status code {}.".format(request.status_code)
-            raise MWUpdateError(cause=cause)
+            try:
+                cause = request.json().get('cuase')
+            except:
+                cause = "Middleware server returns with an unexplianed status code {}.".format(
+                    request.status_code)
+            raise MWUpdateError(cause)
         self.response = request
 
     @staticmethod
