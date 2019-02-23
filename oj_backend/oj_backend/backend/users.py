@@ -22,22 +22,9 @@ from oj_database.models import Student
 from oj_database.models import Instructor
 from oj_backend.backend.middleware_connector import *
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
-from myapp.models import Profile
 
 
 class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
-
-    def filter_users_by_claims(self, claims):
-        email = claims.get('email')
-        if not email:
-            return self.UserModel.objects.none()
-
-        try:
-            profile = Profile.objects.get(email=email)
-            return profile.user
-
-        except Profile.DoesNotExist:
-            return self.UserModel.objects.none()
 
     def create_user(self, claims):
 
