@@ -29,12 +29,13 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def createFromOIDC(self, claims):
 
         addEmail = claims.get('email')
-        addName = claims.get('first name')+claims.get('last name')
+        addName = claims.get('name')
         user = User.objects(email=addEmail, name=addName, rsa_pub_key="")
         user.save()
         try:
             thisStudent = Student.objects.get(enroll_email=addEmail)
             thisStudent.user = user
+            thisStudent.nickname = claims.get('nickname')
             for course in thisStudent.course_set.all():
                 for assignment in course.assignment.all():
                     MWCourseAddRepo(course.uid, assignment.uid, user.email, owner_uid=user.uid)
@@ -52,7 +53,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         Student.object.filter(enroll_email=olduser.email).update(user=None)
         Instructor.object.filter(enroll_email=olduser.email).update(user=None)
         olduser.email = claims.get('email')
-        olduser.name = claims.get('first name')+claims.get('last name')
+        olduser.name = claims.get('name')
         olduser.save()
         Student.object.filter(enroll_email=olduser.email).update(user=olduser)
         Instructor.object.filter(
