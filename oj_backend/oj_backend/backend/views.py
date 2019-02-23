@@ -324,6 +324,8 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
 
     def post(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['uid'])
+        if not request.user.is_authenticated:
+            return JsonResponse(data={}, status=401)
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
@@ -339,9 +341,9 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
             try:
                 this_user = User.objects.get(email=request.data['enroll_email'])
                 this_instr.user = this_user
+                this_instr.save()
             except:
                 pass
-            this_instr.save()
         this_course.instructor.add(this_instr)
         MWCourseAddInstr(
             course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
@@ -392,7 +394,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         courseStudentInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
-        return get_object_or_404(Course, uid=self.kwargs['course_id']).student.all()
+        return get_object_or_404(Course, uid=self.kwargs['course_id']).students.all()
 
     def get_object(self):
         obj = self.get_queryset()
@@ -440,7 +442,7 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         courseStudentInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
-        return get_object_or_404(Course, uid=self.kwargs['course_id']).student.all()
+        return get_object_or_404(Course, uid=self.kwargs['course_id']).students.all()
 
     def get_object(self):
         queryset = self.get_queryset()
@@ -474,7 +476,7 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     permission_classes = (courseJudgeReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
-        return get_object_or_404(Course, uid=self.kwargs['course_id']).judge.all()
+        return get_object_or_404(Course, uid=self.kwargs['course_id']).default_judge.all()
 
     def get_object(self):
         obj = self.get_queryset()
@@ -511,7 +513,7 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     permission_classes = (courseJudgeReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
-        return get_object_or_404(Course, uid=self.kwargs['course_id']).judge.all()
+        return get_object_or_404(Course, uid=self.kwargs['course_id']).default_judge.all()
 
     def get_object(self):
         obj = get_object_or_404(self.get_queryset(),
