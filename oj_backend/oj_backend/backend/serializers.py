@@ -51,6 +51,8 @@ class StudentBasicInfoSerializer(serializers.ModelSerializer):
     """
     Returns a student's basic information including `name`, `email`, `student_id`.
     """
+    name = serializers.CharField(source='user.name', allow_null=True)
+
     class Meta:
         model = Student
         fields = ('name', 'enroll_email', 'student_id')
