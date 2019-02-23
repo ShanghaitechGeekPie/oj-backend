@@ -746,14 +746,15 @@ class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
     `/course/<str:course_id>/assignment/<str:assignment_id>/queue/`
     '''
 
-    def get(self, request, course_id):
+    def get(self, request, course_id, assignment_id):
         if not request.user.is_authenticated:
             return Response(data={}, status=401)
-        if not (Course.objects.get(uid=course_id).insturctor.filter(user__uid=request.user.uid).exists() or Course.objects.filter(uid=course_id).student.get(user__uid=request.user.uid).exists()):
+        this_course = get_object_or_404(Course, uid=course_id)
+        if not (this_course.instructor.filter(user__uid=request.user.uid).exists() or this_course.students.filter(user__uid=request.user.uid).exists()):
             return Response(data={}, status=403)
         redis_server = redis.Redis(
             connection_pool=redisConnectionPool)
-        all_pending = redis_server.zrange(self.kwargs['assignment_id'], 0, -1)
+        all_pending = redis_server.zrange(assignment_id, 0, -1)
         pending_list = []
         for submission in all_pending:
             submission = simplejson.loads(submission)
