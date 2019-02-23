@@ -24,15 +24,17 @@ class StudentInfoSerializer(serializers.ModelSerializer):
     Returns a student's information including `name`, `email`, `student_id`,
     `rsa_pub_key` and `nickname`.
     """
-    uid = serializers.UUIDField(source='user.uid')
-    email = serializers.EmailField(source='user.email')
-    name = serializers.CharField(source='user.name')
-    rsa_pub_key = serializers.CharField(source='user.rsa_pub_key')
+    uid = serializers.UUIDField(source='user.uid', read_only=True)
+    email = serializers.EmailField(source='user.email', allow_null=True)
+    name = serializers.CharField(source='user.name', allow_null=True)
+    rsa_pub_key = serializers.CharField(
+        source='user.rsa_pub_key', allow_null=True)
 
     class Meta:
         model = Student
         fields = ('uid', 'email', 'name', 'student_id',
                   'nickname', 'rsa_pub_key',)
+        extra_kwargs = {'rsa_pub_key': {'write_only': True}}
         related_fields = ('user',)
 
     def update(self, instance, validated_data):
@@ -58,10 +60,11 @@ class InstructorInfoSerializer(serializers.ModelSerializer):
     """
     Returns a instructor's all information.
     """
-    uid = serializers.UUIDField(source='user.uid')
-    email = serializers.EmailField(source='user.email')
-    name = serializers.CharField(source='user.name')
-    rsa_pub_key = serializers.CharField(source='user.rsa_pub_key')
+    uid = serializers.UUIDField(source='user.uid', read_only=True)
+    email = serializers.EmailField(source='user.email', allow_null=True)
+    name = serializers.CharField(source='user.name', allow_null=True)
+    rsa_pub_key = serializers.CharField(
+        source='user.rsa_pub_key', allow_null=True)
 
     class Meta:
         model = Instructor
@@ -83,13 +86,16 @@ class InstructorBasicInfoSerializer(serializers.ModelSerializer):
     Returns a instructor's `name` and `email`. used in CoursesSerialier and
     other APIs that requires privacy.
     """
+    name = serializers.CharField(source='user.name', allow_null=True)
+
     class Meta:
         model = Instructor
-        fields = ('enroll_email')
+        fields = ('enroll_email', 'name')
 
 
 class CoursesSerializer(serializers.ModelSerializer):
-    instructor = serializers.SlugRelatedField(many=True, read_only=True, slug_field='enroll_email')
+    instructor = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field='enroll_email')
 
     class Meta:
         model = Course
@@ -98,12 +104,15 @@ class CoursesSerializer(serializers.ModelSerializer):
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
-    #course_uid = serializers.CharField(source='course.uid')
+    course_uid = serializers.UUIDField(source='course.uid', read_only=True)
 
     class Meta:
         model = Assignment
-        fields = ('uid', 'course', 'name', 'descr_link',
+        fields = ('uid', 'course_id', 'name', 'descr_link',
                   'grade', 'deadline', 'release_date', 'state')
+        extra_kwargs = {
+            'uid': {'editable': False}
+        }
 
 
 class SubmissionRecordSerializer(serializers.ModelSerializer):
@@ -117,8 +126,10 @@ class SubmissionRecordSerializer(serializers.ModelSerializer):
 
 
 class ScoreBoardSerializer(serializers.ModelSerializer):
-    student_nickname = serializers.CharField(source='student.nickname')
-    overall_score = serializers.FloatField(source='assignment.grade')
+    student_nickname = serializers.CharField(
+        source='student.nickname', read_only=True)
+    overall_score = serializers.FloatField(
+        source='assignment.grade', read_only=True)
     score = serializers.FloatField(source='grade')
 
     class Meta:
@@ -133,12 +144,18 @@ class ScoreBoardSerializer(serializers.ModelSerializer):
 
 class JudgeSerializer(serializers.ModelSerializer):
     """
-    Returns information of a judger.
+    Returns information of a judge.
     """
     class Meta:
         model = Judge
         fields = ('uid', 'host', 'max_job',
                   'client_key', 'client_cert', 'cert_ca')
+        extra_kwargs = {
+            'client_key': {'write_only': True},
+            'client_cert': {'write_only': True},
+            'cert_ca': {'write_only': True}
+        }
+
 
 class courseJudgeSerializer(serializers.ModelSerializer):
     class Meta:
