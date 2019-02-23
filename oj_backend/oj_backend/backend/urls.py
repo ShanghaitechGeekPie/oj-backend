@@ -46,6 +46,7 @@ urlpatterns = [
          assignmentJudgeDetail.as_view()),
     path('course/<str:course_id>/assignment/<str:assignment_id>/scores/',
          assignmentScoreboardDetail.as_view()),
+    path('course/<str:course_id>/assignment/<str:assignment_id>/queue', pendingAssignment.as_view()),
     path('student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/',
          submissionHistoryList.as_view()),
     path('student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:git_commit_id>',

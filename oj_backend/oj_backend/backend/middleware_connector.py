@@ -102,6 +102,7 @@ class MWUpdateUserKey(baseMiddlewareAdopter):
 class MWUpdateCourse(baseMiddlewareAdopter):
 
     def __init__(self, course_name, course_uid, api_server=OJBN_GITLAB_ADDR):
+        course_uid = str(course_uid)
         payload = {"name": course_name.lower(), "uuid": course_uid}
         super().__init__(api_server=api_server, interface='/courses', payload=payload)
 
@@ -109,6 +110,7 @@ class MWUpdateCourse(baseMiddlewareAdopter):
 class MWCourseAddInstr(baseMiddlewareAdopter):
 
     def __init__(self, course_uid, instr_email, api_server=OJBN_GITLAB_ADDR):
+        course_uid = str(course_uid)
         payload = {"instructor_name": instr_email}
         interface = '/courses/{}/instructors'
         super().__init__(api_server=api_server, interface=interface, payload=payload)
@@ -117,6 +119,7 @@ class MWCourseAddInstr(baseMiddlewareAdopter):
 class MWCourseAddAssignment(baseMiddlewareAdopter):
 
     def __init__(self, course_uid, assignment_name, assignment_uid, api_server=OJBN_GITLAB_ADDR):
+        assignment_uid = str(assignment_uid)
         payload = {'name': assignment_name, 'uuid': assignment_uid}
         interface = '/courses/{}/assignments'.format(course_uid)
         super().__init__(api_server=api_server, interface=interface, payload=payload)
@@ -124,6 +127,8 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
 
 class MWCourseAddRepo(baseMiddlewareAdopter):
     def __init__(self, course_uid, assignment_uid, owner_email, owner_uid=None,repo_name=None,api_server=OJBN_GITLAB_ADDR):
+        assignment_uid = str(assignment_uid)
+        course_uid = str(course_uid)
         interface = "/courses/{}/assignments/{}/repos".format(
             course_uid, assignment_uid)
         if repo_name == None:

@@ -104,25 +104,21 @@ class CoursesSerializer(serializers.ModelSerializer):
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
-    course_uid = serializers.UUIDField(source='course.uid', read_only=True)
+    course_id = serializers.UUIDField(source='course.uid', read_only=True)
 
     class Meta:
         model = Assignment
         fields = ('uid', 'course_id', 'name', 'descr_link',
-                  'grade', 'deadline', 'release_date', 'state')
-        extra_kwargs = {
-            'uid': {'editable': False}
-        }
-
+                  'grade', 'deadline', 'release_date', 'state', 'short_name')
 
 class SubmissionRecordSerializer(serializers.ModelSerializer):
-    #assignment_id = serializers.CharField(source='assginment.uid')
+    assignment_id = serializers.CharField(source='assginment.uid', read_only=True)
     overall_score = serializers.IntegerField(source='assignment.grade')
 
     class Meta:
         model = Record
         fields = ('git_commit_id', 'grade', 'overall_score',
-                  'message', 'assignment', 'delta')
+                  'message', 'assignment_id', 'delta')
 
 
 class ScoreBoardSerializer(serializers.ModelSerializer):

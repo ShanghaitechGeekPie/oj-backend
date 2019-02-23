@@ -166,7 +166,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         this_course = Course.objects.get(uid=response.data['uid'])
         this_course.instructor.add(request.user)
         try:
-            MWUpdateCourse(this_course.name, this_course.uid)
+            MWUpdateCourse(this_course.name, str(this_course.uid))
         except (MiddlewareError, MWUpdateError):
             # rollback.
             this_course.delete()
@@ -218,7 +218,7 @@ class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
         response = self.update(request, *args, **kwargs)
         this_course = self.get_queryset()
         try:
-            MWUpdateCourse(this_course.name, this_course.uid)
+            MWUpdateCourse(this_course.name, str(this_course.uid))
         except (MiddlewareError, MWUpdateError):
             return JsonResponse(status=500, data={})
         return response
@@ -244,6 +244,10 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         self.check_object_permissions(self.request, obj)
         return obj
 
+    def perform_create(self, serializer):
+        this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
+        serializer.save(course=this_course)
+
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -253,8 +257,8 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             course__uid=self.kwargs['uid'], name=request.data['name'], descr_link=request.data['descr_link'])
         try:
             MWCourseAddAssignment(
-                self.kwargs['uid'], this_assignment.name, this_assignment.uid)
-            repo = MWCourseAddRepo(self.kwargs['uid'], this_assignment.uid, [
+                self.kwargs['uid'], this_assignment.name, str(this_assignment.uid))
+            repo = MWCourseAddRepo(self.kwargs['uid'], str(this_assignment.uid), [
             ], repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
         except (MiddlewareError, MWUpdateError):
@@ -739,8 +743,11 @@ class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
         all_pending = redis_server.zrange(self.kwargs['assignment_id'], 0, -1)
         pending_list = []
         for submission in all_pending:
-            # TODO: get information about submission!
             submission = simplejson.loads(submission)
+            display_submission = {}
+            display_submission['submission_time'] = submission['receive_time']
+            display_submission['submitter'] = ', '.join(Student.object.get(
+                user__uid=submitter).nickname for submitter in submission['owner_uids'])
             pending_list.append(submission)
         return JsonResponse(pending_list, status=200, safe=False)
 
@@ -756,11 +763,12 @@ class internalSubmissionInterface(generics.GenericAPIView):
             return JsonResponse(status=401, data={})
         this_submission = simplejson.dumps(request.DATA)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
+        now = int(time.time())
         payload = {'upstream': request.data['upstream'], "owner_uids": simplejson.loads(
-            request.data['additional_data'])}
+            request.data['additional_data']), 'receive_time': now}
         payload = simplejson.dumps(payload)
         this_redis.zadd(request.data["assignment_uid"], {
-                        payload: time.time()})
+                        payload: now})
         return Response(data=this_submission, status=201)
 
 
