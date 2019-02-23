@@ -716,7 +716,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin)
             if query_set:
                 query_set = query_set | this_student_record
             else:
-                query_set = this_course_student_list
+                query_set = this_student_record
         return query_set
 
     def get_object(self):

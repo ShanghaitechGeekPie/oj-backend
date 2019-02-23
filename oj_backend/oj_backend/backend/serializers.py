@@ -111,8 +111,10 @@ class AssignmentSerializer(serializers.ModelSerializer):
         fields = ('uid', 'course_id', 'name', 'descr_link',
                   'grade', 'deadline', 'release_date', 'state', 'short_name')
 
+
 class SubmissionRecordSerializer(serializers.ModelSerializer):
-    assignment_id = serializers.CharField(source='assginment.uid', read_only=True)
+    assignment_id = serializers.CharField(
+        source='assginment.uid', read_only=True)
     overall_score = serializers.IntegerField(source='assignment.grade')
 
     class Meta:
@@ -126,16 +128,12 @@ class ScoreBoardSerializer(serializers.ModelSerializer):
         source='student.nickname', read_only=True)
     overall_score = serializers.FloatField(
         source='assignment.grade', read_only=True)
-    score = serializers.FloatField(source='grade')
+    #score = serializers.FloatField(source='grade')
 
     class Meta:
         model = Record
         fields = ('student_nickname', 'overall_score',
-                  'score', 'submission_time', 'delta')
-
-    @property
-    def delta(self):
-        return -1
+                  'grade', 'submission_time', 'delta')
 
 
 class JudgeSerializer(serializers.ModelSerializer):
