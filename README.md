@@ -285,7 +285,7 @@ Registered at `/instructor/<str:uid>/course/`.
         "semaster": "Fall",
         "year": 2017,
         "homepage": "https://shtech.org/course/si100c/17f/",
-        "instructor":["b3b17c00f16511e8b3dfdca9047a0f14", "b3b17c00f16511e8b3dfdca9047a0f14"]
+        "instructor":["weidaxz@shanghaitech.edu.cn", "huashuita@shanghaitech.edu.cn"]
     }
 ]
 ```
