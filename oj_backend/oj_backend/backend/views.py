@@ -311,7 +311,7 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     permission_classes = (courseInstrInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
-        this_course = Course.objects.get(uid=self.kwargs['uid'])
+        this_course = get_object_or_404(Course,uid=self.kwargs['uid'])
         return this_course.instructor.all()
 
     def get_object(self):
