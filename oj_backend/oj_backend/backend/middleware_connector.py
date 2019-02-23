@@ -69,7 +69,7 @@ class baseMiddlewareAdopter:
             raise MiddlewareError(cause)
         except HTTPError:
             try:
-                cause = request.json().get('cuase')
+                cause = request.json()['cause']
             except:
                 cause = "Middleware server returns with an unexplianed status code {}.".format(
                     request.status_code)
@@ -111,7 +111,7 @@ class MWCourseAddInstr(baseMiddlewareAdopter):
     def __init__(self, course_uid, instr_email, api_server=OJBN_GITLAB_ADDR):
         course_uid = str(course_uid)
         payload = {"instructor_name": instr_email}
-        interface = '/courses/{}/instructors'
+        interface = '/courses/{}/instructors'.format(course_uid)
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
 
@@ -119,6 +119,7 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
 
     def __init__(self, course_uid, assignment_name, assignment_uid, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
+        course_uid = str(course_uid)
         payload = {'name': assignment_name, 'uuid': assignment_uid}
         interface = '/courses/{}/assignments'.format(course_uid)
         super().__init__(api_server=api_server, interface=interface, payload=payload)
