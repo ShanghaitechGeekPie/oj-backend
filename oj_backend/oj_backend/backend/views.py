@@ -261,6 +261,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             repo = MWCourseAddRepo(self.kwargs['uid'], str(this_assignment.uid), [
             ], repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
+            this_assignment.git_org_add = git_repo[0:-len('_grading_script')]
         except (MiddlewareError, MWUpdateError):
             return JsonResponse(data={}, status=500)
         if isinstance(response, Response):
@@ -270,7 +271,8 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         try:
             for student in this_course.students.all():
                 if student.user:
-                    MWCourseAddRepo(this_course.uid, this_assignment.uid, student.enroll_email, owner_uid=student.user.uid)
+                    MWCourseAddRepo(this_course.uid, this_assignment.uid,
+                                    student.enroll_email, owner_uid=student.user.uid)
         except:
             return JsonResponse(status=500, data={})
         return response
@@ -311,7 +313,7 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     permission_classes = (courseInstrInfoReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
-        this_course = get_object_or_404(Course,uid=self.kwargs['uid'])
+        this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
         return this_course.instructor.all()
 
     def get_object(self):
@@ -339,7 +341,8 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
             this_instr = Instructor(
                 enroll_email=request.data['enroll_email'], user=None)
             try:
-                this_user = User.objects.get(email=request.data['enroll_email'])
+                this_user = User.objects.get(
+                    email=request.data['enroll_email'])
                 this_instr.user = this_user
                 this_instr.save()
             except:
@@ -405,30 +408,31 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        this_course = Course.objects.get(uid=self.kwargs['uid'])
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
-            validate_email(request.data['email'])
+            validate_email(request.data['enroll_email'])
         except ValidationError:
-            return JsonResponse(status=400, data={})
+            return JsonResponse(status=400, data={'cause': 'invalid email'})
         try:
             this_student = Student.objects.get(
-                user__email=request.data['email'])
+                user__email=request.data['enroll_email'])
         except:
             this_student = Student(
-                enroll_email=request.data['email'], user=None)
+                enroll_email=request.data['enroll_email'], user=None, student_id=request.data['student_id'])
             try:
-                this_user = User.objects.get(email=request.data['email'])
+                this_user = User.objects.get(
+                    email=request.data['enroll_email'])
                 this_student.user = this_user
             except:
                 pass
             this_student.save()
-            MWUpdateUser(request.data['email'])
-        this_course.student.add(this_student)
+            MWUpdateUser(request.data['enroll_email'])
+        this_course.students.add(this_student)
         for assignment in this_course.assignment_set.all():
             MWCourseAddRepo(
-                self.kwargs['course_id'], assignment.uid, request.data['email'], owner_uid=this_student.uid)
+                self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], owner_uid=this_student.uid)
         return JsonResponse(data={}, status=201)
 
 
