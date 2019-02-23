@@ -327,24 +327,24 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
-            validate_email(request.data['email'])
+            validate_email(request.data['enroll_email'])
         except ValidationError:
             return JsonResponse(status=400, data={})
         try:
             this_instr = Instructor.objects.get(
-                user__email=request.data['email'])
+                user__email=request.data['enroll_email'])
         except:
             this_instr = Instructor(
-                enroll_email=request.data['email'], user=None)
+                enroll_email=request.data['enroll_email'], user=None)
             try:
-                this_user = User.objects.get(email=request.data['email'])
+                this_user = User.objects.get(email=request.data['enroll_email'])
                 this_instr.user = this_user
             except:
                 pass
             this_instr.save()
         this_course.instructor.add(this_instr)
         MWCourseAddInstr(
-            course_uid=self.kwargs['uid'], instr_email=request.data['email'])
+            course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
         return JsonResponse(data={}, status=201)
 
 
