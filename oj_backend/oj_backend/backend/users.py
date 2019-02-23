@@ -20,6 +20,7 @@
 from oj_database.models import User
 from oj_database.models import Student
 from oj_database.models import Instructor
+from oj_backend.backend.middleware_connector import *
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 
@@ -31,6 +32,19 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         addName = claims.get('first name')+claims.get('last name')
         user = User.objects(email=addEmail, name=addName, rsa_pub_key="")
         user.save()
+        try:
+            thisStudent = Student.objects.get(enroll_email=addEmail)
+            thisStudent.user = user
+            for course in thisStudent.course_set.all():
+                for assignment in course.assignment.all():
+                    MWCourseAddRepo(course.uid, assignment.uid, user.email, owner_uid=user.uid)
+        except:
+            pass
+        try:
+            thisInstr = Instructor.objects.get(enroll_email=addEmail)
+            thisInstr.user = user
+        except:
+            pass
         return user
 
     def updateUser(self, olduser, claims):

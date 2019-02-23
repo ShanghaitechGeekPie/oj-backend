@@ -129,6 +129,8 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
     def __init__(self, course_uid, assignment_uid, owner_email, owner_uid=None,repo_name=None,api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
+        if owner_uid:
+            owner_uid = str(owner_uid)
         interface = "/courses/{}/assignments/{}/repos".format(
             course_uid, assignment_uid)
         if repo_name == None:

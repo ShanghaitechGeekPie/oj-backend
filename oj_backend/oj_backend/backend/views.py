@@ -266,6 +266,13 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         if isinstance(response, Response):
             response.data['ssh_url_to_repo'] = git_repo
             response.content = simplejson.dumps(response.data)
+        this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
+        try:
+            for student in this_course.students.all():
+                if student.user:
+                    MWCourseAddRepo(this_course.uid, this_assignment.uid, student.enroll_email, owner_uid=student.user.uid)
+        except:
+            return JsonResponse(status=500, data={})
         return response
 
 
