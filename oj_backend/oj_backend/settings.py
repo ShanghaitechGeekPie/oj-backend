@@ -161,6 +161,8 @@ OJ_SUBMISSION_TOKEN = os.environ['OJ_SUBMISSION_TOKEN']
 
 OJ_URL_PREFIX = r"^api/"
 OJ_ENFORCE_HTTPS = True
+SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
