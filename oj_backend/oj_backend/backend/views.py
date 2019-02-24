@@ -216,7 +216,7 @@ class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
 
     def post(self, request, *args, **kwargs):
         response = self.update(request, *args, **kwargs)
-        this_course = self.get_queryset()
+        this_course = self.get_object()
         try:
             MWUpdateCourse(this_course.name, str(this_course.uid))
         except (MiddlewareError, MWUpdateError):
@@ -336,7 +336,7 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
             return JsonResponse(status=400, data={})
         try:
             this_instr = Instructor.objects.get(
-                user__email=request.data['enroll_email'])
+                enroll_email=request.data['enroll_email'])
         except:
             this_instr = Instructor(
                 enroll_email=request.data['enroll_email'], user=None)
@@ -417,7 +417,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
             return JsonResponse(status=400, data={'cause': 'invalid email'})
         try:
             this_student = Student.objects.get(
-                user__email=request.data['enroll_email'])
+                enroll_email=request.data['enroll_email'])
         except:
             this_student = Student(
                 enroll_email=request.data['enroll_email'], user=None, student_id=request.data['student_id'])

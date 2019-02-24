@@ -25,7 +25,8 @@ class StudentInfoSerializer(serializers.ModelSerializer):
     `rsa_pub_key` and `nickname`.
     """
     uid = serializers.UUIDField(source='user.uid', read_only=True)
-    email = serializers.EmailField(source='user.email', allow_null=True)
+    email = serializers.EmailField(
+        source='user.email', allow_null=True, read_only=True)
     name = serializers.CharField(source='user.name', allow_null=True)
     rsa_pub_key = serializers.CharField(
         source='user.rsa_pub_key', allow_null=True)
@@ -63,7 +64,8 @@ class InstructorInfoSerializer(serializers.ModelSerializer):
     Returns a instructor's all information.
     """
     uid = serializers.UUIDField(source='user.uid', read_only=True)
-    email = serializers.EmailField(source='user.email', allow_null=True)
+    email = serializers.EmailField(
+        source='user.email', allow_null=True, read_only=True)
     name = serializers.CharField(source='user.name', allow_null=True)
     rsa_pub_key = serializers.CharField(
         source='user.rsa_pub_key', allow_null=True)
@@ -103,6 +105,10 @@ class CoursesSerializer(serializers.ModelSerializer):
         model = Course
         fields = ('uid', 'name', 'year', 'semester',
                   'homepage', 'instructor', 'code')
+        extra_kwargs = {'year': {'read_only': True},
+                        'semester': {'read_only': True},
+                        'code': {'read_only': True}
+                        }
 
 
 class AssignmentSerializer(serializers.ModelSerializer):
@@ -112,6 +118,8 @@ class AssignmentSerializer(serializers.ModelSerializer):
         model = Assignment
         fields = ('uid', 'course_id', 'name', 'descr_link',
                   'grade', 'deadline', 'release_date', 'state', 'short_name')
+        extra_kwargs = {'short_name': {'read_only': True},
+                        }
 
 
 class SubmissionRecordSerializer(serializers.ModelSerializer):

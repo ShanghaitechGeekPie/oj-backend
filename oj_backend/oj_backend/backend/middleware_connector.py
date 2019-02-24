@@ -32,6 +32,16 @@ def get_course_project_name(code, year, semaster):
     return "{}-{}{}".format(code, year, semaster)
 
 
+def get_repo_addr(assignment, user):
+    assignment_name = ''.join(assignment.short_name.split())
+    course = assignment.course
+    course_proj = get_course_project_name(
+        course.code, course.year, course.semaster)
+    personal_repo = user.email.split("@")[0]
+    # TODO: change `oj.geekpie.club`
+    return "git@oj.geekpie.club/{}/{}/{}.git".format(course_proj, assignment_name, personal_repo)
+
+
 class MiddlewareError(BaseException):
 
     '''
@@ -126,7 +136,7 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
 
 
 class MWCourseAddRepo(baseMiddlewareAdopter):
-    def __init__(self, course_uid, assignment_uid, owner_email, owner_uid=None,repo_name=None,api_server=OJBN_GITLAB_ADDR):
+    def __init__(self, course_uid, assignment_uid, owner_email, owner_uid=None, repo_name=None, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
         if owner_uid:
@@ -140,8 +150,10 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
                 owner_uid = [owner_uid]
             else:
                 repo_name = 'group_' + \
-                    "_".join(user.split('@')[0] for user in owner_email).lower()
-        payload = {'owner_email': owner_email, 'repo_name': repo_name, 'additional_data': simplejson.dumps(owner_uid)}
+                    "_".join(user.split('@')[0]
+                             for user in owner_email).lower()
+        payload = {'owner_email': owner_email, 'repo_name': repo_name,
+                   'additional_data': simplejson.dumps(owner_uid)}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
 # TODO:
