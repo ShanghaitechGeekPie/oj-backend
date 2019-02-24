@@ -97,7 +97,17 @@ class InstructorBasicInfoSerializer(serializers.ModelSerializer):
         fields = ('enroll_email', 'name')
 
 
-class CoursesSerializer(serializers.ModelSerializer):
+class CoursesCreateSerializer(serializers.ModelSerializer):
+    instructor = serializers.SlugRelatedField(
+        many=True, read_only=True, slug_field='enroll_email')
+
+    class Meta:
+        model = Course
+        fields = ('uid', 'name', 'year', 'semester',
+                  'homepage', 'instructor', 'code')
+
+
+class CoursesViewSerializer(serializers.ModelSerializer):
     instructor = serializers.SlugRelatedField(
         many=True, read_only=True, slug_field='enroll_email')
 
@@ -111,15 +121,23 @@ class CoursesSerializer(serializers.ModelSerializer):
                         }
 
 
-class AssignmentSerializer(serializers.ModelSerializer):
+class AssignmentViewSerializer(serializers.ModelSerializer):
     course_id = serializers.UUIDField(source='course.uid', read_only=True)
 
     class Meta:
         model = Assignment
         fields = ('uid', 'course_id', 'name', 'descr_link',
                   'grade', 'deadline', 'release_date', 'state', 'short_name')
-        extra_kwargs = {'short_name': {'read_only': True},
-                        }
+        extra_kwargs = {'short_name': {'read_only': True}, }
+
+
+class AssignmentCreateSerializer(serializers.ModelSerializer):
+    course_id = serializers.UUIDField(source='course.uid', read_only=True)
+
+    class Meta:
+        model = Assignment
+        fields = ('uid', 'course_id', 'name', 'descr_link',
+                  'grade', 'deadline', 'release_date', 'state', 'short_name')
 
 
 class SubmissionRecordSerializer(serializers.ModelSerializer):

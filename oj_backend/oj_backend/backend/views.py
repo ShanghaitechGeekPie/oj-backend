@@ -125,7 +125,7 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
     '''
     `/student/<str:uid>/course/`
     '''
-    serializer_class = CoursesSerializer
+    serializer_class = CoursesViewSerializer
     permission_classes = (courseReadWritePermission, IsAuthenticated)
     queryset = Course.objects.all()
 
@@ -144,7 +144,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
     '''
     `/insturctor/<str:uid>/course/`
     '''
-    serializer_class = CoursesSerializer
+    serializer_class = CoursesCreateSerializer
     permission_classes = (courseReadWritePermission, IsAuthenticated)
     queryset = Course.objects.all()
 
@@ -178,7 +178,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
     '''
     `/student/<str:student_id>/course/<str:course_id>/assignment/`
     '''
-    serializer_class = AssignmentSerializer
+    serializer_class = AssignmentViewSerializer
     permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
     queryset = Assignment.objects.all()
 
@@ -199,12 +199,12 @@ class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
     '''
     `/course/<str:course_id>`
     '''
-    serializer_class = CoursesSerializer
+    serializer_class = CoursesViewSerializer
     permission_classes = (courseReadWritePermission, IsAuthenticated)
     queryset = Course.objects.all()
 
     def get_object(self):
-        course_uid = self.kwargs['uid']
+        course_uid = self.kwargs['course_id']
         queryset = self.get_queryset()
         obj = get_object_or_404(
             queryset, uid=course_uid)
@@ -225,7 +225,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
     '''
     `/course/<str:uid>/assignment/`
     '''
-    serializer_class = AssignmentSerializer
+    serializer_class = AssignmentCreateSerializer
     permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
     queryset = Assignment.objects.all()
 
@@ -278,7 +278,7 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>`
     '''
-    serializer_class = AssignmentSerializer
+    serializer_class = AssignmentViewSerializer
     permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
     queryset = Assignment.objects.all()
 
