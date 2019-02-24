@@ -136,9 +136,10 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
 
 
 class MWCourseAddRepo(baseMiddlewareAdopter):
-    def __init__(self, course_uid, assignment_uid, owner_email, owner_uid=None, repo_name=None, api_server=OJBN_GITLAB_ADDR):
+    def __init__(self, course_uid, assignment_uid, owner_email, ddl, owner_uid=None, repo_name=None, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
+        ddl = str(ddl.date())
         if owner_uid:
             owner_uid = str(owner_uid)
         interface = "/courses/{}/assignments/{}/repos".format(
@@ -152,8 +153,8 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
                 repo_name = 'group_' + \
                     "_".join(user.split('@')[0]
                              for user in owner_email).lower()
-        payload = {'owner_email': owner_email, 'repo_name': repo_name,
-                   'additional_data': simplejson.dumps(owner_uid)}
+        payload = {'owners': owner_email, 'repo_name': repo_name,
+                   'additional_data': simplejson.dumps(owner_uid), 'ddl': ddl}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
 # TODO:

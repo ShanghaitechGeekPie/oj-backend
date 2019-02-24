@@ -31,7 +31,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         addName = claims.get('identification', {}).get('shanghaitech', {}).get(
             'realname', claims.get('family_name', '')+claims.get('given_name', ''))
         user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
-            'family_name',''), last_name=claims.get('given_name',''), username=addEmail)
+            'family_name', ''), last_name=claims.get('given_name', ''), username=addEmail)
         user.save()
         try:
             thisStudent = Student.objects.get(enroll_email=addEmail)
@@ -47,7 +47,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             for course in thisStudent.course_set.all():
                 for assignment in course.assignment.all():
                     MWCourseAddRepo(course.uid, assignment.uid,
-                                    user.email, owner_uid=user.uid)
+                                    user.email, assignment.deadline, owner_uid=user.uid)
         except Student.DoesNotExist:
             thisStudent = create_student_from_oidc_claim(claims)
             if thisStudent:
@@ -89,7 +89,7 @@ def create_student_from_oidc_claim(claims):
             if i.get('enrolled_in', 0) > enrolled_in:
                 students_id = i.get('student_id', '')
         student = Student(enroll_email=claims.get('email'), nickname=claims.get(
-        'nickname', ''), student_id=students_id)
+            'nickname', ''), student_id=students_id)
         student.save()
         return student
     else:

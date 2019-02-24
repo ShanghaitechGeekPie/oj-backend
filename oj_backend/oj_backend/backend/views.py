@@ -192,7 +192,8 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
     def get_queryset(self):
         this_student = get_object_or_404(
             Student, user__uid=self.kwargs['student_id'])
-        this_course = get_object_or_404(this_student.course_set.all(), uid=self.kwargs['course_id'])
+        this_course = get_object_or_404(
+            this_student.course_set.all(), uid=self.kwargs['course_id'])
         return this_course.assignment_set.all()
 
     def get_object(self):
@@ -265,11 +266,12 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         response = self.create(request, *args, **kwargs)
         this_assignment = Assignment.objects.get(
             course__uid=self.kwargs['uid'], name=request.data['name'], descr_link=request.data['descr_link'])
+        deadline = this_assignment.deadline
         try:
             MWCourseAddAssignment(
                 self.kwargs['uid'], this_assignment.name, str(this_assignment.uid))
             repo = MWCourseAddRepo(self.kwargs['uid'], str(this_assignment.uid), [
-            ], repo_name='_grading_script', owner_uid=None)
+            ], deadline, repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
             this_assignment.git_org_add = git_repo[0:-len('_grading_script')]
             this_assignment.save()
@@ -284,7 +286,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             for student in this_course.students.all():
                 if student.user:
                     MWCourseAddRepo(this_course.uid, this_assignment.uid,
-                                    student.enroll_email, owner_uid=student.user.uid)
+                                    student.enroll_email, deadline, owner_uid=student.user.uid)
         except:
             return JsonResponse(status=500, data={})
         return response
@@ -448,7 +450,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         this_course.students.add(this_student)
         for assignment in this_course.assignment_set.all():
             MWCourseAddRepo(
-                self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], owner_uid=this_student.uid)
+                self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], assignment.deadline, owner_uid=this_student.uid)
         return JsonResponse(data=this_student, status=201, safe=False)
 
 
@@ -646,7 +648,8 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
     def get_queryset(self):
         this_student = get_object_or_404(
             Student, uid=self.kwargs['student_id'])
-        this_assignment = get_object_or_404(Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
+        this_assignment = get_object_or_404(
+            Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
         return this_student.record_set.filter(assignment=this_assignment)
 
     def get_object(self):
@@ -675,7 +678,6 @@ class submissionHistoryDetail(generics.GenericAPIView, mixins.RetrieveModelMixin
         this_assignment = get_object_or_404(
             Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
         return this_student.record_set.filter(assignment=this_assignment)
-
 
     def get_object(self):
         this_student = self.kwargs['student_id']
