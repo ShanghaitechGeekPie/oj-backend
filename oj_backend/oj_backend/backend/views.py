@@ -68,10 +68,14 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
         response = self.update(request, *args, **kwargs)
         email = self.get_object().user.email
         user_key = self.get_object().user.rsa_pub_key
-        try:
+        try (MWUpdateError, MiddlewareError):
             MWUpdateUser(email)
+        except:
+            pass
+        try:
             MWUpdateUserKey(email, user_key)
         except (MWUpdateError, MiddlewareError):
+            return JsonResponse({"cause": "server error"}, status=500)
             return JsonResponse({"cause": "server error"}, status=500)
         return response
 
@@ -98,8 +102,11 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
         response = self.update(request, *args, **kwargs)
         email = self.get_object().user.email
         user_key = self.get_object().user.rsa_pub_key
-        try:
+        try (MWUpdateError, MiddlewareError):
             MWUpdateUser(email)
+        except:
+            pass
+        try:
             MWUpdateUserKey(email, user_key)
         except (MWUpdateError, MiddlewareError):
             return JsonResponse({"cause": "server error"}, status=500)
@@ -174,11 +181,19 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         this_course = Course.objects.get(uid=response.data['uid'])
         this_course.instructor.add(request.user.instructor)
         try:
-            MWUpdateCourse(this_course.name, str(this_course.uid))
+            course_name = get_course_project_name(
+                this_course.code, this_course.year, this_course.semester)
+            MWUpdateCourse(course_name, str(this_course.uid))
         except (MiddlewareError, MWUpdateError):
             # rollback.
             this_course.delete()
             return JsonResponse(status=500, data={"cuase": "Git server error."})
+        for instr in this_course.instructor.all():
+            try:
+                MWCourseAddInstr(this_course.uid, instr.enroll_email)
+            except (MiddlewareError, MWUpdateError):
+                MWUpdateUser(instr.enroll_email)
+                MWCourseAddInstr(this_course.uid, instr.enroll_email)
         return response
 
 
@@ -269,7 +284,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         deadline = this_assignment.deadline
         try:
             MWCourseAddAssignment(
-                self.kwargs['uid'], this_assignment.name, str(this_assignment.uid))
+                self.kwargs['uid'], this_assignment.short_name, str(this_assignment.uid))
             repo = MWCourseAddRepo(self.kwargs['uid'], str(this_assignment.uid), [
             ], deadline, repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
@@ -365,8 +380,14 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
                 pass
         this_instr.save()
         this_course.instructor.add(this_instr)
-        MWCourseAddInstr(
-            course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
+        try:
+            MWCourseAddInstr(
+                course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
+        except:
+            except (MiddlewareError, MWUpdateError):
+                MWUpdateUser(request.data['enroll_email'])
+                MWCourseAddInstr(
+                    course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
         return JsonResponse(data={}, status=201)
 
 
@@ -449,8 +470,9 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
             MWUpdateUser(request.data['enroll_email'])
         this_course.students.add(this_student)
         for assignment in this_course.assignment_set.all():
-            MWCourseAddRepo(
-                self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], assignment.deadline, owner_uid=this_student.uid)
+            if this_student.user:
+                MWCourseAddRepo(
+                    self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], assignment.deadline, owner_uid=this_student.user.uid)
         return JsonResponse(data=this_student, status=201, safe=False)
 
 
