@@ -29,7 +29,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def create_user(self, claims):
         addEmail = claims.get('email')
         addName = claims.get('identification', {}).get('shanghaitech', {}).get(
-            'realname', claims.get('famaily_name', '')+claims.get('given_name', ''))
+            'realname', claims.get('family_name', '')+claims.get('given_name', ''))
         user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
             'family_name'), last_name=claims.get('given_name'))
         user.save()
