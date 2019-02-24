@@ -170,7 +170,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         except (MiddlewareError, MWUpdateError):
             # rollback.
             this_course.delete()
-            return JsonResponse(status=500, data={})
+            return JsonResponse(status=500, data={"cuase": "Git server error."})
         return response
 
 
@@ -215,13 +215,7 @@ class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
         return self.retrieve(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        response = self.update(request, *args, **kwargs)
-        this_course = self.get_object()
-        try:
-            MWUpdateCourse(this_course.name, str(this_course.uid))
-        except (MiddlewareError, MWUpdateError):
-            return JsonResponse(status=500, data={})
-        return response
+        return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
@@ -262,8 +256,10 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             ], repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
             this_assignment.git_org_add = git_repo[0:-len('_grading_script')]
+            this_assignment.save()
         except (MiddlewareError, MWUpdateError):
-            return JsonResponse(data={}, status=500)
+            this_assignment.delete()
+            return JsonResponse(data={"cuase": "Git server error."}, status=500)
         if isinstance(response, Response):
             response.data['ssh_url_to_repo'] = git_repo
             response.content = simplejson.dumps(response.data)
@@ -377,12 +373,13 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
-        this_instr = this_course.instructor.get(
-            enroll_email=self.kwargs['instr_email'])
+        try:
+            this_instr = this_course.instructor.get(
+                enroll_email=self.kwargs['instr_email'])
+        except:
+            return JsonResponse(data={}, status=404)
         if this_instr.user.uid == this_course.creator:
             return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
-        if not this_instr.exists():
-            return JsonResponse(data={}, status=404)
         response = JsonResponse(data=this_instr, safe=False, status=201)
         this_course.instructor.remove(this_instr)
         return response
