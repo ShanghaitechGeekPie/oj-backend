@@ -37,7 +37,13 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             thisStudent = Student.objects.get(enroll_email=addEmail)
             thisStudent.user = user
             thisStudent.nickname = claims.get('nickname', '')
-            # TODO: update this student from oidc claim
+            enrolled_in = 0
+            student_id = ''
+            for id in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
+                if id.get('enrolled_in',0)>enrolled_in:
+                    student_id =id.get('student_id ','')
+                pass
+            thisStudent.student_id = student_id
             thisStudent.save()
             for course in thisStudent.course_set.all():
                 for assignment in course.assignment.all():
@@ -51,7 +57,6 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         try:
             thisInstr = Instructor.objects.get(enroll_email=addEmail)
             thisInstr.user = user
-            # TODO: update this instructor from oidc claim
             thisInstr.save()
         except Instructor.DoesNotExist:
             thisInstr = create_instructor_from_oidc_claim(claims)
@@ -74,11 +79,21 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
 
 def create_student_from_oidc_claim(claims):
-    pass
+    enrolled_in = 0
+    students_id = ''
+    for id in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
+        if id.get('enrolled_in',0)>enrolled_in:
+            students_id =id.get('student_id ','')
+        pass
+    student=Student(enroll_email=claims.get('email'),nickname = claims.get('nickname', ''),student_id=students_id)
+    student.save()
+
+    return student
     # create student.
-    # TODO: if this user has a student identity, we need to create a new student and point it to this user.
 
 def create_instructor_from_oidc_claim(claims):
-    pass
-    # create instructor.
-    # TODO: if this user has a instr identity, we need to create a new instr and point it to this user.
+    instructor=Instructor(enroll_email=claims.get('email'))
+    instructor.save()
+
+    return instructor
+    # create instructor. 
