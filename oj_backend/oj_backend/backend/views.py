@@ -164,7 +164,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
         this_course = Course.objects.get(uid=response.data['uid'])
-        this_course.instructor.add(request.user)
+        this_course.instructor.add(request.user.instructor)
         try:
             MWUpdateCourse(this_course.name, str(this_course.uid))
         except (MiddlewareError, MWUpdateError):
