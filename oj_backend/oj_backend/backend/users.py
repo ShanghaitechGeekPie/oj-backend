@@ -68,6 +68,9 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         Student.objects.filter(enroll_email=olduser.email).update(user=None)
         Instructor.objects.filter(enroll_email=olduser.email).update(user=None)
         olduser.email = claims.get('email')
+        olduser.first_name=claims.get('family_name','')
+        olduser.last_name=claims.get('given_name','')
+        olduser.username=claims.get('email')
         olduser.name = claims.get('identification', {}).get('shanghaitech', {}).get(
             'realname', claims.get('family_name', '')+claims.get('given_name', ''))
         olduser.save()
