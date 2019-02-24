@@ -68,9 +68,9 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
         response = self.update(request, *args, **kwargs)
         email = self.get_object().user.email
         user_key = self.get_object().user.rsa_pub_key
-        try (MWUpdateError, MiddlewareError):
+        try:
             MWUpdateUser(email)
-        except:
+        except (MWUpdateError, MiddlewareError):
             pass
         try:
             MWUpdateUserKey(email, user_key)
@@ -102,9 +102,9 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
         response = self.update(request, *args, **kwargs)
         email = self.get_object().user.email
         user_key = self.get_object().user.rsa_pub_key
-        try (MWUpdateError, MiddlewareError):
+        try:
             MWUpdateUser(email)
-        except:
+        except (MWUpdateError, MiddlewareError):
             pass
         try:
             MWUpdateUserKey(email, user_key)
