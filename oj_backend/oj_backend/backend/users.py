@@ -41,7 +41,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             student_id = ''
             for id in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
                 if id.get('enrolled_in',0)>enrolled_in:
-                    student_id =id.get('student_id ','')
+                    student_id =id.get('student_id','')
                 pass
             thisStudent.student_id = student_id
             thisStudent.save()
@@ -83,7 +83,7 @@ def create_student_from_oidc_claim(claims):
     students_id = ''
     for id in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
         if id.get('enrolled_in',0)>enrolled_in:
-            students_id =id.get('student_id ','')
+            students_id =id.get('student_id','')
         pass
     student=Student(enroll_email=claims.get('email'),nickname = claims.get('nickname', ''),student_id=students_id)
     student.save()
