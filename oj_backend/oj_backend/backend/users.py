@@ -31,7 +31,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         addName = claims.get('identification', {}).get('shanghaitech', {}).get(
             'realname', claims.get('famaily_name', '')+claims.get('given_name', ''))
         user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
-            'famaily_name'), last_name=claims.get('given_name'))
+            'family_name'), last_name=claims.get('given_name'))
         user.save()
         try:
             thisStudent = Student.objects.get(enroll_email=addEmail)
