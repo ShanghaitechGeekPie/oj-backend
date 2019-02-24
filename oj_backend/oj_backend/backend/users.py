@@ -78,20 +78,34 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
 
 def create_student_from_oidc_claim(claims):
-    enrolled_in = 0
-    students_id = ''
+    is_student = False
     for i in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
-        if i.get('enrolled_in', 0) > enrolled_in:
-            students_id = i.get('student_id', '')
-    student = Student(enroll_email=claims.get('email'), nickname=claims.get(
+        if i.get('role', None) == 'student':
+            is_student = True
+    if is_student:
+        enrolled_in = 0
+        students_id = ''
+        for i in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
+            if i.get('enrolled_in', 0) > enrolled_in:
+                students_id = i.get('student_id', '')
+        student = Student(enroll_email=claims.get('email'), nickname=claims.get(
         'nickname', ''), student_id=students_id)
-    student.save()
-    return student
+        student.save()
+        return student
+    else:
+        return None
     # create student.
 
 
 def create_instructor_from_oidc_claim(claims):
-    instructor = Instructor(enroll_email=claims.get('email'))
-    instructor.save()
-    return instructor
+    is_employee = False
+    for i in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
+        if i.get('role', None) == 'employee':
+            is_employee = True
+    if is_employee:
+        instructor = Instructor(enroll_email=claims.get('email'))
+        instructor.save()
+        return instructor
+    else:
+        return None
     # create instructor.
