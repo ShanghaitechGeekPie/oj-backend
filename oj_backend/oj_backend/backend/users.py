@@ -79,7 +79,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
 def create_student_from_oidc_claim(claims):
     is_student = False
-    for i in claims.tion', {}).get('shanghaitech', {}).get('identities', {}):
+    for i in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
         if i.get('role', None) == 'student':
             is_student = True
     if is_student:
