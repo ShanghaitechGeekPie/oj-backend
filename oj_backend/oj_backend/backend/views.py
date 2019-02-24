@@ -463,7 +463,7 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={}, status=403)
         try:
-            this_student = this_course.student.get(
+            this_student = this_course.students.get(
                 enroll_email=self.kwargs['student_email'])
         except:
             return JsonResponse(data={}, status=404)
@@ -538,7 +538,7 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         except:
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
-        this_course.judge.remove(this_judge)
+        this_course.default_judge.remove(this_judge)
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
 
@@ -605,15 +605,15 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
 
     def delete(self, request, *args, **kwargs):
         try:
-            this_course = Course.objects.get(uid=self.kwargs['course_id'])
+            this_assignment = Assignment.objects.get(uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
         except:
             return JsonResponse(data={}, status=404)
         try:
-            this_course.instructor.get(user__uid=request.user.uid)
+            this_assignment.course.instructor.get(user__uid=request.user.uid)
         except:
             return JsonResponse(data={}, status=403)
-        this_judge = Judge.objects.get(uid=request.data['uid'])
-        this_course.judge.delete(this_judge)
+        this_judge = Judge.objects.get(uid=self.kwargs['judge_id'])
+        this_assignment.judge.delete(this_judge)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         this_redis.publish('assignment_judge', request.data['uid'])
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
