@@ -192,7 +192,8 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
     def get_queryset(self):
         this_student = get_object_or_404(
             Student, user__uid=self.kwargs['student_id'])
-        return this_student.assignment_set.all()
+        this_course = get_object_or_404(this_student.course_set.all(), uid=self.kwargs['course_id'])
+        return this_course.assignment_set.all()
 
     def get_object(self):
         this_student = self.kwargs['student_id']
