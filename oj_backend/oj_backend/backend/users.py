@@ -37,20 +37,27 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             thisStudent = Student.objects.get(enroll_email=addEmail)
             thisStudent.user = user
             thisStudent.nickname = claims.get('nickname', '')
+            # TODO: update this student from oidc claim
             thisStudent.save()
             for course in thisStudent.course_set.all():
                 for assignment in course.assignment.all():
                     MWCourseAddRepo(course.uid, assignment.uid,
                                     user.email, owner_uid=user.uid)
         except Student.DoesNotExist:
-            pass
-            # TODO: if this user has a student identity, we need to create a new student and point it to this user.
+            thisStudent = create_student_from_oidc_claim(claims)
+            if thisStudent:
+                thisStudent.user = user
+                thisStudent.save()
         try:
             thisInstr = Instructor.objects.get(enroll_email=addEmail)
             thisInstr.user = user
+            # TODO: update this instructor from oidc claim
             thisInstr.save()
         except Instructor.DoesNotExist:
-            pass
+            thisInstr = create_instructor_from_oidc_claim(claims)
+            if thisInstr:
+                thisInstr.user = user
+                thisInstr.save()
         return user
 
     def update_user(self, olduser, claims):
@@ -64,3 +71,14 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         Instructor.objects.filter(enroll_email=olduser.email).update(user=olduser)
 
         return olduser
+
+
+def create_student_from_oidc_claim(claims):
+    pass
+    # create student.
+    # TODO: if this user has a student identity, we need to create a new student and point it to this user.
+
+def create_instructor_from_oidc_claim(claims):
+    pass
+    # create instructor.
+    # TODO: if this user has a instr identity, we need to create a new instr and point it to this user.
