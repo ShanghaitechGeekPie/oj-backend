@@ -29,7 +29,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
     def create_user(self, claims):
 
         addEmail = claims.get('email')
-        addName = claims.get('famaily_name','')+claims.get('given_name','')
+        addName = claims.get('identification', {}).get('shanghaitech', {}).get('realname', claims.get('famaily_name','')+claims.get('given_name',''))
         user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
             'famaily_name'), given_name=claims.get('given_name'))
         user.save()
@@ -39,10 +39,9 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             thisStudent.nickname = claims.get('nickname', '')
             enrolled_in = 0
             student_id = ''
-            for id in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
-                if id.get('enrolled_in',0)>enrolled_in:
-                    student_id =id.get('student_id','')
-                pass
+            for i in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
+                if i.get('enrolled_in',0)>enrolled_in:
+                    student_id =i.get('student_id','')
             thisStudent.student_id = student_id
             thisStudent.save()
             for course in thisStudent.course_set.all():
@@ -70,7 +69,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         Student.objects.filter(enroll_email=olduser.email).update(user=None)
         Instructor.objects.filter(enroll_email=olduser.email).update(user=None)
         olduser.email = claims.get('email')
-        olduser.name = claims.get('famaily_name','')+claims.get('given_name','')
+        olduser.name = claims.get('identification', {}).get('shanghaitech', {}).get('realname', claims.get('famaily_name','')+claims.get('given_name',''))
         olduser.save()
         Student.objects.filter(enroll_email=olduser.email).update(user=olduser)
         Instructor.objects.filter(enroll_email=olduser.email).update(user=olduser)
@@ -81,10 +80,9 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 def create_student_from_oidc_claim(claims):
     enrolled_in = 0
     students_id = ''
-    for id in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
-        if id.get('enrolled_in',0)>enrolled_in:
-            students_id =id.get('student_id','')
-        pass
+    for i in claims.get('identification', {}).get('shanghaitech', {}).get('identities', {}):
+        if i.get('enrolled_in',0)>enrolled_in:
+            students_id =i.get('student_id','')
     student=Student(enroll_email=claims.get('email'),nickname = claims.get('nickname', ''),student_id=students_id)
     student.save()
 
