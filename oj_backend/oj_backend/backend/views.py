@@ -279,8 +279,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
 
     def post(self, request, *args, **kwargs):
         response = self.create(request, *args, **kwargs)
-        this_assignment = Assignment.objects.get(
-            course__uid=self.kwargs['uid'], name=request.data['name'], descr_link=request.data['descr_link'])
+        this_assignment = Assignment.objects.get(uid=response.data['uid'])
         deadline = this_assignment.deadline
         try:
             MWCourseAddAssignment(
@@ -472,7 +471,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
             if this_student.user:
                 MWCourseAddRepo(
                     self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], assignment.deadline, owner_uid=this_student.user.uid)
-        return JsonResponse(data=this_student, status=201, safe=False)
+        return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
 
 class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):

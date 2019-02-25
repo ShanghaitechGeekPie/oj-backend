@@ -140,8 +140,11 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
         ddl = str(ddl.date())
-        if owner_uid:
+        if isinstance(owner_uid, str):
             owner_uid = str(owner_uid)
+        elif isinstance(owner_uid, list):
+            for i in range(len(owner_uid)):
+                owner_uid[i] = str(owner_uid[i])
         interface = "/courses/{}/assignments/{}/repos".format(
             course_uid, assignment_uid)
         if repo_name == None:
