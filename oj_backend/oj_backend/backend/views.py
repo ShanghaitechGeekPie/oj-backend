@@ -384,10 +384,9 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
             MWCourseAddInstr(
                 course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
         except:
-            except (MiddlewareError, MWUpdateError):
-                MWUpdateUser(request.data['enroll_email'])
-                MWCourseAddInstr(
-                    course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
+            MWUpdateUser(request.data['enroll_email'])
+            MWCourseAddInstr(
+                course_uid=self.kwargs['uid'], instr_email=request.data['enroll_email'])
         return JsonResponse(data={}, status=201)
 
 
