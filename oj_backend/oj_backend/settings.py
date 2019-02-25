@@ -146,6 +146,8 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_USER_MODEL = 'oj_database.User'
 
+OIDC_EXEMPT_URLS = ['/api/user/login/oauth/param']
+
 OIDC_RP_SIGN_ALGO = 'HS256'
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
 OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
