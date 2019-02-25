@@ -22,6 +22,7 @@ from oj_database.models import Student
 from oj_database.models import Instructor
 from oj_backend.backend.middleware_connector import *
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
+from mozilla_django_oidc.middleware import SessionRefresh as OIDCSessionRefresh
 
 
 class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
@@ -112,3 +113,8 @@ def create_instructor_from_oidc_claim(claims):
     else:
         return None
     # create instructor.
+
+class SessionRefresh(OIDCSessionRefresh):
+    """
+    Custom `mozilla-django-oidc` SessionRefresh class for the `oj-backend` project.
+    """

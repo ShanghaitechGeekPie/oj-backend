@@ -22,7 +22,7 @@ urlpatterns = [
     path('student/<str:uid>', studentInformation.as_view()),
     path('instructor/<str:uid>', insturctorInformation.as_view()),
     path('user/role', userRole.as_view()),
-    path('user/login/oauth/param', oauthLoginParam.as_view()),
+    path('user/login/oauth/param', oauthLoginParam.as_view(), name="oj_backend_login_param"),
     path('student/<str:uid>/course/', courseList4Students.as_view()),
     path('instructor/<str:uid>/course/', courseList4Instr.as_view()),
     path('student/<str:student_id>/course/<str:course_id>/assignment/',

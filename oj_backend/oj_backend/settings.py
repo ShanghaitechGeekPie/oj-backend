@@ -29,6 +29,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 import redis
+from django.urls import reverse
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -69,7 +70,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'mozilla_django_oidc.middleware.SessionRefresh',
+    'oj_backend.backend.users.SessionRefresh',
 ]
 
 ROOT_URLCONF = 'oj_backend.urls'
@@ -146,6 +147,8 @@ AUTHENTICATION_BACKENDS = (
 
 AUTH_USER_MODEL = 'oj_database.User'
 
+OJ_URL_PREFIX = r"^api/"
+
 OIDC_RP_SIGN_ALGO = 'HS256'
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
 OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
@@ -154,12 +157,12 @@ OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
 OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
 OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 600
+OIDC_EXEMPT_URLS = [reverse("oj_backend_login_param"), ]
 LOGIN_REDIRECT_URL = "https://oj.geekpie.club/"
 LOGOUT_REDIRECT_URL = "https://oj.geekpie.club/"
 
 OJ_SUBMISSION_TOKEN = os.environ['OJ_SUBMISSION_TOKEN']
 
-OJ_URL_PREFIX = r"^api/"
 OJ_ENFORCE_HTTPS = True
 SECURE_SSL_REDIRECT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
