@@ -233,7 +233,7 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
             uid = UUID(self.kwargs['uid'])
         except:
             return JsonResponse(data={'cuase': 'Bad request'}, status=400)
-        if strrequest.user.uid != uid:
+        if request.user.uid != uid:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
@@ -762,7 +762,7 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
 
     def get_queryset(self):
         this_student = get_object_or_404(
-            Student, uid=self.kwargs['student_id'])
+            Student, user__uid=self.kwargs['student_id'])
         this_assignment = get_object_or_404(
             Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
         return this_student.record_set.filter(assignment=this_assignment)
