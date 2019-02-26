@@ -15,6 +15,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge
 from oj_backend.backend.utils import get_course_uid_from_path as get_course_uid
@@ -33,6 +34,23 @@ class userInfoReadWritePermission(permissions.BasePermission):
         return request.user.uid == obj.user.uid
 
 
+class studentinstrUserInfoReadWritePermission(permissions.BasePermission):
+    '''
+    This class provides permission for students and instructors.
+    '''
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        return request.user.uid == view.kwargs['uid']
+
+    def has_object_permission(self, request, view, obj):
+        if obj.user:
+            return obj.user == request.user
+        else:
+            return False
+
+
 class submissionRecordReadPermission(permissions.BasePermission):
     '''
     This class provides permission control for student's submission history.
@@ -42,12 +60,21 @@ class submissionRecordReadPermission(permissions.BasePermission):
     Instructor: only insturctor that gives this course could access this record.
     '''
 
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        this_assignment = get_object_or_404(
+            Assignment, uid=view.kwargs['assignment_id'], course__uid=view.kwargs['course_id'])
+        this_course = this_assignment.course
+        return (this_course.instructor.filter(user=request.user).exists()) or (this_course.students.filter(user=request.user).exists())
+
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:
             return False
         this_user = request.user
         this_student = obj.student
-        this_instr = obj.assignment.course.instructor.filter(user__uid=this_user.uid)
+        this_instr = obj.assignment.course.instructor.filter(
+            user__uid=this_user.uid)
         if this_user.uid == this_student.user.uid:
             return True
         return this_instr.exists()
@@ -61,6 +88,13 @@ class assignmentInfoReadWritePermisson(permissions.BasePermission):
 
     Instructor: allowed to motify any assigment that they gives lecture to.
     '''
+
+    def has_permission(self, request, view):
+        course_id = view.kwargs.get('uid', view.kwargs.get('course_id', None))
+        if not course_id:
+            raise KeyError
+        this_course = get_object_or_404(Course, uid=course_id)
+        return (this_course.instructor.filter(user=request.user)) or (this_course.students.filter(user=request.user))
 
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:
@@ -85,13 +119,22 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
     Instructor: allowed to motify instructor list, along with read.
     '''
 
+    def has_permission(self, request, view):
+        course_id = view.kwargs.get('uid', view.kwargs.get('course_id', None))
+        if not course_id:
+            raise KeyError
+        this_course = get_object_or_404(Course, uid=course_id)
+        return (this_course.instructor.filter(user=request.user).exists()) or (this_course.students.filter(user=request.user).exists())
+
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:
             return False
         this_course = Course.objects.get(uid=get_course_uid(request.path))
         if this_course:
-            this_student = this_course.students.filter(user__uid=request.user.uid)
-            this_instr = this_course.instructor.filter(user__uid=request.user.uid)
+            this_student = this_course.students.filter(
+                user__uid=request.user.uid)
+            this_instr = this_course.instructor.filter(
+                user__uid=request.user.uid)
         else:
             return False
         if request.method in permissions.SAFE_METHODS:
@@ -102,12 +145,20 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
             return this_instr.exists()
         return False
 
+
 class courseStudentInfoReadWritePermission(permissions.BasePermission):
     '''
     This class provides permission for viewing/modifying course's instructors.
 
     Only instructors are granted this permission.
     '''
+
+    def has_permission(self, request, view):
+        course_id = view.kwargs.get('uid', view.kwargs.get('course_id', None))
+        if not course_id:
+            raise KeyError
+        this_course = get_object_or_404(Course, uid=course_id)
+        return this_course.instructor.filter(user=request.user).exists()
 
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:
@@ -139,6 +190,14 @@ class courseJudgeReadWritePermisson(permissions.BasePermission):
 
     Instructor: allowed to motify and also read.
     '''
+
+    def has_permission(self, request, view):
+        course_id = view.kwargs.get(
+            'uid', view.kwargs.get('course_id', None))
+        if not course_id:
+            raise KeyError
+        this_course = get_object_or_404(Course, uid=course_id)
+        return this_course.instructor.filter(user=request.user).exists()
 
     def has_object_permission(self, request, view, obj):
         if not request.user.is_authenticated:

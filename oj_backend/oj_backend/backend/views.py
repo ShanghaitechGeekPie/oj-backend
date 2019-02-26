@@ -76,7 +76,6 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
             MWUpdateUserKey(email, user_key)
         except (MWUpdateError, MiddlewareError):
             return JsonResponse({"cause": "server error"}, status=500)
-            return JsonResponse({"cause": "server error"}, status=500)
         return response
 
 
@@ -132,12 +131,14 @@ class userRole(generics.GenericAPIView):
         }
         return JsonResponse(data=data, status=200)
 
+
 class userInstr(generics.GenericAPIView, mixins.RetrieveModelMixin):
     '''
     `/user/<str:uid>/instructor`
     '''
-    serializer_class= InstructorBasicInfoSerializer
-    permission_classes = (IsAuthenticated)
+    serializer_class = InstructorBasicInfoSerializer
+    permission_classes = (
+        IsAuthenticated, studentinstrUserInfoReadWritePermission)
 
     def get_queryset(self):
         return Instructor.objects.filter(user__uid=self.kwargs['uid'])
@@ -156,17 +157,20 @@ class userInstr(generics.GenericAPIView, mixins.RetrieveModelMixin):
             return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
         if request.user.uid != self.kwargs['uid']:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
-        this_instr = Instructor(enroll_email=request.user.email, user=request.user)
+        this_instr = Instructor(
+            enroll_email=request.user.email, user=request.user)
         this_instr.save()
         serializer = self.serializer_class(this_instr)
         return JsonResponse(serializer.data, status=201)
+
 
 class userStudent(generics.GenericAPIView, mixins.RetrieveModelMixin):
     '''
     `/user/<str:uid>/student`
     '''
     serializer_class = StudentBasicInfoSerializer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (
+        IsAuthenticated, studentinstrUserInfoReadWritePermission)
 
     def get_queryset(self):
         return Student.objects.filter(user__uid=self.kwargs['uid'])
@@ -190,7 +194,8 @@ class userStudent(generics.GenericAPIView, mixins.RetrieveModelMixin):
             student_id = self.request.data['student_id']
         except KeyError:
             return JsonResponse(data={'cause': 'Invalid request'}, status=400)
-        this_student = Student(enroll_email=request.user.email, user=request.user, nickname=nickname, student_id=student_id)
+        this_student = Student(enroll_email=request.user.email,
+                               user=request.user, nickname=nickname, student_id=student_id)
         this_student.save()
         serializer = self.serializer_class(this_student)
         return JsonResponse(serializer.data, status=201)
@@ -204,7 +209,8 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
     permission_classes = (courseReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
-        this_student = get_object_or_404(Student, user__uid=self.kwargs['uid'])
+        this_student = get_object_or_404(Student.objects.filter(
+            user=self.request.user), user__uid=self.kwargs['uid'])
         return this_student.course_set.all()
 
     def get_object(self):
@@ -215,6 +221,8 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
         return obj
 
     def get(self, request, *args, **kwargs):
+        if request.user.uid != self.kwargs['uid']:
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
 
@@ -226,8 +234,8 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
     permission_classes = (courseReadWritePermission, IsAuthenticated)
 
     def get_queryset(self):
-        this_instr = get_object_or_404(
-            Instructor, user__uid=self.kwargs['uid'])
+        this_instr = get_object_or_404(Instructor.objects.filter(
+            user=self.request.user), user__uid=self.kwargs['uid'])
         return this_instr.course_set.all()
 
     def get_object(self):
@@ -241,6 +249,8 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         serializer.save(creator=self.request.user.uid, uid=uuid1())
 
     def get(self, request, *args, **kwargs):
+        if request.user.uid != self.kwargs['uid']:
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
@@ -345,6 +355,9 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
+        if not this_course.instructor.filter(user=request.user):
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         response = self.create(request, *args, **kwargs)
         this_assignment = Assignment.objects.get(uid=response.data['uid'])
         deadline = this_assignment.deadline
@@ -362,7 +375,6 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         if isinstance(response, Response):
             response.data['ssh_url_to_repo'] = git_repo
             response.content = simplejson.dumps(response.data)
-        this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
         try:
             for student in this_course.students.all():
                 if student.user:
