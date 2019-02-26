@@ -12,21 +12,23 @@ Deploying using `Docker` is recommended. Make sure you set the following environ
 
 
 environment variable | description | example
----|---|---|
+---|---|---
 `OJBN_DB_HOST` | the host where the database is hosted. | `localhost`
 `OJBN_DB_NAME` | the database name. | `ojdb`
 `OJBN_DB_USER` | the user used to acssess the database. | `geekpie`
 `OJBN_DB_PASSWD` | the database password for the given user. | `gouliguojiashengsiyi`
 `OJBN_HOSTNAME` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
-`OJBN_GITLAB_ADDR` | the address where the gitlab middleware is hosted. | `localhost:8080`
-`OJBN_OAUTH_URL` | the URL of the OAuth service this service is using | `https://gauth.geekpie.club/oauth/login`
+`OJBN_GITLAB_ADDR` | the address where the gitlab middleware is hosted. | `http://localhost:8080` 
+<del>`OJBN_OAUTH_URL`</del> | <del>the URL of the OAuth service this service is using</del> | <del>`https://gauth.geekpie.club/oauth/login`</del> 
 `OJBN_REDIS_ADDR` | the address of redis server. Follows the schema of `redis-py` | `redis://[:password]@localhost:6379/0`
-`OJ_SUBMISSION_TOKEN` | token for auth betwwen `oj-*-middleware` and `oj-backend` for submission | `woshitoken` |
-`OIDC_RP_CLIENT_ID` | OpenID client ID | |
-`OIDC_RP_CLIENT_SECRET` | OpenID client secret | |
-`OIDC_OP_AUTHORIZATION_ENDPOINT` |  | |
-`OIDC_OP_TOKEN_ENDPOINT` |  | |
-`OIDC_OP_USER_ENDPOINT`  |  | |
+`OJ_SUBMISSION_TOKEN` | token for auth betwwen `oj-*-middleware` and `oj-backend` for submission | `woshitoken` 
+`OJBN_STAGE` |the server is whether a test or a production server. When setted to `production`, the server will try to get the secret key from the environment variable. |`development` or `production`
+`OJBN_SECRET_KEY` |the secret key. See https://docs.djangoproject.com/en/2.1/ref/settings/#std:setting-SECRET_KEY | `imarandomstring` 
+`OIDC_RP_CLIENT_ID` | OpenID client ID | see https://mozilla-django-oidc.readthedocs.io/en/stable/ for the following varibles 
+`OIDC_RP_CLIENT_SECRET` | OpenID client secret | 
+`OIDC_OP_AUTHORIZATION_ENDPOINT` | OpenID Authorization Endpoint | 
+`OIDC_OP_TOKEN_ENDPOINT` | OpenID Token Endpoint | 
+`OIDC_OP_USER_ENDPOINT`  | OpenID User Endpoint | 
 
 
 ## API Schema
