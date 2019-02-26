@@ -32,7 +32,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, re_path, include
-from oj_backend.settings import OJ_URL_PREFIX as api_path
 
 urlpatterns = [
     re_path(r'^oidc/', include('mozilla_django_oidc.urls')),
