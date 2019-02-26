@@ -116,6 +116,10 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
 class userRole(generics.GenericAPIView):
     '''
     `/user/role`
+
+    And
+
+    `/user/`
     '''
 
     def get(self, request):
@@ -127,6 +131,69 @@ class userRole(generics.GenericAPIView):
             'is_instructor': Instructor.objects.filter(user__uid=request.user.uid).exists()
         }
         return JsonResponse(data=data, status=200)
+
+class userInstr(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    '''
+    `/user/<str:uid>/instructor`
+    '''
+    serializer_class= InstructorBasicInfoSerializer
+    permission_classes = (IsAuthenticated)
+
+    def get_queryset(self):
+        return Instructor.objects.filter(user__uid=self.kwargs['uid'])
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset, user=self.request.uer)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
+        if request.user.uid != self.kwargs['uid']:
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+        this_instr = Instructor(enroll_email=request.user.email, user=request.user)
+        this_instr.save()
+        serializer = self.serializer_class(this_instr)
+        return JsonResponse(serializer.data, status=201)
+
+class userStudent(generics.GenericAPIView, mixins.RetrieveModelMixin):
+    '''
+    `/user/<str:uid>/student`
+    '''
+    serializer_class = StudentBasicInfoSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self):
+        return Student.objects.filter(user__uid=self.kwargs['uid'])
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset, user=self.request.uer)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
+        if request.user.uid != self.kwargs['uid']:
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+        try:
+            nickname = self.request.data['nickname']
+            student_id = self.request.data['student_id']
+        except KeyError:
+            return JsonResponse(data={'cause': 'Invalid request'}, status=400)
+        this_student = Student(enroll_email=request.user.email, user=request.user, nickname=nickname, student_id=student_id)
+        this_student.save()
+        serializer = self.serializer_class(this_student)
+        return JsonResponse(serializer.data, status=201)
 
 
 class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
