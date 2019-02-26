@@ -90,9 +90,11 @@ class assignmentInfoReadWritePermisson(permissions.BasePermission):
     '''
 
     def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
         course_id = view.kwargs.get('uid', view.kwargs.get('course_id', None))
         if not course_id:
-            raise KeyError
+            raise KeyError('Unable to find the uid of course.')
         this_course = get_object_or_404(Course, uid=course_id)
         return (this_course.instructor.filter(user=request.user)) or (this_course.students.filter(user=request.user))
 
@@ -120,9 +122,11 @@ class courseInstrInfoReadWritePermission(permissions.BasePermission):
     '''
 
     def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
         course_id = view.kwargs.get('uid', view.kwargs.get('course_id', None))
         if not course_id:
-            raise KeyError
+            raise KeyError('Unable to find the uid of course.')
         this_course = get_object_or_404(Course, uid=course_id)
         return (this_course.instructor.filter(user=request.user).exists()) or (this_course.students.filter(user=request.user).exists())
 
@@ -154,9 +158,11 @@ class courseStudentInfoReadWritePermission(permissions.BasePermission):
     '''
 
     def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
         course_id = view.kwargs.get('uid', view.kwargs.get('course_id', None))
         if not course_id:
-            raise KeyError
+            raise KeyError('Unable to find the uid of course.')
         this_course = get_object_or_404(Course, uid=course_id)
         return this_course.instructor.filter(user=request.user).exists()
 
@@ -192,6 +198,8 @@ class courseJudgeReadWritePermisson(permissions.BasePermission):
     '''
 
     def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
         course_id = view.kwargs.get(
             'uid', view.kwargs.get('course_id', None))
         if not course_id:
