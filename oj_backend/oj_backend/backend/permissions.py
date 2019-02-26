@@ -19,6 +19,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import permissions
 from oj_backend.backend.models import Student, Instructor, Course, Assignment, Record, Judge
 from oj_backend.backend.utils import get_course_uid_from_path as get_course_uid
+from uuid import UUID
 
 
 class userInfoReadWritePermission(permissions.BasePermission):
@@ -42,7 +43,7 @@ class studentinstrUserInfoReadWritePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
             return False
-        return request.user.uid == view.kwargs['uid']
+        return request.user.uid == UUID(view.kwargs['uid'])
 
     def has_object_permission(self, request, view, obj):
         if obj.user:

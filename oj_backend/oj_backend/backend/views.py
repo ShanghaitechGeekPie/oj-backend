@@ -35,7 +35,7 @@ except:
 
 import redis
 import time
-from uuid import uuid1
+from uuid import uuid1, UUID
 
 import oj_backend.backend.middleware_connector as mw_connector
 from oj_backend.backend.utils import student_active_test, student_test, insturctor_test, student_taking_course_test, student_submit_assignment_test, instructor_giving_course_test, regrade_assignment
@@ -155,7 +155,11 @@ class userInstr(generics.GenericAPIView, mixins.RetrieveModelMixin):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
-        if str(request.user.uid) != self.kwargs['uid']:
+        try:
+            uid = UUID(self.kwargs['uid'])
+        except:
+            return JsonResponse(data={'cuase': 'Bad request'}, status=400)
+        if request.user.uid != uid:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_instr = Instructor(
             enroll_email=request.user.email, user=request.user)
@@ -187,7 +191,11 @@ class userStudent(generics.GenericAPIView, mixins.RetrieveModelMixin):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
-        if str(request.user.uid) != self.kwargs['uid']:
+        try:
+            uid = UUID(self.kwargs['uid'])
+        except:
+            return JsonResponse(data={'cuase': 'Bad request'}, status=400)
+        if request.user.uid != uid:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             nickname = self.request.data['nickname']
@@ -221,7 +229,11 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
         return obj
 
     def get(self, request, *args, **kwargs):
-        if str(request.user.uid) != self.kwargs['uid']:
+        try:
+            uid = UUID(self.kwargs['uid'])
+        except:
+            return JsonResponse(data={'cuase': 'Bad request'}, status=400)
+        if strrequest.user.uid != uid:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
@@ -249,7 +261,11 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         serializer.save(creator=self.request.user.uid, uid=uuid1())
 
     def get(self, request, *args, **kwargs):
-        if str(request.user.uid) != self.kwargs['uid']:
+        try:
+            uid = UUID(self.kwargs['uid'])
+        except:
+            return JsonResponse(data={'cuase': 'Bad request'}, status=400)
+        if request.user.uid != uid:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
