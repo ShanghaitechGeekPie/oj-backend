@@ -155,7 +155,7 @@ class userInstr(generics.GenericAPIView, mixins.RetrieveModelMixin):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
-        if request.user.uid != self.kwargs['uid']:
+        if str(request.user.uid) != self.kwargs['uid']:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_instr = Instructor(
             enroll_email=request.user.email, user=request.user)
@@ -187,7 +187,7 @@ class userStudent(generics.GenericAPIView, mixins.RetrieveModelMixin):
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse(data={'cuase': 'Unauthorized'}, status=401)
-        if request.user.uid != self.kwargs['uid']:
+        if str(request.user.uid) != self.kwargs['uid']:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             nickname = self.request.data['nickname']
@@ -221,7 +221,7 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
         return obj
 
     def get(self, request, *args, **kwargs):
-        if request.user.uid != self.kwargs['uid']:
+        if str(request.user.uid) != self.kwargs['uid']:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
@@ -249,7 +249,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         serializer.save(creator=self.request.user.uid, uid=uuid1())
 
     def get(self, request, *args, **kwargs):
-        if request.user.uid != self.kwargs['uid']:
+        if str(request.user.uid) != self.kwargs['uid']:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         return self.list(request, *args, **kwargs)
 
