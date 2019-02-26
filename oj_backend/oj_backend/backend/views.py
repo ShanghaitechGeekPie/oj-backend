@@ -942,13 +942,16 @@ class internalSubmissionInterface(generics.GenericAPIView):
         return Response(data=this_submission, status=201)
 
 
-class oauthLoginParam(generics.GenericAPIView):
+class OIDCLoginParam(generics.GenericAPIView):
     '''
     `/user/login/oauth/param`
+
+    AND
+
+    `/user/auth/openid/param`
     '''
 
     def get(self, request, *args, **kwargs):
         host = request.META.get('HTTP_HOST')
-        # if OJ_ENFORCE_HTTPS else request.MATA.get['HTTP_X_FORWARDED_PROTO']
-        schema = "https://"
-        return JsonResponse(status=200, data={'login_url': schema+host+reverse('oidc_authentication_init')})
+        scheme =  "https" if request.is_secure() else "http"
+        return JsonResponse(status=200, data={'login_url': scheme+host+reverse('oidc_authentication_init'), 'logout_url': scheme+host+reverse('oidc_logout')})

@@ -155,7 +155,7 @@ OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
 OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
 OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 600
-OIDC_EXEMPT_URLS = ["/api/user/login/oauth/param", ]
+OIDC_EXEMPT_URLS = ["/api/user/login/oauth/param", "/api/user/auth/oidc/param"]
 LOGIN_REDIRECT_URL = "https://oj.geekpie.club/"
 LOGOUT_REDIRECT_URL = "https://oj.geekpie.club/"
 
