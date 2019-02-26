@@ -39,7 +39,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # Deployment settings:
-if os.environ.get('OJBN_STAGE', 'production').lower() == 'develop':
+if os.environ.get('OJBN_STAGE', 'production').lower() == 'development':
     SECRET_KEY = 'mq-2-_&%i3ne(f=wwhfoc)hw5fvr)=+9elezs&cs!k+1^y^sf='
     DEBUG = True
 else:
