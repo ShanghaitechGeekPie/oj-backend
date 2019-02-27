@@ -19,10 +19,4 @@ cd app
 
 python3 manage.py migrate
 
-nohup gunicorn oj_backend.wsgi:application -b 0.0.0.0:8080 --workers 4 --worker-connections 65535&
-service nginx start
-
-while true
-do
-    sleep 1
-done
+gunicorn oj_backend.wsgi:application -b 0.0.0.0:8080 --workers 4 --worker-connections 65535
