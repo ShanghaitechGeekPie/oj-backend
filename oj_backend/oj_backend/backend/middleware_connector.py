@@ -27,7 +27,7 @@ from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
-middleware_logger = logging.getLogger('oj_backend.gitlab-middleware-adopter')
+middleware_logger = logging.getLogger('backend.gitlab-middleware-adopter')
 
 
 def get_course_project_name(code, year, semaster):
@@ -83,7 +83,7 @@ class baseMiddlewareAdopter:
             raise MiddlewareError(cause)
         except HTTPError:
             middleware_logger.error('Middleware server rejected our request by status code {}. Payload: {}. Response: {}'.format(
-                request.status_code, payload, request.test))
+                request.status_code, payload, request.text))
             try:
                 cause = request.json()['cause']
             except:
