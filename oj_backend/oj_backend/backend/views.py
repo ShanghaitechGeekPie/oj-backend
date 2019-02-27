@@ -164,6 +164,8 @@ class userInstr(generics.GenericAPIView, mixins.RetrieveModelMixin):
             return JsonResponse(data={'cuase': 'Bad request'}, status=400)
         if request.user.uid != uid:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+        if Instructor.objects.filter(enroll_email=request.user.email, user=request.user).exists():
+            return JsonResponse(data={'cause': 'Already exists.'}, status=409)
         this_instr = Instructor(
             enroll_email=request.user.email, user=request.user)
         this_instr.save()
@@ -205,6 +207,8 @@ class userStudent(generics.GenericAPIView, mixins.RetrieveModelMixin):
             student_id = self.request.data['student_id']
         except KeyError:
             return JsonResponse(data={'cause': 'Invalid request'}, status=400)
+        if Student.objects.filter(enroll_email=request.user.email, user=request.user).exists():
+            return JsonResponse(data={'cause': 'Already exists.'}, status=409)
         this_student = Student(enroll_email=request.user.email,
                                user=request.user, nickname=nickname, student_id=student_id)
         this_student.save()
