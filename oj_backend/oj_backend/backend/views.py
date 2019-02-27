@@ -460,13 +460,13 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     def post(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['uid'])
         if not request.user.is_authenticated:
-            return JsonResponse(data={}, status=401)
+            return JsonResponse(data={'cause': 'Unauthorized'}, status=401)
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             validate_email(request.data['enroll_email'])
         except ValidationError:
-            return JsonResponse(status=400, data={})
+            return JsonResponse(status=400, data={'cause': 'Bad request'})
         try:
             this_instr = Instructor.objects.get(
                 enroll_email=request.data['enroll_email'])
@@ -514,12 +514,12 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
     def delete(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             this_instr = this_course.instructor.get(
                 enroll_email=self.kwargs['instr_email'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause': 'Not found'}, status=404)
         if this_instr.user.uid == this_course.creator:
             return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
         response = JsonResponse(data=this_instr, safe=False, status=201)
@@ -549,7 +549,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
     def post(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             validate_email(request.data['enroll_email'])
         except ValidationError:
@@ -601,12 +601,12 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
     def delete(self, request, *args, **kwargs):
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             this_student = this_course.students.get(
                 enroll_email=self.kwargs['student_email'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause': 'Not found'}, status=404)
         response = JsonResponse(data=this_student, safe=False, status=201)
         this_course.students.remove(this_student)
         return response
@@ -634,17 +634,17 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         try:
             this_judge = Judge.objects.get(uid=request.data['uid'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause': 'Not Found'}, status=404)
         if not this_judge.maintainer == request.user:
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             this_course = Course.objects.get(uid=self.kwargs['course_id'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause':'Not Found'}, status=404)
         try:
             this_course.instructor.get(uer__uid=request.user.uid)
         except:
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_course.judge.add(this_judge)
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
@@ -672,11 +672,11 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         try:
             this_course = Course.objects.get(uid=self.kwargs['course_id'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause': 'Not Found'}, status=404)
         try:
             this_course.instructor.get(user__uid=request.user.uid)
         except:
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_judge = Judge.objects.get(uid=request.data['uid'])
         this_course.default_judge.remove(this_judge)
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
@@ -709,18 +709,18 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
         try:
             this_judge = Judge.objects.get(uid=request.data['uid'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause': 'Not Found'}, status=404)
         if not this_judge.maintainer == request.user.instructor:
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             this_assignment = Assignment.objects.get(
                 uid=self.kwargs['assignment_id'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={''}, status=404)
         try:
             this_assignment.course.instructor.get(user__uid=request.user.uid)
         except:
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_assignment.judge.add(this_judge)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         backend_logger.info(
@@ -754,11 +754,11 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             this_assignment = Assignment.objects.get(
                 uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
         except:
-            return JsonResponse(data={}, status=404)
+            return JsonResponse(data={'cause': 'Not found'}, status=404)
         try:
             this_assignment.course.instructor.get(user__uid=request.user.uid)
         except:
-            return JsonResponse(data={}, status=403)
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_judge = Judge.objects.get(uid=self.kwargs['judge_id'])
         this_assignment.judge.delete(this_judge)
         backend_logger.info(
