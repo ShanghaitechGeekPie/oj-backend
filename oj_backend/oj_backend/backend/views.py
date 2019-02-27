@@ -35,6 +35,7 @@ except:
 
 import redis
 import time
+import logging
 from uuid import uuid1, UUID
 
 import oj_backend.backend.middleware_connector as mw_connector
@@ -44,6 +45,8 @@ from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
 from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT, OJ_SUBMISSION_TOKEN, OJ_ENFORCE_HTTPS
 from oj_backend.backend.middleware_connector import *
+
+backend_logger = logging.getLogger('backend.main')
 
 
 class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin):
@@ -696,6 +699,10 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
 
     def post(self, request, *args, **kwargs):
         try:
+            uid = request.data['uid']
+        except:
+            return JsonResponse(data={'cause': 'missing parameter'}, status=400)
+        try:
             this_judge = Judge.objects.get(uid=request.data['uid'])
         except:
             return JsonResponse(data={}, status=404)
@@ -712,6 +719,8 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
             return JsonResponse(data={}, status=403)
         this_assignment.judge.add(this_judge)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
+        backend_logger.info(
+            'Published redis data to assignment_judge: {}'.format(request.data['uid']))
         this_redis.publish('assignment_judge', request.data['uid'])
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
 
@@ -748,6 +757,8 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             return JsonResponse(data={}, status=403)
         this_judge = Judge.objects.get(uid=self.kwargs['judge_id'])
         this_assignment.judge.delete(this_judge)
+        backend_logger.info(
+            'Published redis data to assignment_judge: {}'.format(request.data['uid']))
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         this_redis.publish('assignment_judge', request.data['uid'])
         return JsonResponse(JudgeSerializer(this_judge), safe=False, status=201)
@@ -928,17 +939,29 @@ class internalSubmissionInterface(generics.GenericAPIView):
     '''
 
     def post(self, request, *args, **kwargs):
-        auth_token = request.META.get("HTTP_AUTHORIZATION")
+        auth_token = request.META.get("HTTP_AUTHORIZATION", None)
         if auth_token != OJ_SUBMISSION_TOKEN:
-            return JsonResponse(status=401, data={})
+            remote = request.META.get(
+                'HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', None))
+            backend_logger.error('Submission interface recieved an unauthorized submission. Token: {}; From {}; Payload: {}'.format(
+                auth_token, remote, request.POST))
+            return JsonResponse(status=401, data={'cause': 'Invalid token.'})
         this_submission = simplejson.dumps(request.DATA)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         now = int(time.time())
-        payload = {'upstream': request.data['upstream'], "owner_uids": simplejson.loads(
-            request.data['additional_data']), 'receive_time': now}
+        try:
+            upstream = request.data['upstream']
+            owner_uids = simplejson.loads(
+                request.data['additional_data'])
+            assignment_uid = request.data["assignment_uid"]
+        except KeyError:
+            return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
+        payload = {'upstream': upstream,
+                   "owner_uids": owner_uids, 'receive_time': now}
         payload = simplejson.dumps(payload)
-        this_redis.zadd(request.data["assignment_uid"], {
-                        payload: now})
+        backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
+            payload, assignment_uid, now))
+        this_redis.zadd(assignment_uid, {payload: now})
         return Response(data=this_submission, status=201)
 
 

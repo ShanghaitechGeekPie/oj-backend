@@ -19,6 +19,7 @@
 
 import os
 import simplejson
+import logging
 from secrets import choice
 from string import ascii_letters, digits
 from requests import post
@@ -26,6 +27,7 @@ from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
+middleware_logger = logging.getLogger('oj_backend.gitlab-middleware-adopter')
 
 
 def get_course_project_name(code, year, semaster):
@@ -76,8 +78,12 @@ class baseMiddlewareAdopter:
             request.raise_for_status()
         except (ConnectionError, Timeout):
             cause = 'The connection to middleware server is either broken or timeout.'
+            middleware_logger.error(
+                'Connection to the gitlab-middleware server is either broken or timeout. Remote: {}'.format(api_url))
             raise MiddlewareError(cause)
         except HTTPError:
+            middleware_logger.error('Middleware server rejected our request by status code {}. Payload: {}. Response: {}'.format(
+                request.status_code, payload, request.test))
             try:
                 cause = request.json()['cause']
             except:
@@ -95,6 +101,7 @@ class baseMiddlewareAdopter:
 class MWUpdateUser(baseMiddlewareAdopter):
 
     def __init__(self, user_email, api_server=OJBN_GITLAB_ADDR):
+        middleware_logger.debug('Updating user {} on git.'.format(user_email))
         payload = {'email': user_email,
                    'password': baseMiddlewareAdopter.gen_passwd()}
         super().__init__(api_server=api_server, interface='/users', payload=payload)
@@ -103,6 +110,8 @@ class MWUpdateUser(baseMiddlewareAdopter):
 class MWUpdateUserKey(baseMiddlewareAdopter):
 
     def __init__(self, user_email, user_key, api_server=OJBN_GITLAB_ADDR):
+        middleware_logger.debug(
+            'Updating user {}\'s key on git.'.format(user_email))
         payload = {'key': user_key}
         interface = '/users/{}/key'.format(quote(user_email))
         super().__init__(api_server=api_server, interface=interface, payload=payload)
@@ -111,6 +120,8 @@ class MWUpdateUserKey(baseMiddlewareAdopter):
 class MWUpdateCourse(baseMiddlewareAdopter):
 
     def __init__(self, course_name, course_uid, api_server=OJBN_GITLAB_ADDR):
+        middleware_logger.debug(
+            'Updating course {}-{} on git.'.format(course_name, course_uid))
         course_uid = str(course_uid)
         payload = {"name": course_name.lower(), "uuid": course_uid}
         super().__init__(api_server=api_server, interface='/courses', payload=payload)
@@ -119,6 +130,8 @@ class MWUpdateCourse(baseMiddlewareAdopter):
 class MWCourseAddInstr(baseMiddlewareAdopter):
 
     def __init__(self, course_uid, instr_email, api_server=OJBN_GITLAB_ADDR):
+        middleware_logger.debug(
+            'Updating course {} instructor {} on git.'.format(course_uid, instr_email))
         course_uid = str(course_uid)
         payload = {"instructor_name": instr_email}
         interface = '/courses/{}/instructors'.format(course_uid)
@@ -130,7 +143,7 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
     def __init__(self, course_uid, assignment_name, assignment_uid, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
-        payload = {'name': assignment_name, 'uuid': assignment_uid}
+        payload = {'name': assignment_name.lower(), 'uuid': assignment_uid}
         interface = '/courses/{}/assignments'.format(course_uid)
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
@@ -154,8 +167,9 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
                 owner_uid = [owner_uid]
             else:
                 repo_name = 'group_' + \
-                    "_".join(user.split('@')[0]
-                             for user in owner_email).lower()
+                    "_".join(user.split('@')[0]for user in owner_email).lower()
+        middleware_logger.debug(
+            'Adding repo for course {} , assignment {} on git. Repo name: {}; owners: {}; addtional data: {}; deadline: {}'.format(course_uid, assignment_uid, repo_name, owner_email, owner_uid, ddl))
         payload = {'owners': owner_email, 'repo_name': repo_name,
                    'additional_data': simplejson.dumps(owner_uid), 'ddl': ddl}
         super().__init__(api_server=api_server, interface=interface, payload=payload)

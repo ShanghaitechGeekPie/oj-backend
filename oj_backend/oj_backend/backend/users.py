@@ -17,6 +17,7 @@
 
 # This file provides some baisc integration of auth system.
 
+import logging
 from oj_database.models import User
 from oj_database.models import Student
 from oj_database.models import Instructor
@@ -24,6 +25,7 @@ from oj_backend.backend.middleware_connector import *
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from mozilla_django_oidc.middleware import SessionRefresh as OIDCSessionRefresh
 
+auth_logger = logging.getLogger('backend.users')
 
 class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
 
@@ -34,6 +36,7 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
             'family_name', ''), last_name=claims.get('given_name', ''), username=addEmail)
         user.save()
+        auth_logger.info('User {} is created via OIDC. Name: {}; Email: {}'.format(user, user.name, user.email))
         try:
             thisStudent = Student.objects.get(enroll_email=addEmail)
             thisStudent.user = user
@@ -45,6 +48,8 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
                     student_id = i.get('student_id', '')
             thisStudent.student_id = student_id
             thisStudent.save()
+            auth_logger.info('Student {} is linked with {}. Student ID: {}; Nickname: {}'.format(
+                thisStudent, user, thisStudent.student_id, thisStudent.nickname))
             for course in thisStudent.course_set.all():
                 for assignment in course.assignment.all():
                     MWCourseAddRepo(course.uid, assignment.uid,
@@ -54,30 +59,41 @@ class OJOIDCAuthenticationBackend(OIDCAuthenticationBackend):
             if thisStudent:
                 thisStudent.user = user
                 thisStudent.save()
+                auth_logger.info('Student {} is created for {}. Student ID: {}; Nickname: {}'.format(
+                    thisStudent, user, thisStudent.student_id, thisStudent.nickname))
         try:
             thisInstr = Instructor.objects.get(enroll_email=addEmail)
             thisInstr.user = user
             thisInstr.save()
+            auth_logger.info('Instructor {} is linked with {}.'.format(thisInstr, user))
         except Instructor.DoesNotExist:
             thisInstr = create_instructor_from_oidc_claim(claims)
             if thisInstr:
                 thisInstr.user = user
                 thisInstr.save()
+                auth_logger.info('Instructor {} is created for {}.'.format(
+                    thisInstr, thisInstr.user))
         return user
 
     def update_user(self, olduser, claims):
-        Student.objects.filter(enroll_email=olduser.email).update(user=None)
-        Instructor.objects.filter(enroll_email=olduser.email).update(user=None)
-        olduser.email = claims.get('email')
-        olduser.first_name=claims.get('family_name','')
-        olduser.last_name=claims.get('given_name','')
-        olduser.username=claims.get('email')
-        olduser.name = claims.get('identification', {}).get('shanghaitech', {}).get(
-            'realname', claims.get('family_name', '')+claims.get('given_name', ''))
-        olduser.save()
-        Student.objects.filter(enroll_email=olduser.email).update(user=olduser)
-        Instructor.objects.filter(
-            enroll_email=olduser.email).update(user=olduser)
+        if olduser.email != claims.get('email'):
+            Student.objects.filter(enroll_email=olduser.email).update(user=None)
+            Instructor.objects.filter(enroll_email=olduser.email).update(user=None)
+            olduser.email = claims.get('email')
+            olduser.first_name=claims.get('family_name','')
+            olduser.last_name=claims.get('given_name','')
+            olduser.username=claims.get('email')
+            olduser.name = claims.get('identification', {}).get('shanghaitech', {}).get(
+                'realname', claims.get('family_name', '')+claims.get('given_name', ''))
+            olduser.save()
+            auth_logger.info('User {} is updated from OIDC data.'.format(olduser))
+            Student.objects.filter(enroll_email=olduser.email).update(user=olduser)
+            Instructor.objects.filter(
+                enroll_email=olduser.email).update(user=olduser)
+            auth_logger.info('User {} is linked with latest user.'.format(olduser))
+        else:
+            auth_logger.info(
+                'User {} is already up-to-date.'.format(olduser))
         return olduser
 
 
