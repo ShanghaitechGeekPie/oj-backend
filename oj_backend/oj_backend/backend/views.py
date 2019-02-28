@@ -981,4 +981,4 @@ class OIDCLoginParam(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         host = request.META.get('HTTP_HOST')
         scheme = "https://" if request.is_secure() else "http://"
-        return JsonResponse(status=200, data={'login_url': scheme+host+reverse('oidc_authentication_init'), 'logout_url': scheme+host+reverse('oidc_logout')})
+        return JsonResponse(status=200, data={'login_url': scheme+host+reverse('oidc_auth_request'), 'logout_url': scheme+host+reverse('oidc_end_session')})

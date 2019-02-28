@@ -34,6 +34,6 @@ from django.contrib import admin
 from django.urls import path, re_path, include
 
 urlpatterns = [
-    re_path(r'^oidc/', include('mozilla_django_oidc.urls')),
+    re_path(r'^oidc/', include('oidc_rp.urls')),
     re_path(r'^api/', include('oj_backend.backend.urls'))
 ]

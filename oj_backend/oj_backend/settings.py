@@ -57,7 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'mozilla_django_oidc',
+    'django-oidc-rp',
     'rest_framework',
     'oj_database',
     'oj_backend.backend'
@@ -71,7 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'oj_backend.backend.users.SessionRefresh',
+    'oidc_rp.middleware.OIDCRefreshIDTokenMiddleware',
 ]
 
 ROOT_URLCONF = 'oj_backend.urls'
@@ -87,6 +87,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'oidc_rp.context_processors.oidc',
             ],
         },
     },
@@ -143,7 +144,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTHENTICATION_BACKENDS = (
-    'oj_backend.backend.users.OJOIDCAuthenticationBackend',
+    'oidc_rp.backends.OIDCAuthBackend',
 )
 
 AUTH_USER_MODEL = 'oj_database.User'
@@ -152,10 +153,8 @@ OIDC_RP_SIGN_ALGO = 'HS256'
 OIDC_RP_CLIENT_ID = os.environ['OIDC_RP_CLIENT_ID']
 OIDC_RP_CLIENT_SECRET = os.environ['OIDC_RP_CLIENT_SECRET']
 OIDC_RP_SCOPES = "openid profile email identification identification_shanghaitech_realname identification_shanghaitech_id identification_shanghaitech_role"
-OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ['OIDC_OP_AUTHORIZATION_ENDPOINT']
-OIDC_OP_TOKEN_ENDPOINT = os.environ['OIDC_OP_TOKEN_ENDPOINT']
-OIDC_OP_USER_ENDPOINT = os.environ['OIDC_OP_USER_ENDPOINT']
-OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 600
+OIDC_RP_PROVIDER_ENDPOINT = os.environ['OIDC_RP_PROVIDER_ENDPOINT']
+OIDC_RP_USER_DETAILS_HANDLER = 'oj_backend.backend.users.oidc_create_user_handler'
 OIDC_EXEMPT_URLS = ["/api/user/login/oauth/param", "/api/user/auth/oidc/param"]
 LOGIN_REDIRECT_URL = "https://oj.geekpie.club/"
 LOGOUT_REDIRECT_URL = "https://oj.geekpie.club/"
