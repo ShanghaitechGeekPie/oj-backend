@@ -27,11 +27,14 @@ auth_logger = logging.getLogger('backend.users')
 
 
 def oidc_create_user_handler(oidc_user, claims):
+    auth_logger.info('User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
     addEmail = claims.get('email')
     addName = claims.get('identification', {}).get('shanghaitech', {}).get(
          'realname', claims.get('family_name', '')+claims.get('given_name', ''))
-    user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
-         'family_name', ''), last_name=claims.get('given_name', ''), username=addEmail)
+    #user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
+    #     'family_name', ''), last_name=claims.get('given_name', ''), username=addEmail)
+    user = User.objects.get(email=addEmail)
+    user.name = addName
     user.save()
     oidc_user.user = user
     oidc_user.save()
