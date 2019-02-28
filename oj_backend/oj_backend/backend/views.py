@@ -43,7 +43,7 @@ from oj_backend.backend.utils import student_active_test, student_test, insturct
 from oj_backend.backend.models import *
 from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
-from oj_backend.settings import redisConnectionPool, OIDC_OP_AUTHORIZATION_ENDPOINT, OJ_SUBMISSION_TOKEN, OJ_ENFORCE_HTTPS
+from oj_backend.settings import redisConnectionPool, OJ_SUBMISSION_TOKEN, OJ_ENFORCE_HTTPS
 from oj_backend.backend.middleware_connector import *
 
 backend_logger = logging.getLogger('backend.main')
