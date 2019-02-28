@@ -23,7 +23,7 @@ from oj_database.models import Student
 from oj_database.models import Instructor
 from oj_backend.backend.middleware_connector import *
 
-auth_logger = logging.getLogger('backend.users')
+auth_logger = logging.getLogger('backend.main')
 
 
 def oidc_create_user_handler(oidc_user, claims):

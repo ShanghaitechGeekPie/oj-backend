@@ -27,7 +27,7 @@ from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
-middleware_logger = logging.getLogger('backend.gitlab-middleware-adopter')
+middleware_logger = logging.getLogger('backend.main')
 
 
 def get_course_project_name(code, year, semaster):
