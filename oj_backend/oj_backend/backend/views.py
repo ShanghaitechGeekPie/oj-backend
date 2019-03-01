@@ -511,8 +511,9 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
                 enroll_email=self.kwargs['instr_email'])
         except:
             return JsonResponse(data={'cause': 'Not found'}, status=404)
-        if this_instr.user.uid == this_course.creator:
-            return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
+        if this_instr.user:
+            if this_instr.user.uid == UUID(this_course.creator):
+                return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
         response = JsonResponse(data=this_instr, safe=False, status=201)
         this_course.instructor.remove(this_instr)
         return response
