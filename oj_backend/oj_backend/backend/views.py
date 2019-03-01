@@ -72,10 +72,6 @@ class studentInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mix
         email = self.get_object().user.email
         user_key = self.get_object().user.rsa_pub_key
         try:
-            MWUpdateUser(email)
-        except (MWUpdateError, MiddlewareError):
-            pass
-        try:
             MWUpdateUserKey(email, user_key)
         except (MWUpdateError, MiddlewareError):
             return JsonResponse({"cause": "server error"}, status=500)
@@ -104,10 +100,6 @@ class insturctorInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, 
         response = self.update(request, *args, **kwargs)
         email = self.get_object().user.email
         user_key = self.get_object().user.rsa_pub_key
-        try:
-            MWUpdateUser(email)
-        except (MWUpdateError, MiddlewareError):
-            pass
         try:
             MWUpdateUserKey(email, user_key)
         except (MWUpdateError, MiddlewareError):

@@ -22,7 +22,7 @@ from oj_backend.backend.utils import get_course_uid_from_path as get_course_uid
 from uuid import UUID
 import logging
 
-permission_logger = logging.getLogger('backend.permission')
+permission_logger = logging.getLogger('backend.main')
 
 
 class userInfoReadWritePermission(permissions.BasePermission):

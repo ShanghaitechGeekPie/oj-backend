@@ -18,29 +18,40 @@
 # This file provides some baisc integration of auth system.
 
 import logging
+from django.dispatch import Signal
 from oj_database.models import User
 from oj_database.models import Student
 from oj_database.models import Instructor
 from oj_backend.backend.middleware_connector import *
+from oidc_rp.backends import OIDCAuthBackend
 
 auth_logger = logging.getLogger('backend.main')
 
 
-def oidc_create_user_handler(oidc_user, claims):
-    auth_logger.info('User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
-    addEmail = claims.get('email')
-    addName = claims.get('identification', {}).get('shanghaitech', {}).get(
-         'realname', claims.get('family_name', '')+claims.get('given_name', ''))
-    #user = User(email=addEmail, name=addName, rsa_pub_key="", first_name=claims.get(
-    #     'family_name', ''), last_name=claims.get('given_name', ''), username=addEmail)
-    user = User.objects.get(email=addEmail)
-    user.name = addName
+def oidc_create_user_callback(request, oidc_user):
+    auth_logger.info('User creation callback triggered for OIDC user {}.'.format(oidc_user))
+    user = oidc_user.user
+    claims = oidc_user.userinfo
+    email = claims.get('email')
+    name = claims.get('identification', {}).get('shanghaitech', {}).get(
+        'realname', claims.get('family_name', '')+claims.get('given_name', ''))
+    user.name = name
+    user.email = email
     user.save()
-    oidc_user.user = user
-    oidc_user.save()
-    auth_logger.info('User {} is created via OIDC. Name: {}; Email: {}'.format(
-         user, user.name, user.email))
-    MWUpdateUser(user.email)
+    auth_logger.info('User {} is created via OIDC. Name: {}; Email: {}; OIDC User {}'.format(
+        user, user.name, user.email, oidc_user))
+    try:
+        MWUpdateUser(user.email)
+    except MWUpdateError:
+        auth_logger.error('User {} already exists in git server. Skipped. It is probabaly becuase this user is already added as a student or instructor in a course on the server.')
+
+
+Signal.connect(oidc_create_user_callback, OIDCAuthBackend, dispatch_uid='oj_backend.user.oidc_create_user_callback')
+
+def oidc_user_update_handler(oidc_user, claims):
+    auth_logger.info('User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
+    user = oidc_user.user
+    addEmail = claims.get('email')
     try:
         thisStudent = Student.objects.get(enroll_email=addEmail)
         thisStudent.user = user
