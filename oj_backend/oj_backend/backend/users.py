@@ -18,17 +18,16 @@
 # This file provides some baisc integration of auth system.
 
 import logging
-from django.dispatch import Signal
 from oj_database.models import User
 from oj_database.models import Student
 from oj_database.models import Instructor
 from oj_backend.backend.middleware_connector import *
-from oidc_rp.backends import OIDCAuthBackend
+from oidc_rp.signals import oidc_user_created
 
 auth_logger = logging.getLogger('backend.main')
 
 
-def oidc_create_user_callback(request, oidc_user):
+def oidc_create_user_callback(request, oidc_user, **kwargs):
     auth_logger.info('User creation callback triggered for OIDC user {}.'.format(oidc_user))
     user = oidc_user.user
     claims = oidc_user.userinfo
@@ -46,7 +45,8 @@ def oidc_create_user_callback(request, oidc_user):
         auth_logger.error('User {} already exists in git server. Skipped. It is probabaly becuase this user is already added as a student or instructor in a course on the server.')
 
 
-Signal.connect(oidc_create_user_callback, OIDCAuthBackend, dispatch_uid='oj_backend.user.oidc_create_user_callback')
+oidc_user_created.connect(oidc_create_user_callback,
+                          dispatch_uid='oj_backend.users.oidc_create_user_callback')
 
 def oidc_user_update_handler(oidc_user, claims):
     auth_logger.info('User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
