@@ -223,7 +223,7 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
     def get_object(self):
         student_uid = self.request.user.uid
         queryset = self.get_queryset()
-        obj = get_list_or_404(queryset, student__user__uid=student_uid)
+        obj = queryset.filter(student__user__uid=student_uid)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -252,7 +252,7 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
     def get_object(self):
         instr_uid = self.request.user.uid
         queryset = self.get_queryset()
-        obj = get_list_or_404(queryset, instructor__user__uid=instr_uid)
+        obj = queryset.filter(instructor__user__uid=instr_uid)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -307,8 +307,8 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
         this_student = self.kwargs['student_id']
         this_course = self.kwargs['course_id']
         queryset = self.get_queryset()
-        obj = get_list_or_404(
-            queryset, course__uid=this_course, course__student__user__uid=this_student)
+        obj = queryset.filter(course__uid=this_course,
+                              course__student__user__uid=this_student)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -357,8 +357,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         this_course = self.kwargs['uid']
         this_instr = self.request.user.uid
         queryset = self.get_queryset()
-        obj = get_list_or_404(
-            queryset, course__uid=this_course, course__instructor__user__uid=this_instr)
+        obj = queryset.filter(course__uid=this_course, course__instructor__user__uid=this_instr)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -632,7 +631,7 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         try:
             this_course = Course.objects.get(uid=self.kwargs['course_id'])
         except:
-            return JsonResponse(data={'cause':'Not Found'}, status=404)
+            return JsonResponse(data={'cause': 'Not Found'}, status=404)
         try:
             this_course.instructor.get(uer__uid=request.user.uid)
         except:
@@ -778,8 +777,7 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
         this_student = self.kwargs['student_id']
         this_assignment = self.kwargs['assignment_id']
         queryset = self.get_queryset()
-        obj = get_list_or_404(
-            queryset, student__user__uid=this_student, assignment__uid=this_assignment)
+        obj = queryset.filter(student__user__uid=this_student, assignment__uid=this_assignment)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -806,8 +804,8 @@ class submissionHistoryDetail(generics.GenericAPIView, mixins.RetrieveModelMixin
         this_assignment = self.kwargs['assignment_id']
         this_record = self.kwargs['git_commit_id']
         queryset = self.get_queryset()
-        obj = get_list_or_404(
-            queryset, student__user__uid=this_student, assignment__uid=this_assignment, git_commit_id=this_record)
+        obj = queryset.get(student__user__uid=this_student, assignment__uid=this_assignment, git_commit_id=this_record)
+        self.check_object_permissions(obj)
         return obj
 
     def get(self, request, *args, **kwargs):
@@ -828,8 +826,7 @@ class instrJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
         return this_instr.judge_set.all()
 
     def get_object(self):
-        obj = get_list_or_404(self.get_queryset(),
-                              maintainer=self.request.user.instructor)
+        obj = self.get_queryset().filter(maintainer=self.request.user.instructor)
         self.check_object_permissions(self.request, obj)
         return obj
 
