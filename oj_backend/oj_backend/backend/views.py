@@ -513,7 +513,7 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
             return JsonResponse(data={'cause': 'Not found'}, status=404)
         if this_instr.user:
             if this_instr.user.uid == UUID(this_course.creator):
-                return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=403)
+                return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=400)
         serializer = InstructorBasicInfoSerializer(this_instr)
         response = JsonResponse(data=serializer.data, safe=False, status=201)
         this_course.instructor.remove(this_instr)
@@ -629,7 +629,8 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
             this_judge = Judge.objects.get(uid=request.data['uid'])
         except:
             return JsonResponse(data={'cause': 'Not Found'}, status=404)
-        if not this_judge.maintainer == request.user:
+        maintiainer = this_judge.maintainer.user
+        if not maintiainer == request.user:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             this_course = Course.objects.get(uid=self.kwargs['course_id'])
