@@ -637,7 +637,7 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
         except:
             return JsonResponse(data={'cause': 'Not Found'}, status=404)
         try:
-            this_course.instructor.get(uer__uid=request.user.uid)
+            this_course.instructor.get(user__uid=request.user.uid)
         except:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_course.judge.add(this_judge)
@@ -705,7 +705,8 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
             this_judge = Judge.objects.get(uid=request.data['uid'])
         except:
             return JsonResponse(data={'cause': 'Not Found'}, status=404)
-        if not this_judge.maintainer == request.user.instructor:
+        maintainer = this_judge.maintainer.user
+        if not maintainer == request.user:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
             this_assignment = Assignment.objects.get(
