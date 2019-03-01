@@ -66,7 +66,7 @@ def oidc_user_update_handler(oidc_user, claims):
         auth_logger.info('Student {} is linked with {}. Student ID: {}; Nickname: {}'.format(
                 thisStudent, user, thisStudent.student_id, thisStudent.nickname))
         for course in thisStudent.course_set.all():
-            for assignment in course.assignment.all():
+            for assignment in course.assignment_set.all():
                 MWCourseAddRepo(course.uid, assignment.uid,
                                 user.email, assignment.deadline, owner_uid=user.uid)
     except Student.DoesNotExist:
