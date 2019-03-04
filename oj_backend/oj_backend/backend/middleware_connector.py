@@ -25,6 +25,7 @@ from string import ascii_letters, digits
 from requests import post
 from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
+from uuid import UUID
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
 middleware_logger = logging.getLogger('backend.main')
@@ -153,8 +154,8 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
         ddl = str(ddl.date())
-        if isinstance(owner_uid, str):
-            owner_uid = str(owner_uid)
+        if isinstance(owner_uid, UUID):
+            owner_uid = [str(owner_uid)]
         elif isinstance(owner_uid, list):
             for i in range(len(owner_uid)):
                 owner_uid[i] = str(owner_uid[i])

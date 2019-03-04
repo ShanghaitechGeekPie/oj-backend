@@ -43,7 +43,12 @@ def oidc_create_user_callback(request, oidc_user, **kwargs):
         MWUpdateUser(user.email)
     except MWUpdateError:
         auth_logger.error('User {} already exists in git server. Skipped. It is probabaly becuase this user is already added as a student or instructor in a course on the server.')
-
+    this_student, is_new_student = generate_student_for_user(user, claims)
+    generate_instructor_for_user(user, claims)
+    if this_student and is_new_student:
+        for course in this_student.course_set.all():
+            for assignment in course.assignment_set.all():
+                MWCourseAddRepo(course.uid, assignment.uid, this_student.enroll_email, assignment.deadline, owner_uid=user.uid)
 
 oidc_user_created.connect(oidc_create_user_callback,
                           dispatch_uid='oj_backend.users.oidc_create_user_callback')
@@ -51,7 +56,16 @@ oidc_user_created.connect(oidc_create_user_callback,
 def oidc_user_update_handler(oidc_user, claims):
     auth_logger.info('User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
     user = oidc_user.user
+    this_student, _ = generate_student_for_user(user, claims)
+    generate_instructor_for_user(user, claims)
+    if user.email != claims.get('email'):
+        for course in this_student.course_set.all():
+            for assignment in course.assignment_set.all():
+                MWCourseAddRepo(course.uid, assignment.uid, this_student.enroll_email, assignment.deadline, owner_uid=user.uid)
+
+def generate_student_for_user(user, claims):
     addEmail = claims.get('email')
+    is_new = False
     try:
         thisStudent = Student.objects.get(enroll_email=addEmail)
         thisStudent.user = user
@@ -64,32 +78,34 @@ def oidc_user_update_handler(oidc_user, claims):
         thisStudent.student_id = student_id
         thisStudent.save()
         auth_logger.info('Student {} is linked with {}. Student ID: {}; Nickname: {}'.format(
-                thisStudent, user, thisStudent.student_id, thisStudent.nickname))
-        for course in thisStudent.course_set.all():
-            for assignment in course.assignment_set.all():
-                MWCourseAddRepo(course.uid, assignment.uid,
-                                user.email, assignment.deadline, owner_uid=user.uid)
+            thisStudent, user, thisStudent.student_id, thisStudent.nickname))
     except Student.DoesNotExist:
+        is_new = True
         thisStudent = create_student_from_oidc_claim(claims)
         if thisStudent:
             thisStudent.user = user
             thisStudent.save()
             auth_logger.info('Student {} is created for {}. Student ID: {}; Nickname: {}'.format(
-                    thisStudent, user, thisStudent.student_id, thisStudent.nickname))
+                thisStudent, user, thisStudent.student_id, thisStudent.nickname))
+    return thisStudent, is_new
+
+def generate_instructor_for_user(user, claims):
+    is_new = False
     try:
         thisInstr = Instructor.objects.get(enroll_email=addEmail)
         thisInstr.user = user
         thisInstr.save()
         auth_logger.info(
-                'Instructor {} is linked with {}.'.format(thisInstr, user))
+            'Instructor {} is linked with {}.'.format(thisInstr, user))
     except Instructor.DoesNotExist:
+        is_new = True
         thisInstr = create_instructor_from_oidc_claim(claims)
         if thisInstr:
             thisInstr.user = user
             thisInstr.save()
             auth_logger.info('Instructor {} is created for {}.'.format(
-                    thisInstr, thisInstr.user))
-
+                thisInstr, thisInstr.user))
+    return thisInstr, is_new
 
 def create_student_from_oidc_claim(claims):
     is_student = False
