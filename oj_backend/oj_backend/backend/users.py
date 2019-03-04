@@ -90,6 +90,7 @@ def generate_student_for_user(user, claims):
     return thisStudent, is_new
 
 def generate_instructor_for_user(user, claims):
+    addEmail = claims.get('email')
     is_new = False
     try:
         thisInstr = Instructor.objects.get(enroll_email=addEmail)
