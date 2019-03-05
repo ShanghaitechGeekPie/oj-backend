@@ -599,8 +599,9 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         except:
             return JsonResponse(data={'cause': 'Not found'}, status=404)
         this_course.students.remove(this_student)
-        for assignment in this_course.assignment_set.all():
-            MWCourseDelRepo(this_course.uid, assignment.uid, this_student.enroll_email)
+        if this_student.user:
+            for assignment in this_course.assignment_set.all():
+                MWCourseDelRepo(this_course.uid, assignment.uid, this_student.enroll_email)
         return HttpResponse(content='', status=204)
 
 
