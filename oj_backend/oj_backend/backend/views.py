@@ -514,10 +514,8 @@ class courseInstrDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixi
         if this_instr.user:
             if this_instr.user.uid == UUID(this_course.creator):
                 return JsonResponse(data={'cause': "You could not delete creator from a course's instructor list."}, status=400)
-        serializer = InstructorBasicInfoSerializer(this_instr)
-        response = JsonResponse(data=serializer.data, safe=False, status=201)
         this_course.instructor.remove(this_instr)
-        return response
+        return HttpResponse(content='', status=204)
 
 
 class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
@@ -600,10 +598,10 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
                 enroll_email=self.kwargs['student_email'])
         except:
             return JsonResponse(data={'cause': 'Not found'}, status=404)
-        serializer = StudentBasicInfoSerializer(this_student)
-        response = JsonResponse(data=serializer.data, safe=False, status=201)
         this_course.students.remove(this_student)
-        return response
+        for assignment in this_course.assignment_set.all():
+            MWCourseDelRepo(this_course.uid, assignment.uid, this_student.enroll_email)
+        return HttpResponse(content='', status=204)
 
 
 class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
@@ -672,9 +670,8 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             this_course.instructor.get(user__uid=request.user.uid)
         except:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
-        this_judge = Judge.objects.get(uid=self.kwargs['judge_id'])
         this_course.default_judge.remove(this_judge)
-        return JsonResponse(JudgeSerializer(this_judge).data, safe=False, status=201)
+        return HttpResponse(content='', status=204)
 
 
 class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
@@ -761,7 +758,7 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             'Published redis data to assignment_judge: {}'.format(request.data['uid']))
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         this_redis.publish('assignment_judge', request.data['uid'])
-        return JsonResponse(JudgeSerializer(this_judge).data, safe=False, status=201)
+        return HttpResponse(content='', status=204)
 
 
 class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):

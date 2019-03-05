@@ -22,7 +22,7 @@ import simplejson
 import logging
 from secrets import choice
 from string import ascii_letters, digits
-from requests import post
+import requests
 from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 from uuid import UUID
@@ -66,16 +66,23 @@ class baseMiddlewareAdopter:
     This is the base adopter for web interface provided by oj-middleware.
     '''
 
-    def __init__(self, api_server=None, interface=None, payload=None):
+    def __init__(self, api_server=None, interface=None, action="POST", payload=None):
         self.api_server = api_server
         self.interface = interface
         self.response = None
-        self._send_request(payload)
+        self._send_request(payload, action)
 
-    def _send_request(self, payload):
+    def _send_request(self, payload, action):
         api_url = "{}{}".format(self.api_server, self.interface)
+        action_func = requests.post
         try:
-            request = post(api_url, json=payload)
+            action_func = getattr(requests, action.lower())
+        except AttributeError:
+            middleware_logger.error(
+                'Could not identify the method {} given.'.format(action))
+            raise MiddlewareError('Could not identify the method {} given.'.format(action))
+        try:
+            request = action_func(api_url, json=payload)
             request.raise_for_status()
         except (ConnectionError, Timeout):
             cause = 'The connection to middleware server is either broken or timeout.'
@@ -174,6 +181,21 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
         payload = {'owners': owner_email, 'repo_name': repo_name,
                    'additional_data': simplejson.dumps(owner_uid), 'ddl': ddl}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
+
+class MWCourseDelRepo(baseMiddlewareAdopter):
+    def __init__(self, course_uid, assignment_uid, owner_email, repo_name=None, api_server=OJBN_GITLAB_ADDR):
+        assignment_uid = str(assignment_uid)
+        course_uid = str(course_uid)
+        if not repo_name:
+            if isinstance(owner_email, list):
+                repo_name = 'group_' + \
+                    "_".join(user.split('@')[0]for user in owner_email).lower()
+            else:
+                repo_name = repo_name = owner_email.split('@')[0].lower()
+        middleware_logger.debug(
+            'Deleting repo for course {} , assignment {} on git. Repo name: {}; owners: {}.'.format(course_uid, assignment_uid, repo_name, owner_email))
+        interface = "/courses/{}/assignemnts/{}/repos/{}".format(course_uid, assignment_uid, repo_name)
+        super().__init__(api_server=api_server, interface=interface, action='DELETE')
 
 # TODO:
 # Write adopters for downloading a user's repo and get its commit history.
