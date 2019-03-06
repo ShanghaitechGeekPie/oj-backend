@@ -421,12 +421,15 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
         return self.retrieve(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        # TODO: notify using redis.
         return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        # TODO: notify using redis.
-        return self.delete(request, *args, **kwargs)
+        response = self.delete(request, *args, **kwargs)
+        this_course = Course.objects.get(uid=self.kwargs['course_id'])
+        this_assignment = Assignment.objects.get(uid=self.kwargs['assignment_id'])
+        for student in this_course.students.all():
+            MWCourseDelRepo(this_course.uid, assignment.uid, student.enroll_email)
+        return response
 
 
 class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
