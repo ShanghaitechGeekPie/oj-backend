@@ -2,7 +2,7 @@
 
 **⚠️ 建设中**
 
-This part provides a RESTful API of user management, course/assignment details for the GeekPie OJ Project. This project is devleloped using `Python 3.7`, ` Django 2.1.3` and also the latest version of `Django RESTful Framework` directly cloned from GitHub.
+This part provides a RESTful API of user management, course/assignment details for the GeekPie OJ Project. This project is devleloped using `Python 3.x`, ` Django 2.1.3` , `Django RESTful Framework` and `Django OIDC RP`.
 
 ## Deploy
 
@@ -31,29 +31,27 @@ environment variable | description | example
 `OIDC_OP_TOKEN_ENDPOINT` | OpenID Token Endpoint |
 `OIDC_OP_USER_ENDPOINT`  | OpenID User Endpoint |
 
-
 ## API Schema
 
+The input/output below is for `GET` and `DELETE`. When creating/updating an object using `POST`, the `uid` filed could be omitted.
+
 ### For all users
-
-#### User Login/Logout
-
-Registered at `/oidc/callback/`. Users are required to login in order to access any API.
 
 
 #### Login parameters
 
 Supported method: `GET`
 
-Registered at `/user/login/oauth/param`
+Registered at `/user/auth/oidc/param`
 
 ```json
 {
-    "login_url": "https://gauth.geekpie.club/oauth/login",
+    "login_url": "https://oj.geekpie.club/oidc/auth/request/",
+    "logout_url": "https://oj.geekpie.club/oidc/end-session/"
 }
 ```
 
-In this example, frontend shall redirect user to `https://gauth.geekpie.club/oauth/login`.
+In this example, frontend shall redirect user to `https://gauth.geekpie.club/oauth/login` for login .
 
 #### User's role
 
@@ -69,11 +67,50 @@ Registered at `/user/role`
 }
 ```
 
+#### Claiming identity
+
+See https://github.com/ShanghaitechGeekPie/oj-backend/issues/11 for background.
+
+Location: `/user/<str:user_id>/instructor`
+
+Supported method:
+
+- `GET`: get the instructor associated with this user. The format is the same as what `/course/<str:course_id>/instructor/<str:user_id>` gives. It will return `null` with status code `404` when the user has not instructor associated with;
+- `POST`: claim "I'm TA". Post the `enroll_email`(same as `email`) and `name` of this user into this interface will make the backend create a new instructor object in database for this user.
+
+```json
+{
+    "uid": "2080083a-382c-11e9-ac7b-029eb86a7f02", 
+    "name": "Wei DaTa",
+    "enroll_email": "huashuita@shanghaitech.edu.cn"
+}
+```
+
+Location: `/user/<str:user_id>/student`
+
+A similar API will also be provided as a fallback for students at `/user/<str:user_id>/student` in case the data from GAuth is faulty.
+
+The format is the same as what `/course/<str:course_id>/students/<str:user_id>` gives.
+
+```json
+{
+    "uid": "2080083a-382c-11e9-ac7b-029eb86a7f02", 
+    "name": "Wang Dachui",
+    "enroll_email": "wangdch@shanghaitech.edu.cn",
+    "nickname": "hammerWang"
+}
+```
+
+The newly added student/instructor is linked with no existing courses.
+
 ### For student
 
 #### Student's Basic Information
 
 Supported method: `POST`, `GET`
+
+* `POST`: motify one’s own identity;
+* `GET`: retrive one’s own identity.
 
 Registered at `/student/<str:uid>/` where id is the uid of the student in the database.
 
@@ -130,7 +167,7 @@ It provides student's submission history under an assignment.
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 2019-01-23 19:07:08,
+        "submission_time": "2019-01-23 19:07:08",
         "delta": 0
     }
 ]
@@ -153,7 +190,7 @@ It provides student's one specific submission under an assignment.
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 2019-01-23 19:07:08,
+        "submission_time": "2019-01-23 19:07:08",
         "delta": 0
     }
 ```
@@ -175,8 +212,8 @@ Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/`.
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
         "short_name": "hw1",
-        "deadline":  2019-01-23 19:07:08,
-        "release_date": 2019-01-23 19:07:08,
+        "deadline":  "2019-01-23 19:07:08",
+        "release_date": "2019-01-23 19:07:08",
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
         "score": 3.14,
         "overall_score": 10.0
@@ -195,8 +232,8 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
     "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
-    "deadline":  2019-01-23 19:07:08,
-    "release_date": 2019-01-23 19:07:08,
+    "deadline":  "2019-01-23 19:07:08",
+    "release_date": "2019-01-23 19:07:08",
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
     "score": 3.14,
     "overall_score": 10.0
@@ -215,7 +252,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
         "nickname": "hammerWang",
         "score": 10,
         "overall_score": 10,
-        "submission_time": 2019-01-23 19:07:08,
+        "submission_time": "2019-01-23 19:07:08",
         "delta": 0
     }
 ]
@@ -232,7 +269,7 @@ Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/queue`.
     {
         "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "submission_time": 2019-01-23 19:07:08,
+        "submission_time": "2019-01-23 19:07:08",
         "submitter": "hammerWang"
     }
 ]
@@ -262,6 +299,9 @@ NOTE: this part has not been fully implmented yet.
 
 Supported method: `POST`, `GET`
 
+- `POST`: motify one’s own identity;
+- `GET`: retrive one’s own identity.
+
 Registered at `/instructor/<str:uid>/` where id is the uid of the student in the database.
 
 ```json
@@ -276,6 +316,9 @@ Registered at `/instructor/<str:uid>/` where id is the uid of the student in the
 #### Instructor's Course list
 
 Supported method: `POST`, `GET`
+
+- `POST`: create a new course, with this user as one of the instructor;
+- `GET`: retrive course list
 
 Registered at `/instructor/<str:uid>/course/`.
 
@@ -298,6 +341,10 @@ Registered at `/instructor/<str:uid>/course/`.
 
 Supported method: `POST`, `GET`, `DELETE`
 
+- `POST`: motify a course. Only the `name` and `homepage` filed are allowed to be changed;
+- `GET`: retrive course’s information;
+- `DELETE`: delete one course.
+
 Registered at `/course/<str:uid>`.
 
 ```json
@@ -315,6 +362,9 @@ Registered at `/course/<str:uid>`.
 #### Course students list
 
 Supported method: `POST`, `GET`
+
+* `POST`: add a student to a course;
+* `GET`: get the student list for the course.
 
 Registered at `/course/<str:uid>/students/`.
 
@@ -334,6 +384,10 @@ Caution: `name`, `student_id` and `uid` fileds may be omitted because we do not 
 
 Supported method: `POST`, `GET`, `DELETE`
 
+- <del>`POST`: add astudent to a course;</del>
+- `GET`: get the student’s basic information if this student is in the course;
+- `DELETE`: delete a student from a course, removing all his repo on the git server.
+
 Registered at `/course/<str:uid>/students/<id:student_email>`.
 
 ```json
@@ -349,6 +403,9 @@ Caution: `name`, `student_id` and `uid` fileds may be omitted because we do not 
 #### Course instrctors list
 
 Supported method: `POST`, `GET`
+
+- `POST`: add a instructor to a course;
+- `GET`: get the student list for the course.
 
 Registered at `/course/<str:course_id>/instructor/`
 
@@ -367,6 +424,10 @@ Caution: `name` and `uid` fileds may be omitted because we do not know those inf
 
 Supported method: `GET`, `POST`, `DELETE`
 
+- <del>`POST`: add astudent to a course;</del>
+- `GET`: get the student list for the course;
+- `DELETE`: delete a student from a course, removing all his repo on the git server.
+
 Registered at `/course/<str:course_id>/instructor/<str:instr_email>`
 
 ```json
@@ -382,6 +443,9 @@ Caution: `name` and `uid` fileds may be omitted because we do not know those inf
 
 Supported method: `GET`, `POST`
 
+- `POST`: add an assignment to a course;
+- `GET`: get the assignment list for the course.
+
 Registered at `/course/<str:uid>/assignment/`
 
 ```json
@@ -391,8 +455,8 @@ Registered at `/course/<str:uid>/assignment/`
         "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
         "name": "Homework1: Postfix Calculator",
         "short_name": "HW1",
-        "deadline":  2019-01-23 19:07:08,
-        "release_date": 2019-01-23 19:07:08,
+        "deadline":  "2019-01-23 19:07:08",
+        "release_date": "2019-01-23 19:07:08",
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
     }
 ]
@@ -406,7 +470,13 @@ TODO: export all assignments.
 
 Supported method: `GET`, `POST`, `DELETE`
 
+- `POST`:  modify an assignment;
+- `GET`: get the assignment infer;
+- `DELETE`: delete an assignment from a course, removing all his repo on the git server.
+
 Registered at `/course/<str:course_id>/assignment/<str:assignment_id>`
+
+Please be notified: the `short_name` will be used in the path of the git repo and **SHALL ONLY** contain numbers, ANSI characters (excluding blank and control characters).
 
 ```json
 {
@@ -414,8 +484,8 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>`
     "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
     "name": "Homework1: Postfix Calculator",
     "short_name": "HW1",
-    "deadline":  2019-01-23 19:07:08,
-    "release_date": 2019-01-23 19:07:08,
+    "deadline":  "2019-01-23 19:07:08",
+    "release_date": "2019-01-23 19:07:08",
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
 }
 ```
@@ -450,6 +520,9 @@ Registered at `/course/<str:course_id>/judge/<str:judge_id>`
 
 Supported method: `GET`, `POST`
 
+* `GET`: get the judge’s `uid` list for the assignment
+* `POST`: add an judge with the given `uid` to the judge list of this assignment. 
+
 Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
 
 ```json
@@ -464,6 +537,8 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
 
 Supported method: `GET`, `POST`, `DELETE`
 
+* `DELETE`: remove an judge with the given `uid` to the judge list of this assignment. 
+
 Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>`
 
 ```json
@@ -475,6 +550,11 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str
 #### Judge List
 
 Suppoerted method: `GET`, `POST`
+
+- `GET`: get the judge list for this instructor.
+- `POST`: add an new judge. 
+
+**NOTE**: This interface **WILL ONLY** return judge list for the login user/instructor. Throw a request to this interface and the interface below will result in a 404 response.
 
 Registered at `/judge/`
 
@@ -494,6 +574,10 @@ Registered at `/judge/`
 #### Judge
 
 Supported method: `GET`, `POST`, `DELETE`
+
+- `GET`: get the judge for this instructor with the given `uid`;
+- `POST`: modify the given judge;
+- `DELETE`: delete the given judge.
 
 Registered at `/judge/<str:uid>`
 
@@ -516,7 +600,7 @@ Supported method: `POST`
 
 Registered at `/internal/subbmission`.
 
-Authorization: TBD
+Authorization: Using a token located in the http header `Authorization`. The token shall be specified in the envrionmental variable `OJ_SUBMISSION_TOKEN` (discussed in the “Deploy" section).
 
 ```json
 {
