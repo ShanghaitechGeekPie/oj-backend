@@ -72,8 +72,11 @@ if os.environ.get('OJBN_STAGE', 'production').lower() == 'development':
 else:
     SECRET_KEY = os.environ['OJBN_SECRET_KEY']
     DEBUG = False
-ALLOWED_HOSTS = [os.environ['OJBN_HOSTNAME'], ]
 
+ALLOWED_HOSTS = [os.environ['OJBN_HOSTNAME']]
+OJBN_INTERNAL_HOSTNAME = os.environ.get('OJBN_INTERNAL_HOSTNAME')
+if OJBN_INTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(OJBN_INTERNAL_HOSTNAME)
 
 # Application definition
 

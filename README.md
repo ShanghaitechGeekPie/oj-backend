@@ -18,6 +18,7 @@ environment variable | description | example
 `OJBN_DB_USER` | the user used to acssess the database. | `geekpie`
 `OJBN_DB_PASSWD` | the database password for the given user. | `gouliguojiashengsiyi`
 `OJBN_HOSTNAME` | the `host` header allowed in a HTTP request. | `oj.geekpie.club`
+`OJBN_INTERNAL_HOSTNAME` (optional) | another `host` header allowed in a HTTP request, used for internal submission interface | `backend`
 `OJBN_GITLAB_ADDR` | the address where the gitlab middleware is hosted. | `http://localhost:8080`
 <del>`OJBN_OAUTH_URL`</del> | <del>the URL of the OAuth service this service is using</del> | <del>`https://gauth.geekpie.club/oauth/login`</del>
 `OJBN_REDIS_ADDR` | the address of redis server. Follows the schema of `redis-py` | `redis://[:password]@localhost:6379/0`
@@ -80,7 +81,7 @@ Supported method:
 
 ```json
 {
-    "uid": "2080083a-382c-11e9-ac7b-029eb86a7f02", 
+    "uid": "2080083a-382c-11e9-ac7b-029eb86a7f02",
     "name": "Wei DaTa",
     "enroll_email": "huashuita@shanghaitech.edu.cn"
 }
@@ -94,7 +95,7 @@ The format is the same as what `/course/<str:course_id>/students/<str:user_id>` 
 
 ```json
 {
-    "uid": "2080083a-382c-11e9-ac7b-029eb86a7f02", 
+    "uid": "2080083a-382c-11e9-ac7b-029eb86a7f02",
     "name": "Wang Dachui",
     "enroll_email": "wangdch@shanghaitech.edu.cn",
     "nickname": "hammerWang"
@@ -521,7 +522,7 @@ Registered at `/course/<str:course_id>/judge/<str:judge_id>`
 Supported method: `GET`, `POST`
 
 * `GET`: get the judge’s `uid` list for the assignment
-* `POST`: add an judge with the given `uid` to the judge list of this assignment. 
+* `POST`: add an judge with the given `uid` to the judge list of this assignment.
 
 Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
 
@@ -537,7 +538,7 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/`
 
 Supported method: `GET`, `POST`, `DELETE`
 
-* `DELETE`: remove an judge with the given `uid` to the judge list of this assignment. 
+* `DELETE`: remove an judge with the given `uid` to the judge list of this assignment.
 
 Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str:judge_id>`
 
@@ -552,7 +553,7 @@ Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/judge/<str
 Suppoerted method: `GET`, `POST`
 
 - `GET`: get the judge list for this instructor.
-- `POST`: add an new judge. 
+- `POST`: add an new judge.
 
 **NOTE**: This interface **WILL ONLY** return judge list for the login user/instructor. Throw a request to this interface and the interface below will result in a 404 response.
 
