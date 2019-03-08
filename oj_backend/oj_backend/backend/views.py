@@ -381,7 +381,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             repo = MWCourseAddRepo(self.kwargs['uid'], str(this_assignment.uid), [
             ], deadline, repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
-            this_assignment.git_org_add = git_repo[0:-len('_grading_script')]
+            this_assignment.git_org_addr = git_repo[0:-len('_grading_script')]
             this_assignment.save()
         except (MiddlewareError, MWUpdateError):
             this_assignment.delete()
