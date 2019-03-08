@@ -194,7 +194,7 @@ class MWCourseDelRepo(baseMiddlewareAdopter):
                 repo_name = repo_name = owner_email.split('@')[0].lower()
         middleware_logger.debug(
             'Deleting repo for course {} , assignment {} on git. Repo name: {}; owners: {}.'.format(course_uid, assignment_uid, repo_name, owner_email))
-        interface = "/courses/{}/assignemnts/{}/repos/{}".format(course_uid, assignment_uid, repo_name)
+        interface = "/courses/{}/assignments/{}/repos/{}".format(course_uid, assignment_uid, repo_name)
         super().__init__(api_server=api_server, interface=interface, action='DELETE')
 
 # TODO:
