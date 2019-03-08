@@ -961,7 +961,7 @@ class internalSubmissionInterface(generics.GenericAPIView):
         backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
             payload, assignment_uid, now))
         this_redis.zadd(assignment_uid, {payload: now})
-        return Response(data=this_submission, status=201)
+        return Response(data=simplejson.loads(this_submission), status=201)
 
 
 class OIDCLoginParam(generics.GenericAPIView):
