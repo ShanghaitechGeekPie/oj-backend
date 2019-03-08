@@ -943,9 +943,9 @@ class internalSubmissionInterface(generics.GenericAPIView):
             remote = request.META.get(
                 'HTTP_X_FORWARDED_FOR', request.META.get('REMOTE_ADDR', None))
             backend_logger.error('Submission interface recieved an unauthorized submission. Token: {}; From {}; Payload: {}'.format(
-                auth_token, remote, request.POST))
+                auth_token, remote, request.data))
             return JsonResponse(status=401, data={'cause': 'Invalid token.'})
-        this_submission = simplejson.dumps(request.DATA)
+        this_submission = simplejson.dumps(request.data)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         now = int(time.time())
         try:
