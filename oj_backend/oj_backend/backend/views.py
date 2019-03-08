@@ -757,7 +757,7 @@ class assignmentJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         except:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         this_judge = Judge.objects.get(uid=self.kwargs['judge_id'])
-        this_assignment.judge.delete(this_judge)
+        this_assignment.judge.reomve(this_judge)
         backend_logger.info(
             'Published redis data to assignment_judge: {}'.format(request.data['uid']))
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
