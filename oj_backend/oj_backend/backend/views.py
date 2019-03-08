@@ -928,7 +928,7 @@ class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):
             display_submission['submission_time'] = submission['receive_time']
             display_submission['submitter'] = ', '.join(Student.objects.get(
                 user__uid=submitter).nickname for submitter in submission['owner_uids'])
-            pending_list.append(submission)
+            pending_list.append(display_submission)
         return JsonResponse(pending_list, status=200, safe=False)
 
 
