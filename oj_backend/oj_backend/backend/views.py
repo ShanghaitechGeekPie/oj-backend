@@ -381,7 +381,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             repo = MWCourseAddRepo(self.kwargs['uid'], str(this_assignment.uid), [
             ], deadline, repo_name='_grading_script', owner_uid=None)
             git_repo = repo.response.json().get('ssh_url_to_repo')
-            this_assignment.git_org_addr = git_repo[0:-len('_grading_script')]
+            this_assignment.git_org_addr = git_repo.split('_grading_script')[0]
             this_assignment.save()
         except (MiddlewareError, MWUpdateError):
             this_assignment.delete()
@@ -957,10 +957,11 @@ class internalSubmissionInterface(generics.GenericAPIView):
             return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
         payload = {'upstream': upstream,
                    "owner_uids": owner_uids, 'receive_time': now}
-        payload = simplejson.dumps(payload)
-        backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
-            payload, assignment_uid, now))
-        this_redis.zadd(assignment_uid, {payload: now})
+        if payload.get('owner_uids'):
+            payload = simplejson.dumps(payload)
+            backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
+                payload, assignment_uid, now))
+            this_redis.zadd(assignment_uid, {payload: now})
         return Response(data=simplejson.loads(this_submission), status=201)
 
 
