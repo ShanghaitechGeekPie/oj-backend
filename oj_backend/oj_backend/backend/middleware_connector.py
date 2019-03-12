@@ -172,7 +172,6 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
             if not isinstance(owner_email, list):
                 repo_name = owner_email.split('@')[0].lower()
                 owner_email = [owner_email]
-                owner_uid = [owner_uid]
             else:
                 repo_name = 'group_' + \
                     "_".join(user.split('@')[0]for user in owner_email).lower()
