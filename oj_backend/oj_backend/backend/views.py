@@ -424,7 +424,7 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
         return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        response = self.delete(request, *args, **kwargs)
+        response = self.destroy(request, *args, **kwargs)
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         this_assignment = Assignment.objects.get(uid=self.kwargs['assignment_id'])
         for student in this_course.students.all():
