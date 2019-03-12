@@ -357,7 +357,8 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         this_course = self.kwargs['uid']
         this_instr = self.request.user.uid
         queryset = self.get_queryset()
-        obj = queryset.filter(course__uid=this_course, course__instructor__user__uid=this_instr)
+        obj = queryset.filter(course__uid=this_course,
+                              course__instructor__user__uid=this_instr)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -426,9 +427,11 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
     def delete(self, request, *args, **kwargs):
         response = self.destroy(request, *args, **kwargs)
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
-        this_assignment = Assignment.objects.get(uid=self.kwargs['assignment_id'])
+        this_assignment = Assignment.objects.get(
+            uid=self.kwargs['assignment_id'])
         for student in this_course.students.all():
-            MWCourseDelRepo(this_course.uid, this_assignment.uid, student.enroll_email)
+            MWCourseDelRepo(this_course.uid, this_assignment.uid,
+                            student.enroll_email)
         return response
 
 
@@ -457,6 +460,10 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
             return JsonResponse(data={'cause': 'Unauthorized'}, status=401)
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+        try:
+            enroll_email = request.data['enroll_email']
+        except KeyError:
+            return JsonResponse(data={'cause': 'Bad Request.'})
         try:
             validate_email(request.data['enroll_email'])
         except ValidationError:
@@ -545,28 +552,31 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         if not this_course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
         try:
-            validate_email(request.data['enroll_email'])
+            enroll_email = request.data['enroll_email']
+            student_id = request.data['student_id']
+        except KeyError:
+            return JsonResponse(data={'cause': 'Bad Request.'})
+        try:
+            validate_email(enroll_email)
         except ValidationError:
             return JsonResponse(status=400, data={'cause': 'invalid email'})
         try:
             this_student = Student.objects.get(
-                enroll_email=request.data['enroll_email'])
+                enroll_email=enroll_email)
         except:
             this_student = Student(
-                enroll_email=request.data['enroll_email'], user=None, student_id=request.data['student_id'])
+                enroll_email=enroll_email, user=None, student_id=student_id)
             try:
-                this_user = User.objects.get(
-                    email=request.data['enroll_email'])
+                this_user = User.objects.get(email=enroll_email)
                 this_student.user = this_user
             except:
                 pass
             this_student.save()
-            MWUpdateUser(request.data['enroll_email'])
+            MWUpdateUser(enroll_email)
         this_course.students.add(this_student)
-        for assignment in this_course.assignment_set.all():
-            if this_student.user:
-                MWCourseAddRepo(
-                    self.kwargs['course_id'], assignment.uid, request.data['enroll_email'], assignment.deadline, owner_uid=this_student.user.uid)
+        if this_student.user:
+            for assignment in this_course.assignment_set.all():
+                MWCourseAddRepo(self.kwargs['course_id'], assignment.uid, enroll_email, assignment.deadline, owner_uid=this_student.user.uid)
         return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
 
@@ -604,7 +614,8 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         this_course.students.remove(this_student)
         if this_student.user:
             for assignment in this_course.assignment_set.all():
-                MWCourseDelRepo(this_course.uid, assignment.uid, this_student.enroll_email)
+                MWCourseDelRepo(this_course.uid, assignment.uid,
+                                this_student.enroll_email)
         return HttpResponse(content='', status=204)
 
 
@@ -783,7 +794,8 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
         this_student = self.kwargs['student_id']
         this_assignment = self.kwargs['assignment_id']
         queryset = self.get_queryset()
-        obj = queryset.filter(student__user__uid=this_student, assignment__uid=this_assignment)
+        obj = queryset.filter(student__user__uid=this_student,
+                              assignment__uid=this_assignment)
         self.check_object_permissions(self.request, obj)
         return obj
 
@@ -810,7 +822,8 @@ class submissionHistoryDetail(generics.GenericAPIView, mixins.RetrieveModelMixin
         this_assignment = self.kwargs['assignment_id']
         this_record = self.kwargs['git_commit_id']
         queryset = self.get_queryset()
-        obj = queryset.get(student__user__uid=this_student, assignment__uid=this_assignment, git_commit_id=this_record)
+        obj = queryset.get(student__user__uid=this_student,
+                           assignment__uid=this_assignment, git_commit_id=this_record)
         self.check_object_permissions(obj)
         return obj
 
