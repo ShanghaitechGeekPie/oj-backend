@@ -197,7 +197,7 @@ class MWCourseDelRepo(baseMiddlewareAdopter):
         super().__init__(api_server=api_server, interface=interface, action='DELETE')
 
 def MW_if_user_exists(email):
-    r = requests.get('/user/{}'.format(email))
+    r = requests.get('/user/{}'.format(quote(email)))
     if r.status_code == 204:
         return True
     return False
