@@ -284,8 +284,11 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
             try:
                 MWCourseAddInstr(this_course.uid, instr.enroll_email)
             except (MiddlewareError, MWUpdateError):
-                MWUpdateUser(instr.enroll_email)
-                MWCourseAddInstr(this_course.uid, instr.enroll_email)
+                try:
+                    MWUpdateUser(instr.enroll_email)
+                    MWCourseAddInstr(this_course.uid, instr.enroll_email)
+                except (MiddlewareError, MWUpdateError):
+                    pass
         return response
 
 
