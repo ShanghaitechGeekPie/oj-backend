@@ -37,6 +37,8 @@ def oidc_create_user_callback(request, oidc_user, **kwargs):
         'realname', claims.get('family_name', '')+claims.get('given_name', ''))
     user.name = name
     user.email = email
+    if not email:
+        user.is_active = False
     user.save()
     auth_logger.info('User {} is created via OIDC. Name: {}; Email: {}; OIDC User {}'.format(
         user, user.name, user.email, oidc_user))
@@ -62,6 +64,10 @@ def oidc_user_update_handler(oidc_user, claims):
     auth_logger.info(
         'User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
     user = oidc_user.user
+    if claims.get('email') and user.is_active = False:
+        user.email = claims.get('email')
+        user.is_active = True
+        user.save()
     this_student, _ = generate_student_for_user(user, claims)
     generate_instructor_for_user(user, claims)
     if user.email != claims.get('email'):
