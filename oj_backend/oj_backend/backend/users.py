@@ -64,7 +64,7 @@ def oidc_user_update_handler(oidc_user, claims):
     auth_logger.info(
         'User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
     user = oidc_user.user
-    if claims.get('email') and user.is_active = False:
+    if claims.get('email') and user.is_active == False:
         user.email = claims.get('email')
         user.is_active = True
         user.save()
