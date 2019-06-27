@@ -196,6 +196,11 @@ class MWCourseDelRepo(baseMiddlewareAdopter):
         interface = "/courses/{}/assignments/{}/repos/{}".format(course_uid, assignment_uid, repo_name)
         super().__init__(api_server=api_server, interface=interface, action='DELETE')
 
+def MW_if_user_exists(email):
+    r = requests.get('/user/{}'.format(email))
+    if r.status_code == 204:
+        return True
+    return False
 # TODO:
 # Write adopters for downloading a user's repo and get its commit history.
 # This function requries the backend to act like a reserve proxy between user and middleware.

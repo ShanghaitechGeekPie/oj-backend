@@ -281,14 +281,15 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
             this_course.delete()
             return JsonResponse(status=500, data={"cuase": "Git server error."})
         for instr in this_course.instructor.all():
+            if not MW_if_user_exists(instr.enroll_email):
+                try:
+                    MWUpdateUser(instr.enroll_email)
+                except (MiddlewareError, MWUpdateError):
+                    return JsonResponse(data={'cause': 'Git server error.'}, status=500)
             try:
                 MWCourseAddInstr(this_course.uid, instr.enroll_email)
             except (MiddlewareError, MWUpdateError):
-                try:
-                    MWUpdateUser(instr.enroll_email)
-                    MWCourseAddInstr(this_course.uid, instr.enroll_email)
-                except (MiddlewareError, MWUpdateError):
-                    pass
+                return JsonResponse(data={'cause': 'Git server error.'}, status=500)
         return response
 
 
