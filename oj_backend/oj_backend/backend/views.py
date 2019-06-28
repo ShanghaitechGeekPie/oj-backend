@@ -973,7 +973,7 @@ class internalSubmissionInterface(generics.GenericAPIView):
             assignment_uid = request.data["assignment_uid"]
         except KeyError:
             return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
-        if upstream.endwith("_grading_script.git"):
+        if upstream.endswith("_grading_script.git"):
             channel = "grade_script_pushed"
         else:
             channel = assignment_uid
