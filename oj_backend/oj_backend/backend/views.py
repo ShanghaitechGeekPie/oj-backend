@@ -580,7 +580,8 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         this_course.students.add(this_student)
         if this_student.user:
             for assignment in this_course.assignment_set.all():
-                MWCourseAddRepo(self.kwargs['course_id'], assignment.uid, enroll_email, assignment.deadline, owner_uid=this_student.user.uid)
+                MWCourseAddRepo(self.kwargs['course_id'], assignment.uid, enroll_email,
+                                assignment.deadline, owner_uid=this_student.user.uid)
         return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
 
@@ -972,13 +973,16 @@ class internalSubmissionInterface(generics.GenericAPIView):
             assignment_uid = request.data["assignment_uid"]
         except KeyError:
             return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
+        if upstream.endwith("_grading_script.git"):
+            channel = "grade_script_pushed"
+        else:
+            channel = assignment_uid
         payload = {'upstream': upstream,
                    "owner_uids": owner_uids, 'receive_time': now}
-        if payload.get('owner_uids'):
-            payload = simplejson.dumps(payload)
-            backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
-                payload, assignment_uid, now))
-            this_redis.zadd(assignment_uid, {payload: now})
+        payload = simplejson.dumps(payload)
+        backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
+            payload, assignment_uid, now))
+        this_redis.zadd(channel, {payload: now})
         return Response(data=simplejson.loads(this_submission), status=201)
 
 
