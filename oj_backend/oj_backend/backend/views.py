@@ -973,16 +973,21 @@ class internalSubmissionInterface(generics.GenericAPIView):
             assignment_uid = request.data["assignment_uid"]
         except KeyError:
             return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
-        if upstream.endswith("_grading_script.git"):
-            channel = "grade_script_pushed"
-        else:
-            channel = assignment_uid
         payload = {'upstream': upstream,
-                   "owner_uids": owner_uids, 'receive_time': now}
+                       "owner_uids": owner_uids, 'receive_time': now}
         payload = simplejson.dumps(payload)
-        backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
-            payload, assignment_uid, now))
-        this_redis.zadd(channel, {payload: now})
+        if upstream.endswith("_grading_script.git"):
+            # The upstream stores the grading script.
+            channel = "grade_script_pushed"
+            backend_logger.info('Submission relied. Payload: {}; Channel: {}'.format(
+                payload, channel))
+            this_redis.publish(channel, payload)
+        else:
+            # The upstream stores the student's submission.
+            channel = assignment_uid
+            backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
+                payload, channel, now))
+            this_redis.zadd(channel, {payload: now})
         return Response(data=simplejson.loads(this_submission), status=201)
 
 
