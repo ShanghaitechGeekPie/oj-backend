@@ -429,14 +429,13 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
         return self.update(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        response = self.destroy(request, *args, **kwargs)
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         this_assignment = Assignment.objects.get(
             uid=self.kwargs['assignment_id'])
         for student in this_course.students.all():
             MWCourseDelRepo(this_course.uid, this_assignment.uid,
                             student.enroll_email)
-        return response
+        return self.destroy(request, *args, **kwargs)
 
 
 class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.CreateModelMixin):
