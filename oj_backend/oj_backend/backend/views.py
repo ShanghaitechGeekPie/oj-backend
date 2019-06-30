@@ -689,6 +689,7 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             this_course.instructor.get(user__uid=request.user.uid)
         except:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+        this_judge = get_object_or_404(Judge.objects.all(), uid=self.kwargs['judge_id'] )
         this_course.default_judge.remove(this_judge)
         return HttpResponse(content='', status=204)
 
