@@ -878,9 +878,7 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
         return this_instr.judge_set.all()
 
     def get_object(self):
-        this_user = self.request.user
-        obj = get_object_or_404(self.get_queryset(),
-                                maintainer=this_user.instructor, uid=self.kwargs['uid'])
+        obj = get_object_or_404(Judge.objects.all(), uid=self.kwargs['uid'])
         self.check_object_permissions(self.request, obj)
         return obj
 
