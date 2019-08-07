@@ -156,6 +156,16 @@ class MWCourseAddAssignment(baseMiddlewareAdopter):
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
 
+class MWCourseDelAssignment(baseMiddlewareAdopter):
+    def __init__(self, course_uid, assignment_uid, api_server=OJBN_GITLAB_ADDR):
+        assignment_uid = str(assignment_uid)
+        course_uid = str(course_uid)
+        middleware_logger.debug(
+            'Deleting assignment {} for course {} on git.'.format(assignment_uid, course_uid))
+        interface = "/courses/{}/assignments/{}".format(course_uid, assignment_uid)
+        super().__init__(api_server=api_server, interface=interface, action='DELETE')
+
+
 class MWCourseAddRepo(baseMiddlewareAdopter):
     def __init__(self, course_uid, assignment_uid, owner_email, ddl, owner_uid=None, repo_name=None, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)

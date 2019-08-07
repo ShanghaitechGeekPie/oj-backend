@@ -432,9 +432,7 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
         this_course = Course.objects.get(uid=self.kwargs['course_id'])
         this_assignment = Assignment.objects.get(
             uid=self.kwargs['assignment_id'])
-        for student in this_course.students.all():
-            MWCourseDelRepo(this_course.uid, this_assignment.uid,
-                            student.enroll_email)
+        MWCourseDelAssignment(this_course.uid, this_assignment.uid)
         return self.destroy(request, *args, **kwargs)
 
 
