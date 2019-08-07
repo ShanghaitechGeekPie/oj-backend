@@ -191,9 +191,10 @@ class judgeReadWritePermission(permissions.BasePermission):
         this_user = request.user
         if obj.maintainer.user == this_user:
             return True
-        for course in obj.course_set.all():
-            if this_user in course.instructor.all():
-                return True
+        if request.method == "GET":  # read only permission to co-workers.
+            for course in obj.course_set.all():
+                if course.instructor.filter(user=this_user).exists():
+                    return True
         return False
 
 
