@@ -718,22 +718,25 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
             uid = request.data['uid']
         except:
             return JsonResponse(data={'cause': 'missing parameter'}, status=400)
+
         try:
             this_judge = Judge.objects.get(uid=request.data['uid'])
         except:
             return JsonResponse(data={'cause': 'Not Found'}, status=404)
-        maintainer = this_judge.maintainer.user
-        if not maintainer == request.user:
-            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+
         try:
             this_assignment = Assignment.objects.get(
                 uid=self.kwargs['assignment_id'])
         except:
             return JsonResponse(data={''}, status=404)
-        try:
-            this_assignment.course.instructor.get(user__uid=request.user.uid)
-        except:
+
+        if not this_assignment.course.instructor.filter(user__uid=request.user.uid).exists():
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+
+        if (not this_assignment.course.default_judge.filter(uid=this_judge.uid).exists()) and \
+                this_judge.maintainer.user != request.user:  # if the judge neither belongs to course nor the person
+            return JsonResponse(data={'cause': 'Forbidden'}, status=403)
+
         this_assignment.judge.add(this_judge)
         this_redis = redis.Redis(connection_pool=redisConnectionPool)
         backend_logger.info(
