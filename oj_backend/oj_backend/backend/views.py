@@ -297,7 +297,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
     '''
     `/student/<str:student_id>/course/<str:course_id>/assignment/`
     '''
-    serializer_class = AssignmentViewSerializer
+    serializer_class = AssignmentStudentSerializer
     permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
@@ -305,16 +305,22 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
             Student, user__uid=self.kwargs['student_id'])
         this_course = get_object_or_404(
             this_student.course_set.all(), uid=self.kwargs['course_id'])
-        return this_course.assignment_set.all()
+        this_assignment_set = this_course.assignment_set.all()
+        last_rec = Record.objects.filter(student=this_student)\
+                .filter(assignment__in=this_assignment_set)\
+                .annotate(max_date=Max('assignment__record__submission_time'))\
+                .filter(submission_time=F('max_date'))
 
-    def get_object(self):
-        this_student = self.kwargs['student_id']
-        this_course = self.kwargs['course_id']
-        queryset = self.get_queryset()
-        obj = queryset.filter(course__uid=this_course,
-                              course__student__user__uid=this_student)
-        self.check_object_permissions(self.request, obj)
-        return obj
+        assignment_with_grade = this_assignment_set.values.values()
+        for i in range(len(assignment_with_grade)):
+            try:
+                assignment_with_grade[i]['score'] = last_rec\
+                    .get(assignment__uid=assignment_with_grade[i]['uid'])\
+                    .value('grade', flat=True)
+            except ObjectDoesNotExist:
+                assignment_with_grade[i]['score'] = 0
+                
+        return assignment_with_grade
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -408,7 +414,7 @@ class assignmentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin, mixin
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>`
     '''
-    serializer_class = AssignmentViewSerializer
+    serializer_class = AssignmentDetailSerializer
     permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
 
     def get_queryset(self):
