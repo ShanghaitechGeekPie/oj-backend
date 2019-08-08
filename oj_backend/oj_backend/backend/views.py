@@ -896,35 +896,37 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
         return self.destroy(request, *args, **kwargs)
 
 
-class assignmentScoreboardDetail(generics.GenericAPIView, mixins.ListModelMixin):
+class assignmentScoreboardDetail(generics.GenericAPIView):
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
     '''
-    serializer_class = ScoreBoardSerializer
-    permission_classes = (recordReadOnly, IsAuthenticated)
 
     def get_queryset(self):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
         this_course_student_list = Course.objects.get(
             uid=this_course).students.all()
-        query_set = None
-        for this_student in this_course_student_list:
-            this_student_record = Record.objects.filter(
-                student=this_student, assignment__uid=this_assignment).order_by('-submission_time')[0]
-            if query_set:
-                query_set = query_set | this_student_record
-            else:
-                query_set = this_student_record
-        return query_set
+        last_rec = Record.objects.filter(assignment=this_assignment)\
+                .filter(student__in=this_course_student_list)\
+                .annotate(max_date=Max('student__record__submission_time'))\
+                .filter(submission_time=F('max_date'))
 
-    def get_object(self):
-        obj = self.get_queryset()
-        self.check_object_permissions(self.request, obj)
-        return obj
+        student_with_grade = list(this_course_student_list.values\
+                ("nickname", overall_score=this_assignment.grade))
 
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        for i in range(len(student_with_grade)):
+            try:
+                rec = last_rec.get(assignment__uid=student_with_grade[i]['uid'])
+                student_with_grade[i]['score'] = rec.grade
+                student_with_grade[i]['delta'] = rec.delta
+                student_with_grade[i]['submission_time'] = rec.submission_time
+
+            except ObjectDoesNotExist:
+                student_with_grade[i]['score'] = 0
+                student_with_grade[i]['delta'] = None
+                student_with_grade[i]['submission_time'] = None
+                
+        return JsonResponse(student_with_grade, safe=False)
 
 
 class pendingAssignment(generics.GenericAPIView, mixins.ListModelMixin):

@@ -165,20 +165,6 @@ class SubmissionRecordSerializer(serializers.ModelSerializer):
                   'message', 'assignment_id', 'submission_time', 'delta')
 
 
-class ScoreBoardSerializer(serializers.ModelSerializer):
-    student_nickname = serializers.CharField(
-        source='student.nickname', read_only=True)
-    overall_score = serializers.FloatField(
-        source='assignment.grade', read_only=True)
-    score = serializers.IntegerField(source='grade')
-    #score = serializers.FloatField(source='score')
-
-    class Meta:
-        model = Record
-        fields = ('student_nickname', 'overall_score',
-                  'score', 'submission_time', 'delta')
-
-
 class JudgeSerializer(serializers.ModelSerializer):
     """
     Returns information of a judge.
