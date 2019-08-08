@@ -294,14 +294,12 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         return response
 
 
-class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
+class assignmentList4Student(generics.GenericAPIView):
     '''
     `/student/<str:student_id>/course/<str:course_id>/assignment/`
     '''
-    serializer_class = AssignmentStudentSerializer
-    permission_classes = (assignmentInfoReadWritePermisson, IsAuthenticated)
 
-    def get_queryset(self):
+    def get(self, request, *args, **kwargs):
         this_student = get_object_or_404(
             Student, user__uid=self.kwargs['student_id'])
         this_course = get_object_or_404(
@@ -312,7 +310,9 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
                 .annotate(max_date=Max('assignment__record__submission_time'))\
                 .filter(submission_time=F('max_date'))
 
-        assignment_with_grade = this_assignment_set.values()
+        assignment_with_grade = this_assignment_set.values\
+                ('uid', 'course_id', 'grade', 'name', 'descr_link',\
+                 'deadline', 'release_date', 'short_name')
         for i in range(len(assignment_with_grade)):
             try:
                 assignment_with_grade[i]['score'] = last_rec\
@@ -320,10 +320,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
             except ObjectDoesNotExist:
                 assignment_with_grade[i]['score'] = 0
                 
-        return assignment_with_grade
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+        return JsonResponse(assignment_with_grade, safe=False)
 
 
 class courseInformation(generics.GenericAPIView, mixins.RetrieveModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin):
