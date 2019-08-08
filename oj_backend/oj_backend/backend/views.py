@@ -794,7 +794,7 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
             Student, user__uid=self.kwargs['student_id'])
         this_assignment = get_object_or_404(
             Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
-        return this_student.record_set.filter(assignment=this_assignment)
+        return this_student.record_set.filter(assignment=this_assignment).order_by('-submission_time')
 
     def get_object(self):
         this_student = self.kwargs['student_id']
