@@ -316,8 +316,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
         for i in range(len(assignment_with_grade)):
             try:
                 assignment_with_grade[i]['score'] = last_rec\
-                    .get(assignment__uid=assignment_with_grade[i]['uid'])\
-                    .value('grade', flat=True)
+                    .get(assignment__uid=assignment_with_grade[i]['uid']).grade
             except ObjectDoesNotExist:
                 assignment_with_grade[i]['score'] = 0
                 
