@@ -911,11 +911,11 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 .filter(submission_time=F('max_date'))
 
         oscore = get_object_or_404(Assignment,uid=this_assignment).grade
-        student_with_grade = list(this_course_student_list.values("nickname"))
+        student_with_grade = list(this_course_student_list.values("user_id", "nickname"))
         for i in range(len(student_with_grade)):
             student_with_grade[i]['overall_score'] = oscore
             try:
-                rec = last_rec.get(student__uid=student_with_grade[i]['uid'])
+                rec = last_rec.get(student__user_id=student_with_grade[i].pop('user_id'))
                 student_with_grade[i]['score'] = rec.grade
                 student_with_grade[i]['delta'] = rec.delta
                 student_with_grade[i]['submission_time'] = rec.submission_time
