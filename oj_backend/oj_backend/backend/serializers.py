@@ -123,31 +123,34 @@ class CoursesViewSerializer(serializers.ModelSerializer):
 
 class AssignmentViewSerializer(serializers.ModelSerializer):
     course_id = serializers.UUIDField(source='course.uid', read_only=True)
+    score = serializers.IntegerField(source='grade')
 
     class Meta:
         model = Assignment
         fields = ('uid', 'course_id', 'name', 'descr_link',
-                  'grade', 'deadline', 'release_date', 'state', 'short_name')
+                  'score', 'deadline', 'release_date', 'state', 'short_name')
         extra_kwargs = {'short_name': {'read_only': True}, }
 
 
 class AssignmentCreateSerializer(serializers.ModelSerializer):
     course_id = serializers.UUIDField(source='course.uid', read_only=True)
+    score = serializers.IntegerField(source='grade')
 
     class Meta:
         model = Assignment
         fields = ('uid', 'course_id', 'name', 'descr_link',
-                  'grade', 'deadline', 'release_date', 'state', 'short_name')
+                  'score', 'deadline', 'release_date', 'state', 'short_name')
 
 
 class SubmissionRecordSerializer(serializers.ModelSerializer):
     assignment_id = serializers.CharField(
         source='assginment.uid', read_only=True)
     overall_score = serializers.IntegerField(source='assignment.grade')
+    score = serializers.IntegerField(source='grade')
 
     class Meta:
         model = Record
-        fields = ('git_commit_id', 'grade', 'overall_score',
+        fields = ('git_commit_id', 'score', 'overall_score',
                   'message', 'assignment_id', 'submission_time', 'delta')
 
 
@@ -156,12 +159,13 @@ class ScoreBoardSerializer(serializers.ModelSerializer):
         source='student.nickname', read_only=True)
     overall_score = serializers.FloatField(
         source='assignment.grade', read_only=True)
-    #score = serializers.FloatField(source='grade')
+    score = serializers.IntegerField(source='grade')
+    #score = serializers.FloatField(source='score')
 
     class Meta:
         model = Record
         fields = ('student_nickname', 'overall_score',
-                  'grade', 'submission_time', 'delta')
+                  'score', 'submission_time', 'delta')
 
 
 class JudgeSerializer(serializers.ModelSerializer):
