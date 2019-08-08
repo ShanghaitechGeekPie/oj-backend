@@ -16,7 +16,8 @@
 # under the License.
 
 from django.views import View
-from django.core.exceptions import ValidationError
+from django.db.models import Max, F
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import validate_email, validate_ipv46_address
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse, HttpResponseForbidden
 from django.contrib.auth.models import AnonymousUser
@@ -311,7 +312,7 @@ class assignmentList4Student(generics.GenericAPIView, mixins.ListModelMixin):
                 .annotate(max_date=Max('assignment__record__submission_time'))\
                 .filter(submission_time=F('max_date'))
 
-        assignment_with_grade = this_assignment_set.values.values()
+        assignment_with_grade = this_assignment_set.values()
         for i in range(len(assignment_with_grade)):
             try:
                 assignment_with_grade[i]['score'] = last_rec\
