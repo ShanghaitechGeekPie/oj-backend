@@ -915,7 +915,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         for i in range(len(student_with_grade)):
             student_with_grade[i]['overall_score'] = oscore
             try:
-                rec = last_rec.get(assignment__uid=student_with_grade[i]['uid'])
+                rec = last_rec.get(student__uid=student_with_grade[i]['uid'])
                 student_with_grade[i]['score'] = rec.grade
                 student_with_grade[i]['delta'] = rec.delta
                 student_with_grade[i]['submission_time'] = rec.submission_time
