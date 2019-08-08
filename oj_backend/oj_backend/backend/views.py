@@ -912,7 +912,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 .filter(submission_time=F('max_date'))
 
         student_with_grade = list(this_course_student_list.values\
-                ("nickname", overall_score=this_assignment.grade))
+                ("nickname", overall_score=F(this_assignment.grade)))
 
         for i in range(len(student_with_grade)):
             try:
