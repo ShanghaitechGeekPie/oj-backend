@@ -310,9 +310,9 @@ class assignmentList4Student(generics.GenericAPIView):
                 .annotate(max_date=Max('assignment__record__submission_time'))\
                 .filter(submission_time=F('max_date'))
 
-        assignment_with_grade = this_assignment_set.values\
-                ('uid', 'course_id', 'grade', 'name', 'descr_link',\
-                 'deadline', 'release_date', 'short_name')
+        assignment_with_grade = list(this_assignment_set.values\
+                ('uid', 'course_id', 'name', 'descr_link', 'deadline',\
+                 'release_date', 'deadline', 'short_name', overall_score=F('grade')))
         for i in range(len(assignment_with_grade)):
             try:
                 assignment_with_grade[i]['score'] = last_rec\
