@@ -904,17 +904,16 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
-        this_course_student_list = Course.objects.get(
-            uid=this_course).students.all()
-        last_rec = Record.objects.filter(assignment=this_assignment)\
+        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all()
+        last_rec = Record.objects.filter(assignment__uid=this_assignment)\
                 .filter(student__in=this_course_student_list)\
                 .annotate(max_date=Max('student__record__submission_time'))\
                 .filter(submission_time=F('max_date'))
 
-        student_with_grade = list(this_course_student_list.values\
-                ("nickname", overall_score=F(this_assignment.grade)))
-
+        oscore = get_object_or_404(Assignment,uid=this_assignment).grade
+        student_with_grade = list(this_course_student_list.values("nickname"))
         for i in range(len(student_with_grade)):
+            student_with_grade[i]['overall_score'] = oscore
             try:
                 rec = last_rec.get(assignment__uid=student_with_grade[i]['uid'])
                 student_with_grade[i]['score'] = rec.grade
