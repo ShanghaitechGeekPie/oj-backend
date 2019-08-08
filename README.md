@@ -222,25 +222,6 @@ Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/`.
 ]
 ```
 
-#### Assignment Detail
-
-Supported method: `GET`
-
-Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/`
-
-```json
-{
-    "uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-    "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
-    "name": "Homework1: Postfix Calculator",
-    "deadline":  "2019-01-23 19:07:08",
-    "release_date": "2019-01-23 19:07:08",
-    "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
-    "score": 3.14,
-    "overall_score": 10.0
-}
-```
-
 #### Assignment Scoreboard
 
 Supported method: `GET`
@@ -458,6 +439,7 @@ Registered at `/course/<str:uid>/assignment/`
         "short_name": "HW1",
         "deadline":  "2019-01-23 19:07:08",
         "release_date": "2019-01-23 19:07:08",
+        "grade": 100,
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
     }
 ]
@@ -487,6 +469,7 @@ Please be notified: the `short_name` will be used in the path of the git repo an
     "short_name": "HW1",
     "deadline":  "2019-01-23 19:07:08",
     "release_date": "2019-01-23 19:07:08",
+    "grade": 100,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
 }
 ```
