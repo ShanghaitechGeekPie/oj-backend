@@ -847,7 +847,9 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 .filter(student__in=this_course_student_list)\
                 .annotate(max_date=Max('student__record__submission_time'))\
                 .filter(submission_time=F('max_date'))
-
+        
+        backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
+                this_assignment, str(last_rec.values())))
         oscore = get_object_or_404(Assignment,uid=this_assignment).grade
         student_with_grade = list(this_course_student_list.values("user_id", "nickname"))
         for i in range(len(student_with_grade)):
