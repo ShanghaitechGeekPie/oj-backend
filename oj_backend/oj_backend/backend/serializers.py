@@ -121,26 +121,13 @@ class CoursesViewSerializer(serializers.ModelSerializer):
                         }
 
 
-class AssignmentStudentSerializer(serializers.ModelSerializer):
-    uid = serializers.UUIDField(source='uid')
-    course_id = serializers.UUIDField(source='course_id', read_only=True)
-    overall_score = serializers.IntegerField(source='grade')
-    name = serializers.CharField(source='name')
-    descr_link = serializers.URLField(source='descr_link')
-    deadline = serializers.DateTimeField(source='deadline')
-    release_date = serializers.DateTimeField(source='release_date')
-    short_name = serializers.CharField(source='short_name')
-    score = serializers.IntegerField(source='grade')
-
-
 class AssignmentDetailSerializer(serializers.ModelSerializer):
     course_id = serializers.UUIDField(source='course.uid', read_only=True)
-    score = serializers.IntegerField(source='grade')
 
     class Meta:
         model = Assignment
         fields = ('uid', 'course_id', 'name', 'descr_link',
-                  'score', 'deadline', 'release_date', 'state', 'short_name')
+                  'grade', 'deadline', 'release_date', 'state', 'short_name')
         extra_kwargs = {'short_name': {'read_only': True}, }
 
 

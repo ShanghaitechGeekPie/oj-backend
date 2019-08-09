@@ -200,7 +200,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 LANGUAGE_CODE = 'zh-cn'
 
-TIME_ZONE = 'Asia/Shanghai'
+TIME_ZONE = 'Etc/UCT'
 
 USE_I18N = True
 
