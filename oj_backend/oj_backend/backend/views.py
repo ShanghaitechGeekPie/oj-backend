@@ -221,13 +221,6 @@ class courseList4Students(generics.GenericAPIView, mixins.ListModelMixin):
             user=self.request.user), user__uid=self.kwargs['uid'])
         return this_student.course_set.all()
 
-    def get_object(self):
-        student_uid = self.request.user.uid
-        queryset = self.get_queryset()
-        obj = queryset.filter(student__user__uid=student_uid)
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def get(self, request, *args, **kwargs):
         try:
             uid = UUID(self.kwargs['uid'])
@@ -249,13 +242,6 @@ class courseList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cr
         this_instr = get_object_or_404(Instructor.objects.filter(
             user=self.request.user), user__uid=self.kwargs['uid'])
         return this_instr.course_set.all()
-
-    def get_object(self):
-        instr_uid = self.request.user.uid
-        queryset = self.get_queryset()
-        obj = queryset.filter(instructor__user__uid=instr_uid)
-        self.check_object_permissions(self.request, obj)
-        return obj
 
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user.uid, uid=uuid1())
@@ -360,15 +346,6 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
         return this_course.assignment_set.all()
 
-    def get_object(self):
-        this_course = self.kwargs['uid']
-        this_instr = self.request.user.uid
-        queryset = self.get_queryset()
-        obj = queryset.filter(course__uid=this_course,
-                              course__instructor__user__uid=this_instr)
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def perform_create(self, serializer):
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
         serializer.save(course=this_course)
@@ -449,11 +426,6 @@ class courseInstrList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     def get_queryset(self):
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
         return this_course.instructor.all()
-
-    def get_object(self):
-        obj = self.get_queryset()
-        self.check_object_permissions(self.request, obj)
-        return obj
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -543,11 +515,6 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
     def get_queryset(self):
         return get_object_or_404(Course, uid=self.kwargs['course_id']).students.all()
 
-    def get_object(self):
-        obj = self.get_queryset()
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -634,11 +601,6 @@ class courseJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Cre
     def get_queryset(self):
         return get_object_or_404(Course, uid=self.kwargs['course_id']).default_judge.all()
 
-    def get_object(self):
-        obj = self.get_queryset()
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -705,11 +667,6 @@ class assignmentJudgeList(generics.GenericAPIView, mixins.ListModelMixin):
     def get_queryset(self):
         return get_object_or_404(
             Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id']).judge.all()
-
-    def get_object(self):
-        obj = self.get_queryset()
-        self.check_object_permissions(self.request, obj)
-        return obj
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -799,15 +756,6 @@ class submissionHistoryList(generics.GenericAPIView, mixins.ListModelMixin):
             Assignment, uid=self.kwargs['assignment_id'], course__uid=self.kwargs['course_id'])
         return this_student.record_set.filter(assignment=this_assignment).order_by('-submission_time')
 
-    def get_object(self):
-        this_student = self.kwargs['student_id']
-        this_assignment = self.kwargs['assignment_id']
-        queryset = self.get_queryset()
-        obj = queryset.filter(student__user__uid=this_student,
-                              assignment__uid=this_assignment)
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
@@ -853,11 +801,6 @@ class instrJudgeList(generics.GenericAPIView, mixins.ListModelMixin, mixins.Crea
             raise PermissionDenied
         return this_instr.judge_set.all()
 
-    def get_object(self):
-        obj = self.get_queryset().filter(maintainer=self.request.user.instructor)
-        self.check_object_permissions(self.request, obj)
-        return obj
-
     def perform_create(self, serializer):
         serializer.save(maintainer=self.request.user.instructor)
 
@@ -880,11 +823,6 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
         if not this_instr:
             raise PermissionDenied
         return this_instr.judge_set.all()
-
-    def get_object(self):
-        obj = get_object_or_404(Judge.objects.all(), uid=self.kwargs['uid'])
-        self.check_object_permissions(self.request, obj)
-        return obj
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
