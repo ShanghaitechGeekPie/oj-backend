@@ -843,11 +843,20 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
         this_course_student_list = get_object_or_404(Course, uid=this_course).students.all()
-        last_rec = Record.objects.filter(assignment__uid=this_assignment)\
-                .filter(student__in=this_course_student_list)\
-                .annotate(max_date=Max('student__record__submission_time'))\
-                .filter(submission_time=F('max_date'))
-        
+        # last_rec = Record.objects.filter(assignment__uid=this_assignment)\
+        #         .filter(student__in=this_course_student_list)\
+        #         .annotate(max_date=Max('student__record__submission_time'))\
+        #         .filter(submission_time=F('max_date'))
+
+        gitIds = set()
+        for stu in this_course_student_list:
+            try:
+                gitIds.add(Record.objects.filter(Q(assignment__uid=this_assignment) & Q(
+                    student=stu)).latest("submission_time").git_commit_id)
+            except:
+                pass
+        last_rec = Record.objects.filter(git_commit_id__in=gitIds)
+
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
                 this_assignment, str(last_rec.values())))
         oscore = get_object_or_404(Assignment,uid=this_assignment).grade
