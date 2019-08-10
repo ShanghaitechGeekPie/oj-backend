@@ -848,14 +848,16 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         #         .annotate(max_date=Max('student__record__submission_time'))\
         #         .filter(submission_time=F('max_date'))
 
-        gitIds = set()
-        for stu in this_course_student_list:
-            try:
-                gitIds.add(Record.objects.filter(Q(assignment__uid=this_assignment) & Q(
-                    student=stu)).latest("submission_time").git_commit_id)
-            except:
-                pass
-        last_rec = Record.objects.filter(git_commit_id__in=gitIds)
+        # gitIds = set()
+        # for stu in this_course_student_list:
+        #     try:
+        #         gitIds.add(Record.objects.filter(Q(assignment__uid=this_assignment) & Q(student=stu)).latest("submission_time").git_commit_id)
+        #     except:
+        #         pass
+        # last_rec = Record.objects.filter(git_commit_id__in=gitIds)
+        BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` FROM `oj_database_record` INNER JOIN `oj_database_record_student` ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' AND `oj_database_record_student`.`student_id` = {student_id}) ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
+        SQL = "SELECT * FROM (" + "UNION".join([BASE.format(assignment_id=this_assignment, student_id=stu.id) for stu in this_course_student_list]) + ") AS T"
+        last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, []))
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
                 this_assignment, str(last_rec.values())))
