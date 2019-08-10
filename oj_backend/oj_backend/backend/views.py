@@ -17,6 +17,7 @@
 
 from django.views import View
 from django.db.models import Max, F, Q
+from django.db.models.expressions import RawSQL
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import validate_email, validate_ipv46_address
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse, HttpResponseForbidden
