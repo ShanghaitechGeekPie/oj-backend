@@ -292,10 +292,14 @@ class assignmentList4Student(generics.GenericAPIView):
         this_course = get_object_or_404(
             this_student.course_set.all(), uid=self.kwargs['course_id'])
         this_assignment_set = this_course.assignment_set.all()
-        last_rec = Record.objects.filter(student=this_student)\
-                .filter(assignment__in=this_assignment_set)\
-                .annotate(max_date=Max('assignment__record__submission_time'))\
-                .filter(submission_time=F('max_date'))
+        # last_rec = Record.objects.filter(student=this_student)\
+        #         .filter(assignment__in=this_assignment_set)\
+        #         .annotate(max_date=Max('assignment__record__submission_time'))\
+        #         .filter(submission_time=F('max_date'))
+
+        BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` FROM `oj_database_record` INNER JOIN `oj_database_record_student` ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' AND `oj_database_record_student`.`student_id` = {student_id}) ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
+        SQL = "SELECT * FROM (" + "UNION".join([BASE.format(assignment_id=str(assign.uid).replace("-",""), student_id=this_student.id) for assign in this_assignment_set]) + ") AS T"
+        last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, []))
 
         assignment_with_grade = list(this_assignment_set.values\
                 ('uid', 'course_id', 'name', 'descr_link', 'deadline',\
