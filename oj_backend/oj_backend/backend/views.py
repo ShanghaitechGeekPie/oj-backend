@@ -293,14 +293,6 @@ class assignmentList4Student(generics.GenericAPIView):
         this_course = get_object_or_404(
             this_student.course_set.all(), uid=self.kwargs['course_id'])
         this_assignment_set = this_course.assignment_set.all()
-        # last_rec = Record.objects.filter(student=this_student)\
-        #         .filter(assignment__in=this_assignment_set)\
-        #         .annotate(max_date=Max('assignment__record__submission_time'))\
-        #         .filter(submission_time=F('max_date'))
-
-        # BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` FROM `oj_database_record` INNER JOIN `oj_database_record_student` ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' AND `oj_database_record_student`.`student_id` = {student_id}) ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
-        # SQL = "SELECT * FROM (" + "UNION".join([BASE.format(assignment_id=str(assign.uid).replace("-",""), student_id=this_student.id) for assign in this_assignment_set]) + ") AS T"
-        # last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, []))
         
         BASE="""
         DROP TABLE IF EXISTS gitidtableS;
@@ -348,6 +340,11 @@ class assignmentList4Student(generics.GenericAPIView):
             except KeyError:
                 assignment_with_grade[i]['score'] = 0
                 
+        assignment_with_grade = sorted(
+            assignment_with_grade,
+            key=lambda x: (x["deadline"], x["release_date"], x["name"])
+        )
+
         return JsonResponse(assignment_with_grade, safe=False)
 
 
@@ -885,15 +882,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
         this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values()
-        # BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` \
-        #     FROM `oj_database_record` INNER JOIN `oj_database_record_student` \
-        #     ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) \
-        #     WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' \
-        #     AND `oj_database_record_student`.`student_id` = {student_id}) \
-        #     ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
-        # SQL = "SELECT * FROM (" + "UNION"\
-        # .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu['id'])\
-        #          for stu in this_course_student_list]) + ") AS T"
+
         BASE="""
         DROP TABLE IF EXISTS gitidtable;
         CREATE TEMPORARY TABLE gitidtable (gitid VARCHAR(40));
@@ -956,7 +945,11 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                     'delta': None,
                     'submission_time': None
                 })
-
+        
+        student_with_grade = sorted(
+            student_with_grade,
+            key=lambda x: (-x['score'], x['submission_time'])
+        )
         return JsonResponse(student_with_grade, safe=False)
 
 
