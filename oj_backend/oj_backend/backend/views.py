@@ -383,7 +383,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
 
     def get_queryset(self):
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
-        return this_course.assignment_set.all()
+        return this_course.assignment_set.all().order_by("deadline","release_date","name")
 
     def perform_create(self, serializer):
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
