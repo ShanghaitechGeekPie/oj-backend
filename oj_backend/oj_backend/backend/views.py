@@ -868,7 +868,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time'):
             stu_set.add(i['student__user_id'])
             student_with_grade.append({
-                'nickname': i['student__nickname']
+                'nickname': i['student__nickname'],
                 'overall_score': oscore,
                 'score': i['grade'],
                 'delta': i['delta'],
