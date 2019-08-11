@@ -875,7 +875,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 'submission_time': i['submission_time']
             })
 
-        for i in range(len(this_course_student_list)):
+        for i in this_course_student_list:
             if(not i['user_id'] in stu_set):
                 student_with_grade.append({
                     'nickname': i['nickname'],
