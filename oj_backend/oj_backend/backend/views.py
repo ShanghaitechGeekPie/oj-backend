@@ -345,7 +345,7 @@ class assignmentList4Student(generics.GenericAPIView):
         for i in range(len(assignment_with_grade)):
             try:
                 assignment_with_grade[i]['score'] = last_rec[assignment_with_grade[i]['uid']]
-            except ObjectDoesNotExist:
+            except KeyError:
                 assignment_with_grade[i]['score'] = 0
                 
         return JsonResponse(assignment_with_grade, safe=False)
