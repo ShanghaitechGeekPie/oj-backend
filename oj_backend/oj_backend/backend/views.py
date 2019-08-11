@@ -14,7 +14,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-
+from datetime import datetime
 from django.views import View
 from django.db.models import Max, F, Q
 from django.db.models.expressions import RawSQL
@@ -948,7 +948,10 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         
         student_with_grade = sorted(
             student_with_grade,
-            key=lambda x: (-x['score'], x['submission_time'])
+            key=lambda x: (
+                -x['score'],
+                x['submission_time'] if x['submission_time'] else datetime.fromtimestamp(0)
+            )
         )
         return JsonResponse(student_with_grade, safe=False)
 
