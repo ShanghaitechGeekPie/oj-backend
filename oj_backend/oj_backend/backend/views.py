@@ -855,7 +855,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
             AND `oj_database_record_student`.`student_id` = {student_id}) \
             ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
         SQL = "SELECT * FROM (" + "UNION"\
-        .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu.id)\
+        .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu['id'])\
                  for stu in this_course_student_list]) + ") AS T"
         last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, [])).order_by('-grade')
 
