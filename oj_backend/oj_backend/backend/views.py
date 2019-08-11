@@ -855,7 +855,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
             AND `oj_database_record_student`.`student_id` = {student_id}) \
             ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
         SQL = "SELECT * FROM (" + "UNION"\
-        .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu.id)\
+        .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu['id'])\
                  for stu in this_course_student_list]) + ") AS T"
         last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, [])).order_by('-grade')
 
@@ -865,20 +865,20 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
 
         student_with_grade = []
         stu_set=set()
-        for i in last_rec.values("student__user_id", 'grade', 'delta', 'submission_time'):
-            stu_set.add(i.student__user_id)
+        for i in last_rec.values("student_id", 'grade', 'delta', 'submission_time'):
+            stu_set.add(i['student_id'])
             student_with_grade.append({
-                'nickname': this_course_student_list.get(user_id = i.student__user_id).nickname,
+                'nickname': this_course_student_list.get(user_id = i['student_id']).nickname,
                 'overall_score': oscore,
-                'score': i.grade,
-                'delta': i.delta,
-                'submission_time': i.submission_time
+                'score': i['grade'],
+                'delta': i['delta'],
+                'submission_time': i['submission_time']
             })
 
         for i in range(len(this_course_student_list)):
-            if(not i.user_id in stu_set):
+            if(not i['user_id'] in stu_set):
                 student_with_grade.append({
-                    'nickname': i.nickname,
+                    'nickname': i['nickname'],
                     'overall_score': oscore,
                     'score': 0,
                     'delta': None,
