@@ -847,40 +847,44 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
-        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all()
-        # last_rec = Record.objects.filter(assignment__uid=this_assignment)\
-        #         .filter(student__in=this_course_student_list)\
-        #         .annotate(max_date=Max('student__record__submission_time'))\
-        #         .filter(submission_time=F('max_date'))
-
-        # gitIds = set()
-        # for stu in this_course_student_list:
-        #     try:
-        #         gitIds.add(Record.objects.filter(Q(assignment__uid=this_assignment) & Q(student=stu)).latest("submission_time").git_commit_id)
-        #     except:
-        #         pass
-        # last_rec = Record.objects.filter(git_commit_id__in=gitIds)
-        BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` FROM `oj_database_record` INNER JOIN `oj_database_record_student` ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' AND `oj_database_record_student`.`student_id` = {student_id}) ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
-        SQL = "SELECT * FROM (" + "UNION".join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu.id) for stu in this_course_student_list]) + ") AS T"
-        last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, []))
+        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values()
+        BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` \
+            FROM `oj_database_record` INNER JOIN `oj_database_record_student` \
+            ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) \
+            WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' \
+            AND `oj_database_record_student`.`student_id` = {student_id}) \
+            ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
+        SQL = "SELECT * FROM (" + "UNION"\
+        .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu.id)\
+                 for stu in this_course_student_list]) + ") AS T"
+        last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, [])).order_by('-grade')
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
                 this_assignment, str(last_rec.values())))
         oscore = get_object_or_404(Assignment,uid=this_assignment).grade
-        student_with_grade = list(this_course_student_list.values("user_id", "nickname"))
-        for i in range(len(student_with_grade)):
-            student_with_grade[i]['overall_score'] = oscore
-            try:
-                rec = last_rec.get(student__user_id=student_with_grade[i].pop('user_id'))
-                student_with_grade[i]['score'] = rec.grade
-                student_with_grade[i]['delta'] = rec.delta
-                student_with_grade[i]['submission_time'] = rec.submission_time
 
-            except ObjectDoesNotExist:
-                student_with_grade[i]['score'] = 0
-                student_with_grade[i]['delta'] = None
-                student_with_grade[i]['submission_time'] = None
-                
+        student_with_grade = []
+        stu_set=set()
+        for i in last_rec.values("student__user_id", 'grade', 'delta', 'submission_time'):
+            stu_set.add(i.student__user_id)
+            student_with_grade.append({
+                'nickname': this_course_student_list.get(user_id = i.student__user_id).nickname,
+                'overall_score': oscore,
+                'score': i.grade,
+                'delta': i.delta,
+                'submission_time': i.submission_time
+            })
+
+        for i in range(len(this_course_student_list)):
+            if(not i.user_id in stu_set):
+                student_with_grade.append({
+                    'nickname': i.nickname,
+                    'overall_score': oscore,
+                    'score': 0,
+                    'delta': None,
+                    'submission_time': None
+                })
+
         return JsonResponse(student_with_grade, safe=False)
 
 
