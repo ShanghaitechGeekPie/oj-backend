@@ -950,7 +950,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
             student_with_grade,
             key=lambda x: (
                 -x['score'],
-                x['submission_time'].timestamp() if x['submission_time'] else 0
+                x['submission_time'].timestamp() if x['submission_time'] else 10**11
             )
         )
         return JsonResponse(student_with_grade, safe=False)
