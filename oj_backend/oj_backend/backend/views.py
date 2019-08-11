@@ -298,17 +298,53 @@ class assignmentList4Student(generics.GenericAPIView):
         #         .annotate(max_date=Max('assignment__record__submission_time'))\
         #         .filter(submission_time=F('max_date'))
 
-        BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` FROM `oj_database_record` INNER JOIN `oj_database_record_student` ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' AND `oj_database_record_student`.`student_id` = {student_id}) ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
-        SQL = "SELECT * FROM (" + "UNION".join([BASE.format(assignment_id=str(assign.uid).replace("-",""), student_id=this_student.id) for assign in this_assignment_set]) + ") AS T"
-        last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, []))
-
+        # BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` FROM `oj_database_record` INNER JOIN `oj_database_record_student` ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' AND `oj_database_record_student`.`student_id` = {student_id}) ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
+        # SQL = "SELECT * FROM (" + "UNION".join([BASE.format(assignment_id=str(assign.uid).replace("-",""), student_id=this_student.id) for assign in this_assignment_set]) + ") AS T"
+        # last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, []))
+        
+        BASE="""
+        DROP TABLE IF EXISTS gitidtableS;
+        CREATE TEMPORARY TABLE gitidtableS (gitid VARCHAR(40));
+        DROP PROCEDURE
+        IF EXISTS Id2R;
+        CREATE PROCEDURE Id2R (aid VARCHAR(32))
+        BEGIN
+            INSERT INTO gitidtableS SELECT
+                `oj_database_record`.`git_commit_id`
+            FROM
+                `oj_database_record`
+            INNER JOIN `oj_database_record_student` ON (
+                `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+            )
+            WHERE
+                (
+                    `oj_database_record`.`assignment_id` = aid
+                    AND `oj_database_record_student`.`student_id` = {student_id}
+                )
+            ORDER BY
+                `oj_database_record`.`submission_time` DESC
+            LIMIT 1;
+        END;
+        {call}
+        """
+        SQL = BASE.format(
+            student_id=this_student.id,
+            call="".join(["CALL Id2R('{}');".format(str(assign.uid).replace("-", ""))
+                          for assign in this_assignment_set])
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(SQL)
+            cursor.execute("SELECT * FROM gitidtableS;")
+            gitids = [i[0]for i in cursor.fetchall()]
+        
+        last_rec = Record.objects.filter(git_commit_id__in=gitids)
+        last_rec = {i['assignment_id']: i['grade'] for i in list(last_rec.values())}
         assignment_with_grade = list(this_assignment_set.values\
                 ('uid', 'course_id', 'name', 'descr_link', 'deadline',\
                  'release_date', 'deadline', 'short_name', overall_score=F('grade')))
         for i in range(len(assignment_with_grade)):
             try:
-                assignment_with_grade[i]['score'] = last_rec\
-                    .get(assignment__uid=assignment_with_grade[i]['uid']).grade
+                assignment_with_grade[i]['score'] = last_rec[assignment_with_grade[i]['uid']]
             except ObjectDoesNotExist:
                 assignment_with_grade[i]['score'] = 0
                 
