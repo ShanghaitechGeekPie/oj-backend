@@ -18,6 +18,7 @@
 from django.views import View
 from django.db.models import Max, F, Q
 from django.db.models.expressions import RawSQL
+from django.db import connection
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.validators import validate_email, validate_ipv46_address
 from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http404, HttpResponse, HttpResponseForbidden
@@ -848,16 +849,51 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
         this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values()
-        BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` \
-            FROM `oj_database_record` INNER JOIN `oj_database_record_student` \
-            ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) \
-            WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' \
-            AND `oj_database_record_student`.`student_id` = {student_id}) \
-            ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
-        SQL = "SELECT * FROM (" + "UNION"\
-        .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu['id'])\
-                 for stu in this_course_student_list]) + ") AS T"
-        last_rec = Record.objects.filter(git_commit_id__in=RawSQL(SQL, [])).order_by('-grade')
+        # BASE = "(SELECT * FROM(SELECT `oj_database_record`.`git_commit_id` \
+        #     FROM `oj_database_record` INNER JOIN `oj_database_record_student` \
+        #     ON (`oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`) \
+        #     WHERE (`oj_database_record`.`assignment_id` = '{assignment_id}' \
+        #     AND `oj_database_record_student`.`student_id` = {student_id}) \
+        #     ORDER BY `oj_database_record`.`submission_time` DESC  LIMIT 1)AS T)"
+        # SQL = "SELECT * FROM (" + "UNION"\
+        # .join([BASE.format(assignment_id=this_assignment.replace("-",""), student_id=stu['id'])\
+        #          for stu in this_course_student_list]) + ") AS T"
+        BASE="""
+        DROP TABLE IF EXISTS gitidtable;
+        CREATE TEMPORARY TABLE gitidtable (gitid VARCHAR(40));
+        DROP PROCEDURE
+        IF EXISTS Id2R;
+        CREATE PROCEDURE Id2R (id INT)
+        BEGIN
+            INSERT INTO gitidtable SELECT
+                `oj_database_record`.`git_commit_id`
+            FROM
+                `oj_database_record`
+            INNER JOIN `oj_database_record_student` ON (
+                `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+            )
+            WHERE
+                (
+                    `oj_database_record`.`assignment_id` = '{assignment_id}'
+                    AND `oj_database_record_student`.`student_id` = id
+                )
+            ORDER BY
+                `oj_database_record`.`submission_time` DESC
+            LIMIT 1;
+        END;
+        {call}
+        """
+        SQL = BASE.format(
+            assignment_id=this_assignment.replace("-", ""),
+            call="".join(["CALL Id2R({});".format(stu['id'])
+                          for stu in this_course_student_list])
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(SQL)
+            cursor.execute("SELECT * FROM gitidtable;")
+            gitids = [i[0]for i in cursor.fetchall()]
+        
+        last_rec = Record.objects.filter(git_commit_id__in=gitids).order_by('-grade')
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
                 this_assignment, str(last_rec.values())))
