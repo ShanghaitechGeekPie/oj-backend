@@ -857,11 +857,10 @@ class instrJudgeDetail(generics.GenericAPIView, mixins.UpdateModelMixin, mixins.
     serializer_class = JudgeSerializer
     permission_classes = (judgeReadWritePermission, IsAuthenticated)
 
-    def get_queryset(self):
-        this_instr = self.request.user.instructor
-        if not this_instr:
-            raise PermissionDenied
-        return this_instr.judge_set.all()
+    def get_object(self):
+        obj = get_object_or_404(Judge.objects.all(), uid=self.kwargs['uid'])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
