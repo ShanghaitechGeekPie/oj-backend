@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'oidc_rp',
     'rest_framework',
+    'corsheaders',
     'oj_database',
     'oj_backend.backend'
 ]
@@ -101,10 +102,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'oidc_rp.middleware.OIDCRefreshIDTokenMiddleware',
 ]
 
 ROOT_URLCONF = 'oj_backend.urls'
+CORS_ORIGIN_ALLOW_ALL = True
 
 TEMPLATES = [
     {
