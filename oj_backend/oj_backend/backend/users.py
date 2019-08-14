@@ -47,9 +47,9 @@ def oidc_create_user_callback(request, oidc_user, **kwargs):
     except MWUpdateError:
         auth_logger.error(
             'User {} already exists in git server. Skipped. It is probabaly becuase this user is already added as a student or instructor in a course on the server.')
-    this_student, is_new_student = generate_student_for_user(user, claims)
+    this_student, _ = generate_student_for_user(user, claims)
     generate_instructor_for_user(user, claims)
-    if this_student and is_new_student:
+    if this_student:
         for course in this_student.course_set.all():
             for assignment in course.assignment_set.all():
                 MWCourseAddRepo(course.uid, assignment.uid, this_student.enroll_email,
