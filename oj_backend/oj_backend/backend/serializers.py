@@ -27,7 +27,8 @@ class StudentInfoSerializer(serializers.ModelSerializer):
     uid = serializers.UUIDField(source='user.uid', read_only=True)
     email = serializers.EmailField(
         source='user.email', allow_null=True, read_only=True)
-    name = serializers.CharField(source='user.name', allow_null=True)
+    name = serializers.CharField(
+        source='user.name', allow_null=True, read_only=True)
     rsa_pub_key = serializers.CharField(
         source='user.rsa_pub_key', allow_null=True)
 
