@@ -880,30 +880,52 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
-        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values()
+        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values("id", "user_id", "nickname", "user__name", "student_id")
 
         BASE="""
         DROP TABLE IF EXISTS gitidtable;
-        CREATE TEMPORARY TABLE gitidtable (gitid VARCHAR(40));
+        CREATE TEMPORARY TABLE gitidtable (
+            gitid VARCHAR (40),
+            gitcount INT
+        );
         DROP PROCEDURE
         IF EXISTS Id2R;
         CREATE PROCEDURE Id2R (id INT)
         BEGIN
             INSERT INTO gitidtable SELECT
-                `oj_database_record`.`git_commit_id`
+                *
             FROM
-                `oj_database_record`
-            INNER JOIN `oj_database_record_student` ON (
-                `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
-            )
-            WHERE
                 (
-                    `oj_database_record`.`assignment_id` = '{assignment_id}'
-                    AND `oj_database_record_student`.`student_id` = id
+                    SELECT
+                        `oj_database_record`.`git_commit_id`
+                    FROM
+                        `oj_database_record`
+                    INNER JOIN `oj_database_record_student` ON (
+                        `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                    )
+                    WHERE
+                        (
+                            `oj_database_record`.`assignment_id` = '{assignment_id}'
+                            AND `oj_database_record_student`.`student_id` = id
+                        )
+                    ORDER BY
+                        `oj_database_record`.`submission_time` DESC
+                    LIMIT 1
+                ) AS T1
+            INNER JOIN (
+                SELECT
+                    count(*)
+                FROM
+                    `oj_database_record`
+                INNER JOIN `oj_database_record_student` ON (
+                    `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
                 )
-            ORDER BY
-                `oj_database_record`.`submission_time` DESC
-            LIMIT 1;
+                WHERE
+                    (
+                        `oj_database_record`.`assignment_id` = '{assignment_id}'
+                        AND `oj_database_record_student`.`student_id` = id
+                    )
+            ) AS T2;
         END;
         {call}
         """
@@ -915,7 +937,8 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         with connection.cursor() as cursor:
             cursor.execute(SQL)
             cursor.execute("SELECT * FROM gitidtable;")
-            gitids = [i[0]for i in cursor.fetchall()]
+            gitid2times = {i[0]:i[1] for i in cursor.fetchall()}
+            gitids = [i for i in gitid2times]
         
         last_rec = Record.objects.filter(git_commit_id__in=gitids).order_by('-grade')
 
@@ -925,24 +948,30 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
 
         student_with_grade = []
         stu_set=set()
-        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time'):
+        for i in last_rec.values("student__user_id", "student__nickname", "student__user__name", "student__student_id", 'grade', 'delta', 'submission_time' ,"git_commit_id"):
             stu_set.add(i['student__user_id'])
             student_with_grade.append({
                 'nickname': i['student__nickname'],
+                "name": i["student__user__name"],
+                "student_id": i["student__student_id"],
                 'overall_score': oscore,
                 'score': i['grade'],
                 'delta': i['delta'],
-                'submission_time': i['submission_time']
+                'submission_time': i['submission_time'],
+                'submission_count': gitid2times[i["git_commit_id"]]
             })
 
         for i in this_course_student_list:
             if(not i['user_id'] in stu_set):
                 student_with_grade.append({
                     'nickname': i['nickname'],
+                    "name": i["user__name"],
+                    "student_id": i["student_id"],
                     'overall_score': oscore,
                     'score': 0,
                     'delta': None,
-                    'submission_time': None
+                    'submission_time': None,
+                    'submission_count': 0
                 })
         
         student_with_grade = sorted(
