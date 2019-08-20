@@ -196,6 +196,25 @@ It provides student's one specific submission under an assignment.
     }
 ```
 
+#### Student's Assignment Scoreboard
+
+Supported method: `GET`
+
+Registerd at `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
+
+```json
+[
+    {
+        "nickname": "hammerWang",
+        "score": 10,
+        "overall_score": 10,
+        "submission_time": "2019-01-23 19:07:08",
+        "delta": 0,
+        "submission_count": 0
+    }
+]
+```
+
 ### For Course
 
 #### Course's Assignment List
@@ -218,24 +237,6 @@ Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/`.
         "descr_link": "https://shtech.org/course/si100c/17f/hw/1",
         "score": 3.14,
         "overall_score": 10.0
-    }
-]
-```
-
-#### Assignment Scoreboard
-
-Supported method: `GET`
-
-Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
-
-```json
-[
-    {
-        "nickname": "hammerWang",
-        "score": 10,
-        "overall_score": 10,
-        "submission_time": "2019-01-23 19:07:08",
-        "delta": 0
     }
 ]
 ```
@@ -472,6 +473,27 @@ Please be notified: the `short_name` will be used in the path of the git repo an
     "grade": 100,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
 }
+```
+
+#### Assignment Scoreboard
+
+Supported method: `GET`
+
+Registerd at `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
+
+```json
+[
+    {
+        "nickname": "hammerWang",
+        "name": "王大锤",
+        "student_id": "19260817",
+        "score": 10,
+        "overall_score": 10,
+        "submission_time": "2019-01-23 19:07:08",
+        "delta": 0,
+        "submission_count": 0
+    }
+]
 ```
 
 #### Course's default judges list
