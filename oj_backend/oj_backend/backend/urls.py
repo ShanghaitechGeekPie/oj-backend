@@ -33,6 +33,8 @@ urlpatterns = [
          submissionHistoryList.as_view()),
     path('student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/history/<str:git_commit_id>',
          submissionHistoryDetail.as_view()),
+    path('/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/scores/',
+         assignmentScoreboardDetail4Student.as_view()),
     path('instructor/<str:uid>/course/', courseList4Instr.as_view()),
     path('instructor/<str:uid>', insturctorInformation.as_view()),
     path('course/<str:uid>', courseInformation.as_view()),

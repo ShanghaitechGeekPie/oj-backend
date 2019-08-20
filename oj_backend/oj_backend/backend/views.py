@@ -1063,3 +1063,111 @@ class OIDCLoginParam(generics.GenericAPIView):
         host = request.META.get('HTTP_HOST')
         scheme = "https://" if request.is_secure() else "http://"
         return JsonResponse(status=200, data={'login_url': scheme+host+reverse('oidc_auth_request'), 'logout_url': scheme+host+reverse('oidc_end_session')})
+
+
+class assignmentScoreboardDetail4Student(generics.GenericAPIView):
+    '''
+    `/student/<str:student_id>/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
+    '''
+
+    def get(self, request, *args, **kwargs):
+        this_course = self.kwargs['course_id']
+        this_assignment = self.kwargs['assignment_id']
+        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values("id", "user_id", "nickname")
+
+        BASE="""
+        DROP TABLE IF EXISTS gitidtable;
+        CREATE TEMPORARY TABLE gitidtable (
+            gitid VARCHAR (40),
+            gitcount INT
+        );
+        DROP PROCEDURE
+        IF EXISTS Id2R;
+        CREATE PROCEDURE Id2R (id INT)
+        BEGIN
+            INSERT INTO gitidtable SELECT
+                *
+            FROM
+                (
+                    SELECT
+                        `oj_database_record`.`git_commit_id`
+                    FROM
+                        `oj_database_record`
+                    INNER JOIN `oj_database_record_student` ON (
+                        `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                    )
+                    WHERE
+                        (
+                            `oj_database_record`.`assignment_id` = '{assignment_id}'
+                            AND `oj_database_record_student`.`student_id` = id
+                        )
+                    ORDER BY
+                        `oj_database_record`.`submission_time` DESC
+                    LIMIT 1
+                ) AS T1
+            INNER JOIN (
+                SELECT
+                    count(*)
+                FROM
+                    `oj_database_record`
+                INNER JOIN `oj_database_record_student` ON (
+                    `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                )
+                WHERE
+                    (
+                        `oj_database_record`.`assignment_id` = '{assignment_id}'
+                        AND `oj_database_record_student`.`student_id` = id
+                    )
+            ) AS T2;
+        END;
+        {call}
+        """
+        SQL = BASE.format(
+            assignment_id=this_assignment.replace("-", ""),
+            call="".join(["CALL Id2R({});".format(stu['id'])
+                          for stu in this_course_student_list])
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(SQL)
+            cursor.execute("SELECT * FROM gitidtable;")
+            gitid2times = {i[0]:i[1] for i in cursor.fetchall()}
+            gitids = [i for i in gitid2times]
+        
+        last_rec = Record.objects.filter(git_commit_id__in=gitids).order_by('-grade')
+
+        backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
+                this_assignment, str(last_rec.values())))
+        oscore = get_object_or_404(Assignment,uid=this_assignment).grade
+
+        student_with_grade = []
+        stu_set=set()
+        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time' ,"git_commit_id"):
+            stu_set.add(i['student__user_id'])
+            student_with_grade.append({
+                'nickname': i['student__nickname'],
+                'overall_score': oscore,
+                'score': i['grade'],
+                'delta': i['delta'],
+                'submission_time': i['submission_time'],
+                'submission_count': gitid2times[i["git_commit_id"]]
+            })
+
+        for i in this_course_student_list:
+            if(not i['user_id'] in stu_set):
+                student_with_grade.append({
+                    'nickname': i['nickname'],
+                    'overall_score': oscore,
+                    'score': 0,
+                    'delta': None,
+                    'submission_time': None,
+                    'submission_count': 0
+                })
+        
+        student_with_grade = sorted(
+            student_with_grade,
+            key=lambda x: (
+                -x['score'],
+                x['submission_time'].timestamp() if x['submission_time'] else 10**11
+            )
+        )
+        return JsonResponse(student_with_grade, safe=False)
