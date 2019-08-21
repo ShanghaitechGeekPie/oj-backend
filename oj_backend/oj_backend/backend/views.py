@@ -876,6 +876,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
     '''
+    permission_classes = (courseStudentInfoReadWritePermission, IsAuthenticated)
 
     def get(self, request, *args, **kwargs):
         this_course = self.kwargs['course_id']
