@@ -149,7 +149,7 @@ class SubmissionRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ('git_commit_id', 'score', 'overall_score',
+        fields = ('commit_tag', 'score', 'overall_score',
                   'message', 'assignment_id', 'submission_time', 'delta')
 
 

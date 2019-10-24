@@ -59,7 +59,7 @@ def student_submit_assignment_test(request, assignment):
     this_student = request.user.student
     if this_student:
         this_student_submissions = this_student.record_set.get(
-            git_commit_id=assignment)
+            commit_tag=assignment)
         return len(this_student_submissions) != 0
     return False
 
