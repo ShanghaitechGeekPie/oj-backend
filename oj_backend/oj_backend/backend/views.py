@@ -1036,9 +1036,9 @@ class internalSubmissionInterface(generics.GenericAPIView):
             return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
         payload = {'upstream': upstream,
                        "owner_uids": owner_uids, 'receive_time': now}
-        payload = simplejson.dumps(payload)
         if upstream.endswith("_grading_script.git"):
             # The upstream stores the grading script.
+            payload = simplejson.dumps(payload)
             channel = "grade_script_pushed"
             backend_logger.info('Submission relied. Payload: {}; Channel: {}'.format(
                 payload, channel))
@@ -1050,10 +1050,12 @@ class internalSubmissionInterface(generics.GenericAPIView):
                        delta=0,
                        grade_time=timezone.make_aware(datetime.fromtimestamp(0)),
                        submission_time=timezone.make_aware(datetime.fromtimestamp(now)),
-                       redis_message=payload,
+                       redis_message=simplejson.dumps(payload),
                        state=1)
             R.save()
             channel = assignment_uid
+            payload['record_id'] = R.id
+            payload = simplejson.dumps(payload)
             backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
                 payload, channel, now))
             this_redis.zadd(channel, {payload: now})
