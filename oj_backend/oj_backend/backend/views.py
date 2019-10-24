@@ -1053,6 +1053,8 @@ class internalSubmissionInterface(generics.GenericAPIView):
                        redis_message=simplejson.dumps(payload),
                        state=1)
             R.save()
+            stuSet = Student.objects.filter(user__in=owner_uids)
+            R.student.add(*stuSet)
             channel = assignment_uid
             payload['record_id'] = R.id
             payload = simplejson.dumps(payload)
