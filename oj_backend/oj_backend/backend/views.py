@@ -25,6 +25,7 @@ from django.http import HttpResponse, JsonResponse, HttpResponseNotAllowed, Http
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.urls import path, include, reverse
+from django.utils import timezone
 from django.shortcuts import get_object_or_404, get_list_or_404
 from rest_framework import status, generics, mixins
 from rest_framework.parsers import JSONParser
@@ -302,11 +303,11 @@ class assignmentList4Student(generics.GenericAPIView):
         CREATE PROCEDURE Id2R (aid VARCHAR(32))
         BEGIN
             INSERT INTO gitidtableS SELECT
-                `oj_database_record`.`git_commit_id`
+                `oj_database_record`.`commit_tag`
             FROM
                 `oj_database_record`
             INNER JOIN `oj_database_record_student` ON (
-                `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
             )
             WHERE
                 (
@@ -329,7 +330,7 @@ class assignmentList4Student(generics.GenericAPIView):
             cursor.execute("SELECT * FROM gitidtableS;")
             gitids = [i[0]for i in cursor.fetchall()]
         
-        last_rec = Record.objects.filter(git_commit_id__in=gitids)
+        last_rec = Record.objects.filter(commit_tag__in=gitids)
         last_rec = {i['assignment_id']: i['grade'] for i in list(last_rec.values())}
         assignment_with_grade = list(this_assignment_set.values\
                 ('uid', 'course_id', 'name', 'descr_link', 'deadline',\
@@ -819,7 +820,7 @@ class submissionHistoryDetail(generics.GenericAPIView, mixins.RetrieveModelMixin
         this_record = self.kwargs['git_commit_id']
         queryset = self.get_queryset()
         obj = queryset.get(student__user__uid=this_student,
-                           assignment__uid=this_assignment, git_commit_id=this_record)
+                           assignment__uid=this_assignment, commit_tag=this_record)
         self.check_object_permissions(obj)
         return obj
 
@@ -898,11 +899,11 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
             FROM
                 (
                     SELECT
-                        `oj_database_record`.`git_commit_id`
+                        `oj_database_record`.`commit_tag`
                     FROM
                         `oj_database_record`
                     INNER JOIN `oj_database_record_student` ON (
-                        `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                        `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
                     )
                     WHERE
                         (
@@ -919,7 +920,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 FROM
                     `oj_database_record`
                 INNER JOIN `oj_database_record_student` ON (
-                    `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                    `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
                 )
                 WHERE
                     (
@@ -941,7 +942,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
             gitid2times = {i[0]:i[1] for i in cursor.fetchall()}
             gitids = [i for i in gitid2times]
         
-        last_rec = Record.objects.filter(git_commit_id__in=gitids).order_by('-grade')
+        last_rec = Record.objects.filter(commit_tag__in=gitids).order_by('-grade')
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
                 this_assignment, str(last_rec.values())))
@@ -949,7 +950,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
 
         student_with_grade = []
         stu_set=set()
-        for i in last_rec.values("student__user_id", "student__nickname", "student__user__name", "student__student_id", 'grade', 'delta', 'submission_time' ,"git_commit_id"):
+        for i in last_rec.values("student__user_id", "student__nickname", "student__user__name", "student__student_id", 'grade', 'delta', 'submission_time' ,"commit_tag"):
             stu_set.add(i['student__user_id'])
             student_with_grade.append({
                 'nickname': i['student__nickname'],
@@ -959,7 +960,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 'score': i['grade'],
                 'delta': i['delta'],
                 'submission_time': i['submission_time'],
-                'submission_count': gitid2times[i["git_commit_id"]]
+                'submission_count': gitid2times[i["commit_tag"]]
             })
 
         for i in this_course_student_list:
@@ -1044,6 +1045,14 @@ class internalSubmissionInterface(generics.GenericAPIView):
             this_redis.publish(channel, payload)
         else:
             # The upstream stores the student's submission.
+            R = Record(assignment=Assignment.objects.get(uid=assignment_uid),
+                       grade=0,
+                       delta=0,
+                       grade_time=timezone.make_aware(datetime.fromtimestamp(0)),
+                       submission_time=timezone.make_aware(datetime.fromtimestamp(now)),
+                       redis_message=payload,
+                       state=1)
+            R.save()
             channel = assignment_uid
             backend_logger.info('Submission relied. Payload: {}; Channel: {}; Weight: {}'.format(
                 payload, channel, now))
@@ -1091,11 +1100,11 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
             FROM
                 (
                     SELECT
-                        `oj_database_record`.`git_commit_id`
+                        `oj_database_record`.`commit_tag`
                     FROM
                         `oj_database_record`
                     INNER JOIN `oj_database_record_student` ON (
-                        `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                        `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
                     )
                     WHERE
                         (
@@ -1112,7 +1121,7 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
                 FROM
                     `oj_database_record`
                 INNER JOIN `oj_database_record_student` ON (
-                    `oj_database_record`.`git_commit_id` = `oj_database_record_student`.`record_id`
+                    `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
                 )
                 WHERE
                     (
@@ -1134,7 +1143,7 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
             gitid2times = {i[0]:i[1] for i in cursor.fetchall()}
             gitids = [i for i in gitid2times]
         
-        last_rec = Record.objects.filter(git_commit_id__in=gitids).order_by('-grade')
+        last_rec = Record.objects.filter(commit_tag__in=gitids).order_by('-grade')
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
                 this_assignment, str(last_rec.values())))
@@ -1142,7 +1151,7 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
 
         student_with_grade = []
         stu_set=set()
-        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time' ,"git_commit_id"):
+        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time' ,"commit_tag"):
             stu_set.add(i['student__user_id'])
             student_with_grade.append({
                 'nickname': i['student__nickname'],
@@ -1150,7 +1159,7 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
                 'score': i['grade'],
                 'delta': i['delta'],
                 'submission_time': i['submission_time'],
-                'submission_count': gitid2times[i["git_commit_id"]]
+                'submission_count': gitid2times[i["commit_tag"]]
             })
 
         for i in this_course_student_list:
