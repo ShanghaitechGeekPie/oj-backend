@@ -313,6 +313,7 @@ class assignmentList4Student(generics.GenericAPIView):
                 (
                     `oj_database_record`.`assignment_id` = aid
                     AND `oj_database_record_student`.`student_id` = {student_id}
+                    AND `oj_database_record`.`state` = 2
                 )
             ORDER BY
                 `oj_database_record`.`submission_time` DESC
@@ -909,6 +910,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                         (
                             `oj_database_record`.`assignment_id` = '{assignment_id}'
                             AND `oj_database_record_student`.`student_id` = id
+                            AND `oj_database_record`.`state` = 2
                         )
                     ORDER BY
                         `oj_database_record`.`submission_time` DESC
@@ -1114,6 +1116,7 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
                         (
                             `oj_database_record`.`assignment_id` = '{assignment_id}'
                             AND `oj_database_record_student`.`student_id` = id
+                            AND `oj_database_record`.`state` = 2
                         )
                     ORDER BY
                         `oj_database_record`.`submission_time` DESC
