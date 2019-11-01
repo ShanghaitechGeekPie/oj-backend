@@ -160,11 +160,20 @@ Registered at `/student/<str:student_id>/course/<str:course_id>/assignment/<str:
 
 It provides student's submission history under an assignment.
 
+`state` describes status of records.
+
+state    | integer 
+:-:|:-:
+PLACEHOLD  |    0    
+PENDING   |    1    
+JUDGED    |    2    
+INVALID   |    3    
+
 ```json
 [
     {
-        "git_commit_id": "b3b17c00f16511e8b3dfdca9047a0f14",
-        "course_uid": "b3b17c00f16511e8b3dfdca9047a0f14",
+        "state": 2,
+        "commit_tag": "b3b17c00f16511e8b3dfdca9047a0f14",
         "message": "1. Accepted\n",
         "score": 10,
         "overall_score": 10,
