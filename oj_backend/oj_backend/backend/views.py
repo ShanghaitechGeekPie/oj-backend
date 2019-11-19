@@ -49,7 +49,7 @@ from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
 from oj_backend.settings import redisConnectionPool, OJ_SUBMISSION_TOKEN, OJ_ENFORCE_HTTPS
 from oj_backend.backend.middleware_connector import *
-from oj_backend.backend.celery_tasks import MWCourseAddRepoDelay
+from oj_backend.backend.celery_tasks import *
 
 backend_logger = logging.getLogger('backend.main')
 
@@ -628,7 +628,7 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         this_course.students.remove(this_student)
         if this_student.user:
             for assignment in this_course.assignment_set.all():
-                MWCourseDelRepo(this_course.uid, assignment.uid,
+                MWCourseDelRepoDelay.delay(this_course.uid, assignment.uid,
                                 this_student.enroll_email)
         return HttpResponse(content='', status=204)
 

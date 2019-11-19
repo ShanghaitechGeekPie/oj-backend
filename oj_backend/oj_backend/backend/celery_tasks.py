@@ -7,5 +7,11 @@ celery_app = Celery('demo', broker='redis://{}:{}/{}'.format(
 
 @celery_app.task
 def MWCourseAddRepoDelay(*args, **kwargs):
-    print("Add MWCourseAddRepo job:", args, kwargs)
+    print("Add MWCourseAddRepo job:"+str(args)+str(kwargs))
     MWCourseAddRepo(*args, **kwargs)
+
+
+@celery_app.task
+def MWCourseDelRepoDelay(*args):
+    print("Add MWCourseDelRepo job:"+str(args))
+    MWCourseDelRepo(*args)

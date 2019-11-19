@@ -52,8 +52,8 @@ def oidc_create_user_callback(request, oidc_user, **kwargs):
     if this_student:
         for course in this_student.course_set.all():
             for assignment in course.assignment_set.all():
-                MWCourseAddRepo(course.uid, assignment.uid, this_student.enroll_email,
-                                assignment.deadline, owner_uid=user.uid)
+                MWCourseAddRepoDelay.delay(course.uid, assignment.uid, this_student.enroll_email,
+                                           str(assignment.deadline.date()), owner_uid=user.uid)
 
 
 oidc_user_created.connect(oidc_create_user_callback,
@@ -73,8 +73,8 @@ def oidc_user_update_handler(oidc_user, claims):
     if user.email != claims.get('email'):
         for course in this_student.course_set.all():
             for assignment in course.assignment_set.all():
-                MWCourseAddRepo(course.uid, assignment.uid, this_student.enroll_email,
-                                assignment.deadline, owner_uid=user.uid)
+                MWCourseAddRepoDelay.delay(course.uid, assignment.uid, this_student.enroll_email,
+                                           str(assignment.deadline.date()), owner_uid=user.uid)
 
 
 def generate_student_for_user(user, claims):
