@@ -26,7 +26,7 @@ import requests
 from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 from uuid import UUID
-from celery_tasks import celery_app
+from oj_backend.backend.celery_tasks import celery_app
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
 middleware_logger = logging.getLogger('backend.main')
