@@ -19,4 +19,5 @@ cd app
 
 python3 manage.py migrate
 
+celery -A oj_backend.backend.celery_tasks worker --loglevel=info &
 gunicorn oj_backend.wsgi:application -b 0.0.0.0:8080 --workers 4 --worker-connections 65535
