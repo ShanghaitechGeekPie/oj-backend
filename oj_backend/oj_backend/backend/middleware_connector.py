@@ -170,7 +170,8 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
     def __init__(self, course_uid, assignment_uid, owner_email, ddl, owner_uid=None, repo_name=None, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)
-        ddl = str(ddl.date())
+        if not isinstance(ddl, str):
+            ddl = str(ddl.date())
         if isinstance(owner_uid, UUID):
             owner_uid = [str(owner_uid)]
         elif isinstance(owner_uid, list):

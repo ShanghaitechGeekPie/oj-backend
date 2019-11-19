@@ -420,7 +420,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             for student in this_course.students.all():
                 if student.user:
                     MWCourseAddRepoDelay.delay(this_course.uid, this_assignment.uid,
-                                    student.enroll_email, deadline, owner_uid=student.user.uid)
+                                    student.enroll_email, str(deadline.date()), owner_uid=student.user.uid)
         except:
             return JsonResponse(status=500, data={})
         return response
@@ -590,7 +590,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         if this_student.user:
             for assignment in this_course.assignment_set.all():
                 MWCourseAddRepoDelay.delay(self.kwargs['course_id'], assignment.uid, enroll_email,
-                                assignment.deadline, owner_uid=this_student.user.uid)
+                                str(assignment.deadline.date()), owner_uid=this_student.user.uid)
         return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
 
