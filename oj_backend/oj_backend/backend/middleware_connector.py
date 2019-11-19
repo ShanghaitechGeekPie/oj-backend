@@ -26,7 +26,6 @@ import requests
 from urllib.parse import quote
 from requests.exceptions import RequestException, ConnectionError, HTTPError, Timeout
 from uuid import UUID
-from oj_backend.backend.celery_tasks import celery_app
 
 OJBN_GITLAB_ADDR = os.environ['OJBN_GITLAB_ADDR']
 middleware_logger = logging.getLogger('backend.main')
@@ -168,7 +167,6 @@ class MWCourseDelAssignment(baseMiddlewareAdopter):
 
 
 class MWCourseAddRepo(baseMiddlewareAdopter):
-    @celery_app.task
     def __init__(self, course_uid, assignment_uid, owner_email, ddl, owner_uid=None, repo_name=None, api_server=OJBN_GITLAB_ADDR):
         assignment_uid = str(assignment_uid)
         course_uid = str(course_uid)

@@ -49,6 +49,7 @@ from oj_backend.backend.serializers import *
 from oj_backend.backend.permissions import *
 from oj_backend.settings import redisConnectionPool, OJ_SUBMISSION_TOKEN, OJ_ENFORCE_HTTPS
 from oj_backend.backend.middleware_connector import *
+from oj_backend.backend.celery_tasks import MWCourseAddRepoDelay
 
 backend_logger = logging.getLogger('backend.main')
 
@@ -418,7 +419,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
         try:
             for student in this_course.students.all():
                 if student.user:
-                    MWCourseAddRepo.delay(this_course.uid, this_assignment.uid,
+                    MWCourseAddRepoDelay.delay(this_course.uid, this_assignment.uid,
                                     student.enroll_email, deadline, owner_uid=student.user.uid)
         except:
             return JsonResponse(status=500, data={})
@@ -588,7 +589,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         this_course.students.add(this_student)
         if this_student.user:
             for assignment in this_course.assignment_set.all():
-                MWCourseAddRepo.delay(self.kwargs['course_id'], assignment.uid, enroll_email,
+                MWCourseAddRepoDelay.delay(self.kwargs['course_id'], assignment.uid, enroll_email,
                                 assignment.deadline, owner_uid=this_student.user.uid)
         return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
