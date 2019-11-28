@@ -22,6 +22,7 @@ from oj_database.models import User
 from oj_database.models import Student
 from oj_database.models import Instructor
 from oj_backend.backend.middleware_connector import *
+from oj_backend.backend.celery_tasks import *
 from oidc_rp.signals import oidc_user_created
 
 auth_logger = logging.getLogger('backend.main')
