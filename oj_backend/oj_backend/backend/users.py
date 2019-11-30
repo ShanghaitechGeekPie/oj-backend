@@ -65,8 +65,11 @@ def oidc_user_update_handler(oidc_user, claims):
     auth_logger.info(
         'User info got from OIDC backend. OIDC User: {}'.format(oidc_user))
     user = oidc_user.user
-    if claims.get('email') and user.is_active == False:
+    name = claims.get('identification', {}).get('shanghaitech', {}).get(
+        'realname', claims.get('family_name', '')+claims.get('given_name', ''))
+    if claims.get('email') and name and (user.is_active == False):
         user.email = claims.get('email')
+        user.name = name
         user.is_active = True
         user.save()
     this_student, _ = generate_student_for_user(user, claims)
