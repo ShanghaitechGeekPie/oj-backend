@@ -38,7 +38,7 @@ def oidc_create_user_callback(request, oidc_user, **kwargs):
         'realname', claims.get('family_name', '')+claims.get('given_name', ''))
     user.name = name
     user.email = email
-    if not email:
+    if (not email) or (not name):
         user.is_active = False
     user.save()
     auth_logger.info('User {} is created via OIDC. Name: {}; Email: {}; OIDC User {}'.format(
