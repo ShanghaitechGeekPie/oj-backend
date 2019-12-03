@@ -1226,3 +1226,69 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
             )
         )
         return JsonResponse(student_with_grade, safe=False)
+
+
+class assignmentSubmissionExportation(generics.GenericAPIView):
+
+    '''
+    `/course/<str:course_id>/assignment/<str:assignment_id>/export`
+    '''
+
+    guidance = """ <p>You could you the script for downloading all the students' submission to your local computer.</p>
+    <p>Before you start, please meke sure you installed a working git client and make in your local computer. Also, please add your SSH public key to OJ. Then Switch to the directory you want to store the submissions, invoke the script and the download will start automatically.</p>
+    """
+
+    # TODO: Add error handling
+    download_base = """
+    echo "Downloading repo for {} from {}"
+    if [ -d {} ]; then
+        cd {} && git pull {} && cd ..;
+    else
+        git clone {};
+    fi
+
+    """
+
+    script_header = """#!/bin/bash"""
+    script_tail = """ """
+
+    def get(self, request, *args, **kwargs):
+        course_id = self.kwargs['course_id']
+        assignment_id = self.kwargs['assignment_id']
+
+        if not request.user.is_authenticated:
+            return Response(data={}, status=401)
+        this_course = get_object_or_404(Course, uid=course_id)
+        if not this_course.instructor.filter(user__uid=request.user.uid).exists():
+            return Response(data={}, status=403)
+
+        all_students = get_object_or_404(Course, uid=course_id).students.all()
+        this_assignment = get_object_or_404(
+            Assignment, uid=assignment_id, course__uid=course_id)
+        script = self.script_header
+        for student in all_students:
+            student_repo = "git@oj.geekpie.club:/{}-{}{}/{}/{}.git".format(
+                this_course.code,
+                this_course.year,
+                this_course.semester,
+                this_assignment.short_name,
+                student.enroll_email.spilt("@")[0]
+            )
+            student_download_cmd = self.download_base.format(
+                student.enroll_email,
+                student_repo,
+                student.enroll_emal,
+                student.enroll_emal,
+                student_repo,
+                student_repo
+            )
+            script += student_download_cmd
+        script += self.script_tail
+        return JsonResponse(
+            {
+                "guidance": self.guidance,
+                "script": script
+            },
+            safe=False,
+            status=200
+        )
