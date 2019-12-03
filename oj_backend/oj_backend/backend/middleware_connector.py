@@ -174,9 +174,11 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
             ddl = str(ddl.date())
         if isinstance(owner_uid, UUID):
             owner_uid = [str(owner_uid)]
+            owner_uid = simplejson.dumps(owner_uid)
         elif isinstance(owner_uid, list):
             for i in range(len(owner_uid)):
                 owner_uid[i] = str(owner_uid[i])
+            owner_uid = simplejson.dumps(owner_uid)
         interface = "/courses/{}/assignments/{}/repos".format(
             course_uid, assignment_uid)
         if repo_name == None:
@@ -189,7 +191,7 @@ class MWCourseAddRepo(baseMiddlewareAdopter):
         middleware_logger.debug(
             'Adding repo for course {} , assignment {} on git. Repo name: {}; owners: {}; addtional data: {}; deadline: {}'.format(course_uid, assignment_uid, repo_name, owner_email, owner_uid, ddl))
         payload = {'owners': owner_email, 'repo_name': repo_name,
-                   'additional_data': simplejson.dumps(owner_uid), 'ddl': ddl}
+                   'additional_data': owner_uid, 'ddl': ddl}
         super().__init__(api_server=api_server, interface=interface, payload=payload)
 
 class MWCourseDelRepo(baseMiddlewareAdopter):
