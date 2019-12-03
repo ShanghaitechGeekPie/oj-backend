@@ -36,6 +36,7 @@ class StudentInfoSerializer(serializers.ModelSerializer):
         model = Student
         fields = ('uid', 'email', 'name', 'student_id',
                   'nickname', 'rsa_pub_key',)
+        read_only_fields = ('student_id',)
         extra_kwargs = {'rsa_pub_key': {'write_only': True}}
         related_fields = ('user',)
 
