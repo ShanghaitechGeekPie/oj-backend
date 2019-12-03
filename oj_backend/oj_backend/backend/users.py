@@ -67,11 +67,12 @@ def oidc_user_update_handler(oidc_user, claims):
     user = oidc_user.user
     name = claims.get('identification', {}).get('shanghaitech', {}).get(
         'realname', claims.get('family_name', '')+claims.get('given_name', ''))
+    # Update the username and email of the user regardless of the current account status for quicker updates from data of GAuth.
+    user.email = claims.get('email')
+    user.name = name
     if claims.get('email') and name and (user.is_active == False):
-        user.email = claims.get('email')
-        user.name = name
         user.is_active = True
-        user.save()
+    user.save()
     this_student, _ = generate_student_for_user(user, claims)
     generate_instructor_for_user(user, claims)
     if user.email != claims.get('email'):
