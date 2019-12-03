@@ -295,8 +295,8 @@ class assignmentList4Student(generics.GenericAPIView):
         this_course = get_object_or_404(
             this_student.course_set.all(), uid=self.kwargs['course_id'])
         this_assignment_set = this_course.assignment_set.all()
-        
-        BASE="""
+
+        BASE = """
         DROP TABLE IF EXISTS gitidtableS;
         CREATE TEMPORARY TABLE gitidtableS (gitid VARCHAR(40));
         DROP PROCEDURE
@@ -331,18 +331,19 @@ class assignmentList4Student(generics.GenericAPIView):
             cursor.execute(SQL)
             cursor.execute("SELECT * FROM gitidtableS;")
             gitids = [i[0]for i in cursor.fetchall()]
-        
+
         last_rec = Record.objects.filter(commit_tag__in=gitids)
-        last_rec = {i['assignment_id']: i['grade'] for i in list(last_rec.values())}
-        assignment_with_grade = list(this_assignment_set.values\
-                ('uid', 'course_id', 'name', 'descr_link', 'deadline',\
-                 'release_date', 'deadline', 'short_name', overall_score=F('grade')))
+        last_rec = {i['assignment_id']: i['grade']
+                    for i in list(last_rec.values())}
+        assignment_with_grade = list(this_assignment_set.values
+                                     ('uid', 'course_id', 'name', 'descr_link', 'deadline',
+                                      'release_date', 'deadline', 'short_name', overall_score=F('grade')))
         for i in range(len(assignment_with_grade)):
             try:
                 assignment_with_grade[i]['score'] = last_rec[assignment_with_grade[i]['uid']]
             except KeyError:
                 assignment_with_grade[i]['score'] = 0
-                
+
         assignment_with_grade = sorted(
             assignment_with_grade,
             key=lambda x: (x["deadline"], x["release_date"], x["name"])
@@ -386,7 +387,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
 
     def get_queryset(self):
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
-        return this_course.assignment_set.all().order_by("deadline","release_date","name")
+        return this_course.assignment_set.all().order_by("deadline", "release_date", "name")
 
     def perform_create(self, serializer):
         this_course = get_object_or_404(Course, uid=self.kwargs['uid'])
@@ -420,7 +421,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             for student in this_course.students.all():
                 if student.user:
                     MWCourseAddRepoDelay.delay(this_course.uid, this_assignment.uid,
-                                    student.enroll_email, str(deadline.date()), owner_uid=student.user.uid)
+                                               student.enroll_email, str(deadline.date()), owner_uid=student.user.uid)
         except:
             return JsonResponse(status=500, data={})
         return response
@@ -590,7 +591,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         if this_student.user:
             for assignment in this_course.assignment_set.all():
                 MWCourseAddRepoDelay.delay(self.kwargs['course_id'], assignment.uid, enroll_email,
-                                str(assignment.deadline.date()), owner_uid=this_student.user.uid)
+                                           str(assignment.deadline.date()), owner_uid=this_student.user.uid)
         return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
 
@@ -629,7 +630,7 @@ class courseStudentDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
         if this_student.user:
             for assignment in this_course.assignment_set.all():
                 MWCourseDelRepoDelay.delay(this_course.uid, assignment.uid,
-                                this_student.enroll_email)
+                                           this_student.enroll_email)
         return HttpResponse(content='', status=204)
 
 
@@ -694,7 +695,8 @@ class courseJudgeDetail(generics.GenericAPIView, mixins.RetrieveModelMixin):
             this_course.instructor.get(user__uid=request.user.uid)
         except:
             return JsonResponse(data={'cause': 'Forbidden'}, status=403)
-        this_judge = get_object_or_404(Judge.objects.all(), uid=self.kwargs['judge_id'] )
+        this_judge = get_object_or_404(
+            Judge.objects.all(), uid=self.kwargs['judge_id'])
         this_course.default_judge.remove(this_judge)
         return HttpResponse(content='', status=204)
 
@@ -879,14 +881,16 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
     '''
     `/course/<str:course_id>/assignment/<str:assignment_id>/scores/`
     '''
-    permission_classes = (courseStudentInfoReadWritePermission, IsAuthenticated)
+    permission_classes = (
+        courseStudentInfoReadWritePermission, IsAuthenticated)
 
     def get(self, request, *args, **kwargs):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
-        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values("id", "user_id", "nickname", "user__name", "student_id")
+        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all(
+        ).values("id", "user_id", "nickname", "user__name", "student_id")
 
-        BASE="""
+        BASE = """
         DROP TABLE IF EXISTS gitidtable;
         CREATE TEMPORARY TABLE gitidtable (
             gitid VARCHAR (40),
@@ -942,18 +946,19 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         with connection.cursor() as cursor:
             cursor.execute(SQL)
             cursor.execute("SELECT * FROM gitidtable;")
-            gitid2times = {i[0]:i[1] for i in cursor.fetchall()}
+            gitid2times = {i[0]: i[1] for i in cursor.fetchall()}
             gitids = [i for i in gitid2times]
-        
-        last_rec = Record.objects.filter(commit_tag__in=gitids).order_by('-grade')
+
+        last_rec = Record.objects.filter(
+            commit_tag__in=gitids).order_by('-grade')
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
-                this_assignment, str(last_rec.values())))
-        oscore = get_object_or_404(Assignment,uid=this_assignment).grade
+            this_assignment, str(last_rec.values())))
+        oscore = get_object_or_404(Assignment, uid=this_assignment).grade
 
         student_with_grade = []
-        stu_set=set()
-        for i in last_rec.values("student__user_id", "student__nickname", "student__user__name", "student__student_id", 'grade', 'delta', 'submission_time' ,"commit_tag"):
+        stu_set = set()
+        for i in last_rec.values("student__user_id", "student__nickname", "student__user__name", "student__student_id", 'grade', 'delta', 'submission_time', "commit_tag"):
             stu_set.add(i['student__user_id'])
             student_with_grade.append({
                 'nickname': i['student__nickname'],
@@ -978,12 +983,13 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                     'submission_time': None,
                     'submission_count': 0
                 })
-        
+
         student_with_grade = sorted(
             student_with_grade,
             key=lambda x: (
                 -x['score'],
-                x['submission_time'].timestamp() if x['submission_time'] else 10**11
+                x['submission_time'].timestamp(
+                ) if x['submission_time'] else 10**11
             )
         )
         return JsonResponse(student_with_grade, safe=False)
@@ -1040,7 +1046,7 @@ class internalSubmissionInterface(generics.GenericAPIView):
         if isinstance(owner_uids, str):
             owner_uids = [owner_uids]
         payload = {'upstream': upstream,
-                       "owner_uids": owner_uids, 'receive_time': now}
+                   "owner_uids": owner_uids, 'receive_time': now}
         if upstream.endswith("_grading_script.git"):
             # The upstream stores the grading script.
             payload = simplejson.dumps(payload)
@@ -1053,8 +1059,10 @@ class internalSubmissionInterface(generics.GenericAPIView):
             R = Record(assignment=Assignment.objects.get(uid=assignment_uid),
                        grade=0,
                        delta=0,
-                       grade_time=timezone.make_aware(datetime.fromtimestamp(0)),
-                       submission_time=timezone.make_aware(datetime.fromtimestamp(now)),
+                       grade_time=timezone.make_aware(
+                           datetime.fromtimestamp(0)),
+                       submission_time=timezone.make_aware(
+                           datetime.fromtimestamp(now)),
                        redis_message=simplejson.dumps(payload),
                        state=1)
             R.save()
@@ -1092,9 +1100,10 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         this_course = self.kwargs['course_id']
         this_assignment = self.kwargs['assignment_id']
-        this_course_student_list = get_object_or_404(Course, uid=this_course).students.all().values("id", "user_id", "nickname")
+        this_course_student_list = get_object_or_404(
+            Course, uid=this_course).students.all().values("id", "user_id", "nickname")
 
-        BASE="""
+        BASE = """
         DROP TABLE IF EXISTS gitidtable;
         CREATE TEMPORARY TABLE gitidtable (
             gitid VARCHAR (40),
@@ -1150,18 +1159,19 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
         with connection.cursor() as cursor:
             cursor.execute(SQL)
             cursor.execute("SELECT * FROM gitidtable;")
-            gitid2times = {i[0]:i[1] for i in cursor.fetchall()}
+            gitid2times = {i[0]: i[1] for i in cursor.fetchall()}
             gitids = [i for i in gitid2times]
-        
-        last_rec = Record.objects.filter(commit_tag__in=gitids).order_by('-grade')
+
+        last_rec = Record.objects.filter(
+            commit_tag__in=gitids).order_by('-grade')
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
-                this_assignment, str(last_rec.values())))
-        oscore = get_object_or_404(Assignment,uid=this_assignment).grade
+            this_assignment, str(last_rec.values())))
+        oscore = get_object_or_404(Assignment, uid=this_assignment).grade
 
         student_with_grade = []
-        stu_set=set()
-        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time' ,"commit_tag"):
+        stu_set = set()
+        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time', "commit_tag"):
             stu_set.add(i['student__user_id'])
             student_with_grade.append({
                 'nickname': i['student__nickname'],
@@ -1182,12 +1192,79 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
                     'submission_time': None,
                     'submission_count': 0
                 })
-        
+
         student_with_grade = sorted(
             student_with_grade,
             key=lambda x: (
                 -x['score'],
-                x['submission_time'].timestamp() if x['submission_time'] else 10**11
+                x['submission_time'].timestamp(
+                ) if x['submission_time'] else 10**11
             )
         )
         return JsonResponse(student_with_grade, safe=False)
+
+
+class assignmentSubmissionExportation(generics.GenericAPIView):
+
+    '''
+    `/course/<str:course_id>/assignment/<str:assignment_id>/export`
+    '''
+
+    guidance = """ <p>You could you the script for downloading all the students' submission to your local computer.</p>
+    <p>Before you start, please meke sure you installed a working git client and make in your local computer. Also, please add your SSH public key to OJ. Then Switch to the directory you want to store the submissions, invoke the script and the download will start automatically.</p>
+    """
+
+    # TODO: Add error handling
+    download_base = """
+    echo "Downloading repo for {} from {}"
+    if [ -d {} ]; then
+        cd {} && git pull {} && cd ..;
+    else
+        git clone {};
+    fi
+
+    """
+
+    script_header = """#!/bin/bash"""
+    script_tail = """ """
+
+    def get(self, request, *args, **kwargs):
+        course_id = self.kwargs['course_id']
+        assignment_id = self.kwargs['assignment_id']
+
+        if not request.user.is_authenticated:
+            return Response(data={}, status=401)
+        this_course = get_object_or_404(Course, uid=course_id)
+        if not this_course.instructor.filter(user__uid=request.user.uid).exists():
+            return Response(data={}, status=403)
+
+        all_students = get_object_or_404(Course, uid=course_id).students.all()
+        this_assignment = get_object_or_404(
+            Assignment, uid=assignment_id, course__uid=course_id)
+        script = self.script_header
+        for student in all_students:
+            student_repo = "git@oj.geekpie.club:/{}-{}{}/{}/{}.git".format(
+                this_course.code,
+                this_course.year,
+                this_course.semester,
+                this_assignment.short_name,
+                student.enroll_email.spilt("@")[0]
+            )
+            student_download_cmd = self.download_base.format(
+                student.enroll_email,
+                student_repo,
+                student.enroll_emal,
+                student.enroll_emal,
+                student_repo,
+                student_repo
+            )
+            script += student_download_cmd
+        script += self.script_tail
+        return JsonResponse(
+            {
+                "guidance": self.guidance,
+                "script": script
+            },
+            safe=False,
+            status=200
+        )

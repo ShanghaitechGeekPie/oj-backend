@@ -162,12 +162,12 @@ It provides student's submission history under an assignment.
 
 `state` describes status of records.
 
-state    | integer 
+state    | integer
 :-:|:-:
-PLACEHOLD  |    0    
-PENDING   |    1    
-JUDGED    |    2    
-INVALID   |    3    
+PLACEHOLD  |    0
+PENDING   |    1
+JUDGED    |    2
+INVALID   |    3
 
 ```json
 [
@@ -481,6 +481,21 @@ Please be notified: the `short_name` will be used in the path of the git repo an
     "release_date": "2019-01-23 19:07:08",
     "grade": 100,
     "descr_link": "https://shtech.org/course/si100c/17f/hw/1"
+}
+```
+
+#### Assignment Export script
+
+Supported method: `GET`;
+
+Get the script for downloading all student submission repos. See #25 for more details.
+
+Registered at `/course/<str:course_id>/assignment/<str:assignment_id>/export`
+
+```json
+{
+    "guidance": "<p>Desciption of how to use the script.</p>",
+    "script": "#!/bin/sh\ngit clone git@oj.geekpie.club:/cs100-2019fall/hw0/wangdch.git"
 }
 ```
 
