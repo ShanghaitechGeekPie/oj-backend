@@ -421,11 +421,7 @@ class assignmentList4Instr(generics.GenericAPIView, mixins.ListModelMixin, mixin
             for student in this_course.students.all():
                 if student.user:
                     MWCourseAddRepoDelay.delay(this_course.uid, this_assignment.uid,
-<<<<<<< HEAD
-                                               student.enroll_email, str(deadline.date()), owner_uid=student.user.uid)
-=======
                                     student.enroll_email, str(deadline.date()), owner_uid=simplejson.dumps([str(student.user.uid)]))
->>>>>>> cfb438236fc05e2a5a9eb875af5c026921658c38
         except:
             return JsonResponse(status=500, data={})
         return response
@@ -595,11 +591,7 @@ class courseStudentList(generics.GenericAPIView, mixins.ListModelMixin):
         if this_student.user:
             for assignment in this_course.assignment_set.all():
                 MWCourseAddRepoDelay.delay(self.kwargs['course_id'], assignment.uid, enroll_email,
-<<<<<<< HEAD
-                                           str(assignment.deadline.date()), owner_uid=this_student.user.uid)
-=======
                                 str(assignment.deadline.date()), owner_uid=simplejson.dumps([str(this_student.user.uid)]))
->>>>>>> cfb438236fc05e2a5a9eb875af5c026921658c38
         return JsonResponse(data=StudentBasicInfoSerializer(this_student).data, status=201, safe=False)
 
 
@@ -899,19 +891,6 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         ).values("id", "user_id", "nickname", "user__name", "student_id")
 
         BASE = """
-<<<<<<< HEAD
-        DROP TABLE IF EXISTS gitidtable;
-        CREATE TEMPORARY TABLE gitidtable (
-            gitid VARCHAR (40),
-            gitcount INT
-        );
-        DROP PROCEDURE
-        IF EXISTS Id2R;
-        CREATE PROCEDURE Id2R (id INT)
-        BEGIN
-            INSERT INTO gitidtable SELECT
-                *
-=======
         SELECT
             `odu`.`uid`,
             `ods`.`nickname`,
@@ -930,7 +909,6 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
             SELECT
                 MAX(`odr`.`id`) AS `id`,
                 count(*) AS `count`
->>>>>>> cfb438236fc05e2a5a9eb875af5c026921658c38
             FROM
                 `oj_database_student` `ods`
             INNER JOIN `oj_database_record_student` `odrs` ON `odrs`.`student_id` = `ods`.`id`
@@ -953,23 +931,6 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         )
         with connection.cursor() as cursor:
             cursor.execute(SQL)
-<<<<<<< HEAD
-            cursor.execute("SELECT * FROM gitidtable;")
-            gitid2times = {i[0]: i[1] for i in cursor.fetchall()}
-            gitids = [i for i in gitid2times]
-
-        last_rec = Record.objects.filter(
-            commit_tag__in=gitids).order_by('-grade')
-
-        backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
-            this_assignment, str(last_rec.values())))
-        oscore = get_object_or_404(Assignment, uid=this_assignment).grade
-
-        student_with_grade = []
-        stu_set = set()
-        for i in last_rec.values("student__user_id", "student__nickname", "student__user__name", "student__student_id", 'grade', 'delta', 'submission_time', "commit_tag"):
-            stu_set.add(i['student__user_id'])
-=======
             res = cursor.fetchall()
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
@@ -980,7 +941,6 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
         stu_set=set()
         for i in res:
             stu_set.add(i[0])
->>>>>>> cfb438236fc05e2a5a9eb875af5c026921658c38
             student_with_grade.append({
                 'nickname': i[1],
                 "name": i[2],
@@ -1004,19 +964,6 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                     'submission_time': None,
                     'submission_count': 0
                 })
-<<<<<<< HEAD
-
-        student_with_grade = sorted(
-            student_with_grade,
-            key=lambda x: (
-                -x['score'],
-                x['submission_time'].timestamp(
-                ) if x['submission_time'] else 10**11
-            )
-        )
-=======
-
->>>>>>> cfb438236fc05e2a5a9eb875af5c026921658c38
         return JsonResponse(student_with_grade, safe=False)
 
 
