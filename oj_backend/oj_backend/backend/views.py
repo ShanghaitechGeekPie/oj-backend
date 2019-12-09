@@ -297,42 +297,26 @@ class assignmentList4Student(generics.GenericAPIView):
         this_assignment_set = this_course.assignment_set.all()
 
         BASE = """
-        DROP TABLE IF EXISTS gitidtableS;
-        CREATE TEMPORARY TABLE gitidtableS (gitid VARCHAR(40));
-        DROP PROCEDURE
-        IF EXISTS Id2R;
-        CREATE PROCEDURE Id2R (aid VARCHAR(32))
-        BEGIN
-            INSERT INTO gitidtableS SELECT
-                `oj_database_record`.`commit_tag`
+            SELECT
+                max(`oj_database_record`.`id`)
             FROM
-                `oj_database_record`
-            INNER JOIN `oj_database_record_student` ON (
-                `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
-            )
+                oj_database_student
+            INNER JOIN `oj_database_record_student` ON `oj_database_record_student`.`student_id` = `oj_database_student`.`id`
+            INNER JOIN `oj_database_record` ON `oj_database_record_student`.`record_id` = `oj_database_record`.`id`
             WHERE
-                (
-                    `oj_database_record`.`assignment_id` = aid
-                    AND `oj_database_record_student`.`student_id` = {student_id}
-                    AND `oj_database_record`.`state` = 2
-                )
-            ORDER BY
-                `oj_database_record`.`submission_time` DESC
-            LIMIT 1;
-        END;
-        {call}
+                `oj_database_student`.`id` = {id}
+            AND `oj_database_record`.`state` = 2
+            GROUP BY
+                `oj_database_record`.`assignment_id`
         """
         SQL = BASE.format(
-            student_id=this_student.id,
-            call="".join(["CALL Id2R('{}');".format(str(assign.uid).replace("-", ""))
-                          for assign in this_assignment_set])
+            id=this_student.id
         )
         with connection.cursor() as cursor:
             cursor.execute(SQL)
-            cursor.execute("SELECT * FROM gitidtableS;")
-            gitids = [i[0]for i in cursor.fetchall()]
+            recids = [i[0]for i in cursor.fetchall()]
 
-        last_rec = Record.objects.filter(commit_tag__in=gitids)
+        last_rec = Record.objects.filter(id__in=recids)
         last_rec = {i['assignment_id']: i['grade']
                     for i in list(last_rec.values())}
         assignment_with_grade = list(this_assignment_set.values
