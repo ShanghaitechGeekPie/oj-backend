@@ -948,7 +948,7 @@ class assignmentScoreboardDetail(generics.GenericAPIView):
                 'overall_score': oscore,
                 'score': i[4],
                 'delta': i[5],
-                'submission_time': i[6],
+                'submission_time': timezone.make_aware(i[6]),
                 'submission_count': i[7]
             })
 
@@ -1076,86 +1076,67 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
             Course, uid=this_course).students.all().values("id", "user_id", "nickname")
 
         BASE = """
-        DROP TABLE IF EXISTS gitidtable;
-        CREATE TEMPORARY TABLE gitidtable (
-            gitid VARCHAR (40),
-            gitcount INT
-        );
-        DROP PROCEDURE
-        IF EXISTS Id2R;
-        CREATE PROCEDURE Id2R (id INT)
-        BEGIN
-            INSERT INTO gitidtable SELECT
-                *
+        SELECT
+            `odu`.`uid`,
+            `ods`.`nickname`,
+            `odu`.`name`,
+            `ods`.`student_id`,
+            `odr`.`grade`,
+            `odr`.`delta`,
+            `odr`.`submission_time`,
+            `lastest_records`.`count`
+        FROM
+            `oj_database_student` `ods`
+        INNER JOIN `oj_database_user` `odu` ON `ods`.`user_id` = `odu`.`uid`
+        INNER JOIN `oj_database_record_student` `odrs` ON `odrs`.`student_id` = `ods`.`id`
+        INNER JOIN `oj_database_record` `odr` ON `odrs`.`record_id` = `odr`.`id`
+        INNER JOIN (
+            SELECT
+                MAX(`odr`.`id`) AS `id`,
+                count(*) AS `count`
             FROM
-                (
-                    SELECT
-                        `oj_database_record`.`commit_tag`
-                    FROM
-                        `oj_database_record`
-                    INNER JOIN `oj_database_record_student` ON (
-                        `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
-                    )
-                    WHERE
-                        (
-                            `oj_database_record`.`assignment_id` = '{assignment_id}'
-                            AND `oj_database_record_student`.`student_id` = id
-                            AND `oj_database_record`.`state` = 2
-                        )
-                    ORDER BY
-                        `oj_database_record`.`submission_time` DESC
-                    LIMIT 1
-                ) AS T1
-            INNER JOIN (
-                SELECT
-                    count(*)
-                FROM
-                    `oj_database_record`
-                INNER JOIN `oj_database_record_student` ON (
-                    `oj_database_record`.`id` = `oj_database_record_student`.`record_id`
-                )
-                WHERE
-                    (
-                        `oj_database_record`.`assignment_id` = '{assignment_id}'
-                        AND `oj_database_record_student`.`student_id` = id
-                    )
-            ) AS T2;
-        END;
-        {call}
+                `oj_database_student` `ods`
+            INNER JOIN `oj_database_record_student` `odrs` ON `odrs`.`student_id` = `ods`.`id`
+            INNER JOIN `oj_database_record` `odr` ON `odrs`.`record_id` = `odr`.`id`
+            WHERE
+                `odr`.`assignment_id` = '{assignment_id}'
+            AND `odr`.`state` = 2
+            GROUP BY
+                `ods`.`id`
+        ) `lastest_records` ON `lastest_records`.`id` = `odr`.`id`
+        WHERE
+            `odr`.`assignment_id` = '{assignment_id}'
+        ORDER BY
+            `grade` DESC,
+            `submission_time` ASC,
+            `count` ASC;
         """
         SQL = BASE.format(
-            assignment_id=this_assignment.replace("-", ""),
-            call="".join(["CALL Id2R({});".format(stu['id'])
-                          for stu in this_course_student_list])
+            assignment_id=this_assignment.replace("-", "")
         )
         with connection.cursor() as cursor:
             cursor.execute(SQL)
-            cursor.execute("SELECT * FROM gitidtable;")
-            gitid2times = {i[0]: i[1] for i in cursor.fetchall()}
-            gitids = [i for i in gitid2times]
-
-        last_rec = Record.objects.filter(
-            commit_tag__in=gitids).order_by('-grade')
+            res = cursor.fetchall()
 
         backend_logger.info('Searching scoreboard for: {}; last_rec: {}'.format(
-            this_assignment, str(last_rec.values())))
-        oscore = get_object_or_404(Assignment, uid=this_assignment).grade
+                this_assignment, str(res)))
+        oscore = get_object_or_404(Assignment,uid=this_assignment).grade
 
         student_with_grade = []
-        stu_set = set()
-        for i in last_rec.values("student__user_id", "student__nickname", 'grade', 'delta', 'submission_time', "commit_tag"):
-            stu_set.add(i['student__user_id'])
+        stu_set=set()
+        for i in res:
+            stu_set.add(i[0])
             student_with_grade.append({
-                'nickname': i['student__nickname'],
+                'nickname': i[1],
                 'overall_score': oscore,
-                'score': i['grade'],
-                'delta': i['delta'],
-                'submission_time': i['submission_time'],
-                'submission_count': gitid2times[i["commit_tag"]]
+                'score': i[4],
+                'delta': i[5],
+                'submission_time': timezone.make_aware(i[6]),
+                'submission_count': i[7]
             })
 
         for i in this_course_student_list:
-            if(not i['user_id'] in stu_set):
+            if str(i['user_id']).replace("-","") not in stu_set:
                 student_with_grade.append({
                     'nickname': i['nickname'],
                     'overall_score': oscore,
@@ -1164,15 +1145,6 @@ class assignmentScoreboardDetail4Student(generics.GenericAPIView):
                     'submission_time': None,
                     'submission_count': 0
                 })
-
-        student_with_grade = sorted(
-            student_with_grade,
-            key=lambda x: (
-                -x['score'],
-                x['submission_time'].timestamp(
-                ) if x['submission_time'] else 10**11
-            )
-        )
         return JsonResponse(student_with_grade, safe=False)
 
 
