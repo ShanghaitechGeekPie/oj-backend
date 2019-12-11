@@ -994,8 +994,11 @@ class internalSubmissionInterface(generics.GenericAPIView):
         now = int(time.time())
         try:
             upstream = request.data['upstream']
-            owner_uids = simplejson.loads(
-                request.data['additional_data'])
+            try:
+                owner_uids = simplejson.loads(
+                    request.data['additional_data'])
+            except:
+                owner_uids = None
             assignment_uid = request.data["assignment_uid"]
         except KeyError:
             return JsonResponse(data={'cause': 'Missing parameter in request'}, status=400)
